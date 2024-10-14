@@ -17,8 +17,7 @@ import java.util.function.Supplier;
 @Setter
 @Slf4j
 public abstract class BaseNode implements Runnable {
-    private static final long DEFAULT_INTERVAL_MILLI = 5_000;
-    public static final Map<Type, Class<?>> CLASS_MAP = Map.of(Type.DEBUG, DebugNode.class, Type.INJECT, InjectNode.class, Type.TCP_SERVER, TcpServerNode.class, Type.MARKET_INDEX_FETCH, MarketIndexFetchNode.class);
+    private static final long DEFAULT_INTERVAL_MILLI = 1_000;
 
     private static final Supplier<String> ID_GENERATOR = new HashIdGenerator();
 
