@@ -2,16 +2,14 @@ package menu;
 
 import lombok.extern.slf4j.Slf4j;
 import node.BaseNode;
+import node.NodeFactory;
 import node.Type;
-import util.Utils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
-import java.lang.reflect.Constructor;
 
 @Slf4j
 public class FlowNode extends JPanel {
@@ -27,11 +25,7 @@ public class FlowNode extends JPanel {
         Type t = Type.valueOf(type); // type은 항상 올바른 값이 들어온다고 가정한다.
 
         try {
-            Constructor<?> constructor = BaseNode.CLASS_MAP.get(t).getConstructor();
-            constructor.setAccessible(true);
-
-            node = (BaseNode) constructor.newInstance();
-            log.info("{} flow 노드가 생성되었습니다.", node.getClass().getSimpleName());
+            node = NodeFactory.createNode(t);
             setBackground(Color.lightGray);
 
         } catch (Exception e) {
