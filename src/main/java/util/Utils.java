@@ -1,5 +1,7 @@
 package util;
 
+import content.BoardPanel;
+import frame.YesdeRedFrame;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import node.BaseNode;
@@ -7,6 +9,7 @@ import node.Type;
 import org.apache.tika.utils.StringUtils;
 import org.reflections.Reflections;
 
+import javax.swing.*;
 import java.io.File;
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -31,5 +34,10 @@ public class Utils {
                 .build();
     }
 
+    public static TabInfo getSelectedTabInfo() {
+        JTabbedPane contentPane = YesdeRedFrame.getInstance().getContentPane();
+        int selectedIndex = contentPane.getSelectedIndex();
 
+        return new TabInfo(selectedIndex, ((BoardPanel) contentPane.getComponentAt(selectedIndex)));
+    }
 }
