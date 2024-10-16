@@ -9,7 +9,9 @@ import node.functional.TcpServerNode;
 @Slf4j
 public class NodeFactory {
 
-    public static BaseNode createNode(Type type) {
+    public static BaseNode createNode(String t) {
+        Type type = Type.valueOf(t.toUpperCase());  // type은 항상 올바른 값이 들어온다고 가정한다.
+
         BaseNode node;
 
         if (type == Type.DEBUG) node = new DebugNode();
