@@ -4,19 +4,10 @@ import content.BoardPanel;
 import frame.YesdeRedFrame;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import node.BaseNode;
-import node.Type;
-import org.apache.tika.utils.StringUtils;
-import org.reflections.Reflections;
 
 import javax.swing.*;
-import java.io.File;
 import java.net.http.HttpClient;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
