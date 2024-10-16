@@ -8,7 +8,7 @@ import lombok.Setter;
 public class Message implements Comparable<Message> {
     private static final int DEFAULT_ORDER = 0;
 
-    private int order = DEFAULT_ORDER;
+    private int order;
     private String message;
 
     public Message(int order, String message) {
