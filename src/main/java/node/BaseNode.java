@@ -3,14 +3,9 @@ package node;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import node.functional.DebugNode;
-import node.functional.InjectNode;
-import node.functional.MarketIndexFetchNode;
-import node.functional.TcpServerNode;
 import util.HashIdGenerator;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.function.Supplier;
 
 @Getter
@@ -26,6 +21,7 @@ public abstract class BaseNode implements Runnable {
     private final Type type;
     private final Thread thread;
     private final long intervalMilli = DEFAULT_INTERVAL_MILLI;
+    private boolean isRunning;
 
     protected BaseNode(Type type) {
         this.createdAt = LocalDateTime.now();
@@ -36,12 +32,14 @@ public abstract class BaseNode implements Runnable {
     }
 
     protected void preprocess() {
+        isRunning = true;
         log.info("pre-process 함수가 정상적으로 실행되었습니다.");
     }
 
     protected abstract void process() throws Exception;
 
     protected void postprocess() {
+        isRunning = false;
         log.info("post-process 함수가 정상적으로 실행되었습니다.");
     }
 
@@ -49,7 +47,7 @@ public abstract class BaseNode implements Runnable {
     public void run() {
         preprocess();
 
-        while (!Thread.currentThread().isInterrupted()) {
+        while (isRunning && !Thread.currentThread().isInterrupted()) {
 
             try {
                 process();
