@@ -1,25 +1,42 @@
 package node;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Getter
 public abstract class InputOutputNode extends BaseNode {
-    private final Pipe in;
-    private final Set<BaseNode> out;
+    private Pipe in;
+    private Set<BaseNode> out;
 
     protected InputOutputNode(Type type) {
         super(type);
 
-        in = (this instanceof Input) ? new Pipe() : null;
-        out = (this instanceof Output) ? new HashSet<>() : null;
+        if (this instanceof Inputable) {
+            in = new Pipe();
+        }
+
+        if (this instanceof Outputable) {
+            out = new HashSet<>();
+        }
     }
 
-    protected void connect(BaseNode node) {
-        if (this instanceof Input && node instanceof Output || this instanceof Output && node instanceof Input) {
-            out.add(node);
-        }
+    public boolean tryConnect(BaseNode other) {
+        if (!canConnect(other) || out.contains(other)) return false;
+
+        out.add(other);
+        log.info("{}노드와 {}노드가 연결되었습니다.", this, other);
+
+        return true;
+    }
+
+    private boolean canConnect(BaseNode other) {
+        if (this.equals(other)) return false;
+
+        return  (this instanceof Inputable && other instanceof Outputable)
+                || (this instanceof Outputable && other instanceof Inputable);
     }
 }
