@@ -6,8 +6,8 @@ import node.*;
 
 @Setter
 @Getter
-public class InjectNode extends InputOutputNode implements Output {
-    private String message = "test";
+public class InjectNode extends InputOutputNode implements Outputable {
+    private String message;
 
     public InjectNode() {
         super(Type.INJECT);
@@ -15,9 +15,10 @@ public class InjectNode extends InputOutputNode implements Output {
 
     @Override
     protected void process() throws Exception {
-        for (BaseNode node : getOut()) {
-            ((InputOutputNode) node).getIn().push(new Message(message));
+        Message msg = new Message((message != null) ? message : String.valueOf(System.currentTimeMillis()));
 
+        for (BaseNode node : getOut()) {
+            ((InputOutputNode) node).getIn().push(msg);
         }
     }
 }
