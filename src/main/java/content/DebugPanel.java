@@ -17,6 +17,7 @@ public class DebugPanel extends JPanel { // TODO, 멀티 쓰레드 환경에서�
         scrollPane.setViewportView(debugPanel);
 
         add(scrollPane);
+        // TODO, 계속 새로운 값이 입력되는 경우 위에 데이터 확인이 불가능한 이슈 발생.
         scrollPane.getVerticalScrollBar().addAdjustmentListener((e) ->
                         e.getAdjustable().setValue(e.getAdjustable().getMaximum()));
     }
