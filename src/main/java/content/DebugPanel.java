@@ -17,6 +17,8 @@ public class DebugPanel extends JPanel { // TODO, 멀티 쓰레드 환경에서�
         scrollPane.setViewportView(debugPanel);
 
         add(scrollPane);
+        scrollPane.getVerticalScrollBar().addAdjustmentListener((e) ->
+                        e.getAdjustable().setValue(e.getAdjustable().getMaximum()));
     }
 
     public void add(String text) {
