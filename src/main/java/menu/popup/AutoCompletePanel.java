@@ -104,6 +104,7 @@ public class AutoCompletePanel extends JScrollPane {
         node.setBounds(pos.x, pos.y, FlowNode.DEFAULT_WIDTH, FlowNode.DEFAULT_HEIGHT);
 
         invoker.add(node, 0);
+        invoker.revalidate();
         invoker.repaint();
     }
 }
