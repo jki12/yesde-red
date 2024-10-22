@@ -31,4 +31,26 @@ public class Utils {
 
         return new TabInfo(selectedIndex, ((BoardPanel) contentPane.getComponentAt(selectedIndex)));
     }
+
+    /**
+     * drag 이벤트 발생시에도 해당 함수가 많이 호출될 가능성이 있어 재귀가 아닌 반복문으로 구현.
+     */
+    public static long gcd(long x, long y) {
+        long temp;
+
+        if (x < y) { // x > y로 가정하기 위해.
+            temp = x;
+            x = y;
+            y = temp;
+        }
+
+        while (y != 0) {
+            temp = x % y;
+
+            x = y;
+            y = temp;
+        }
+
+        return x;
+    }
 }
