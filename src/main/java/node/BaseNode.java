@@ -1,5 +1,6 @@
 package node;
 
+import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -13,17 +14,23 @@ import java.util.function.Supplier;
 @Slf4j
 public abstract class BaseNode implements Runnable {
     private static final long DEFAULT_INTERVAL_MILLI = 1_000;
-
     private static final Supplier<String> ID_GENERATOR = new HashIdGenerator();
 
     private final LocalDateTime createdAt;
+    @Expose
     private final String id;
+    @Expose(deserialize = false)
     private final Type type;
     private final Thread thread;
-    private final long intervalMilli = DEFAULT_INTERVAL_MILLI;
+    @Expose
+    private long intervalMilli = DEFAULT_INTERVAL_MILLI;
     private boolean isRunning;
 
-    protected BaseNode(Type type) {
+    public BaseNode(Type type) {
+        this(type, ID_GENERATOR.get());
+    }
+
+    protected BaseNode(Type type, String id) {
         this.createdAt = LocalDateTime.now();
         this.id = ID_GENERATOR.get();
         this.type = type;
