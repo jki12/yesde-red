@@ -1,10 +1,14 @@
 package util;
 
+import json.FlowNodeAdapter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import content.BoardPanel;
 import frame.YesdeRedFrame;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import menu.FlowNode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +22,10 @@ public class Utils {
     private static final long MAX_POW = 2097152;
     private static final long TIMEOUT_DURATION = 5;
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]*$");
+    private static final Gson GSON = new GsonBuilder()
+            .excludeFieldsWithoutExposeAnnotation()
+            .registerTypeAdapter(FlowNode.class, new FlowNodeAdapter())
+            .create();
 
     public static boolean isNumeric(String s) {
         return NUMERIC_PATTERN.matcher(s).matches();
@@ -34,6 +42,10 @@ public class Utils {
         int selectedIndex = contentPane.getSelectedIndex();
 
         return new TabInfo(selectedIndex, ((BoardPanel) contentPane.getComponentAt(selectedIndex)));
+    }
+
+    public static String toJson(Object object) {
+        return GSON.toJson(object);
     }
 
     /**
