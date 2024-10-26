@@ -74,5 +74,6 @@ public abstract class BaseNode implements Runnable {
     }
 
     public void stop() {
+        isRunning = false;
     }
 }
