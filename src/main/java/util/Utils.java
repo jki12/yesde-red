@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Utils {
-    private static final long MAX_POW = 2097152;
     private static final long TIMEOUT_DURATION = 5;
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]*$");
     private static final Gson GSON = new GsonBuilder()
@@ -73,6 +72,7 @@ public class Utils {
     /**
      * Point a, b 좌표를 기준으로 3차 함수의 계수를 구합니다.
      */
+    @Deprecated
     public static double[] gaussianElimination(Point a, Point b) {
         double[][] matrix = {
                 { Math.pow(a.x, 3), Math.pow(a.x, 2), a.x, 1, a.y },
