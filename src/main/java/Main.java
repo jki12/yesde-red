@@ -1,21 +1,12 @@
-import sidebar.DebugPanel;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.util.StringTokenizer;
+import frame.YesdeRedFrame;
 
 public class Main {
 
-    public static int[] histogram;
+    public static void main(String[] args) throws Exception {
+        // HttpRequestBuilderImpl checkNameAndValue() restrictedHeaders 확인.
+        System.setProperty("jdk.httpclient.allowRestrictedHeaders", "connection,content-length,expect,host,upgrade");
 
-    public static void main(String[] args) throws IOException {
-        var f = new MyFrame();
-
-//        f.add(new DebugPanel());
-
+        YesdeRedFrame f = YesdeRedFrame.getInstance();
         f.setVisible(true);
     }
-
-
 }
