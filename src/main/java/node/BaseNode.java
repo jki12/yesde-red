@@ -24,6 +24,10 @@ public abstract class BaseNode implements Runnable {
     private final Thread thread;
     @Expose
     private long intervalMilli = DEFAULT_INTERVAL_MILLI;
+    @Expose
+    private int x; // board panel을 기준으로 한 x, y 값.
+    @Expose
+    private int y;
     private boolean isRunning;
 
     public BaseNode(Type type) {
@@ -32,7 +36,7 @@ public abstract class BaseNode implements Runnable {
 
     protected BaseNode(Type type, String id) {
         this.createdAt = LocalDateTime.now();
-        this.id = ID_GENERATOR.get();
+        this.id = id;
         this.type = type;
 
         this.thread = new Thread(this);
@@ -63,6 +67,7 @@ public abstract class BaseNode implements Runnable {
                 log.info(e.getMessage());
                 Thread.currentThread().interrupt();
             } catch (Exception e1) {
+                log.info(e1.getMessage());
             }
         }
 
