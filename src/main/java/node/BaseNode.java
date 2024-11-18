@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import util.HashIdGenerator;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
@@ -42,6 +43,11 @@ public abstract class BaseNode implements Runnable {
         this.thread = new Thread(this);
     }
 
+    public void setPoint(Point p) {
+        x = p.x;
+        y = p.y;
+    }
+
     protected void preprocess() {
         isRunning = true;
         log.info("pre-process 함수가 정상적으로 실행되었습니다.");
@@ -63,11 +69,9 @@ public abstract class BaseNode implements Runnable {
             try {
                 process();
                 Thread.sleep(intervalMilli);
-            } catch (InterruptedException e) {
-                log.info(e.getMessage());
+            } catch (Exception e) {
+                log.error(e.getMessage());
                 Thread.currentThread().interrupt();
-            } catch (Exception e1) {
-                log.info(e1.getMessage());
             }
         }
 
