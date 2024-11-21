@@ -3,14 +3,17 @@ package util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import content.BoardPanel;
-import frame.YesdeRedFrame;
-import json.FlowNodeAdapter;
+import json.WorkflowNodeAdapter;
+import json.WorkflowNodeSetAdapter;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import menu.FlowNode;
 import net.HttpRequestPacket;
+import node.BaseNode;
+import ui.content.BoardPanel;
+import ui.content.TabInfo;
+import ui.frame.YesdeRedFrame;
+import ui.menu.WorkflowNode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,10 +22,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.net.http.HttpClient;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,10 +35,11 @@ public class Utils {
     private static final String PACKET_DATA_REGEX = "\"ip\\..[^:]*\": \".*?\"|\"tcp\\..[^:]*\": \".*?\"|\"http\\..[^:]*: \".*\"|_index";
     private static final Pattern PACKET_DATA_PATTERN = Pattern.compile(PACKET_DATA_REGEX);
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]*$");
-    private static final Gson GSON = new GsonBuilder()
-            .excludeFieldsWithoutExposeAnnotation()
-            .registerTypeAdapter(FlowNode.class, new FlowNodeAdapter())
+    public static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
+            .excludeFieldsWithoutExposeAnnotation()
+            .registerTypeAdapter(WorkflowNode.class, new WorkflowNodeAdapter())
+            .registerTypeAdapter(new TypeToken<Set<BaseNode>>() {}.getType(), new WorkflowNodeSetAdapter())
             .create();
 
     public static boolean isNumeric(String s) {
