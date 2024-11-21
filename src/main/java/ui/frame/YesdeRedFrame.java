@@ -1,7 +1,7 @@
-package frame;
+package ui.frame;
 
-import content.ContentPanel;
-import menubar.MenuBar;
+import ui.content.ContentPanel;
+import ui.menu.menubar.MenuBar;
 
 import javax.swing.*;
 
