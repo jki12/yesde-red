@@ -1,7 +1,7 @@
 package node.functional;
 
-import content.DebugPanel;
-import frame.YesdeRedFrame;
+import ui.content.DebugPanel;
+import ui.frame.YesdeRedFrame;
 import node.InputOutputNode;
 import node.Inputable;
 import node.Message;
