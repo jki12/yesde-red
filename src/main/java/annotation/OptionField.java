@@ -1,6 +1,6 @@
 package annotation;
 
-import enums.FieldType;
+import common.enums.FieldType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
