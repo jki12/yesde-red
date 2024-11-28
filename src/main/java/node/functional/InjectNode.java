@@ -1,5 +1,6 @@
 package node.functional;
 
+import annotation.OptionField;
 import lombok.Getter;
 import lombok.Setter;
 import node.*;
@@ -7,6 +8,7 @@ import node.*;
 @Setter
 @Getter
 public class InjectNode extends InputOutputNode implements Outputable {
+    @OptionField
     private String message;
 
     public InjectNode() {
