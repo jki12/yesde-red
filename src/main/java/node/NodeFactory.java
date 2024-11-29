@@ -5,6 +5,7 @@ import node.functional.DebugNode;
 import node.functional.InjectNode;
 import node.functional.MarketIndexFetchNode;
 import node.functional.TcpServerNode;
+import node.http.HttpServerNode;
 
 @Slf4j
 public class NodeFactory {
@@ -18,6 +19,7 @@ public class NodeFactory {
         else if (type == Type.INJECT) node = new InjectNode();
         else if (type == Type.TCP_SERVER) node = new TcpServerNode();
         else if (type == Type.MARKET_INDEX_FETCH) node = new MarketIndexFetchNode();
+        else if (type == Type.HTTP_SERVER) node = new HttpServerNode();
         else {
             log.error("node type : {}", type);
             throw new IllegalStateException("지원하지 않는 노드 입니다.");
