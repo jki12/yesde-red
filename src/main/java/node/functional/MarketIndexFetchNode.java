@@ -1,11 +1,11 @@
 package node.functional;
 
+import annotation.OptionField;
+import common.enums.FieldType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import node.InputOutputNode;
-import node.Message;
-import node.Type;
+import node.*;
 import util.Utils;
 
 import java.net.URI;
@@ -19,13 +19,14 @@ import java.util.regex.Pattern;
 @Setter
 @Getter
 @Slf4j
-public class MarketIndexFetchNode extends InputOutputNode {
+public class MarketIndexFetchNode extends InputOutputNode implements Outputable {
     private static final String USER_AGENT_KEY = "User-Agent";
     private static final String USER_AGENT_VALUE = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
     private static final String FORMATTED_URL = "https://www.google.com/async/finance_wholepage_price_updates?ei=IfUsXc2oJY2J5wKngriIAQ&yv=3&async=mids:%s,currencies:,_fmt:jspb,currencies:,_fmt:jspb";
-    private static final Pattern PATTERN = Pattern.compile(",\"[0-9,.]*\""); // ex),"2596.91" 이런 형태의 값으로 결과를 반환합니다. subString을 이용해 값을 파싱해서 사용해야함.
+    private static final Pattern PATTERN = Pattern.compile(",\"[0-9,.]*\""); // ex),"2596.91" 이런 형태의 값으로 결과를 반환합니다. subString(2, 1)을 이용해 값을 파싱해서 사용해야함.
 
     private final HttpClient client;
+    @OptionField(type = FieldType.RADIO_BUTTON)
     private MarketIndex currentIndex;
 
     public MarketIndexFetchNode() {
@@ -56,7 +57,9 @@ public class MarketIndexFetchNode extends InputOutputNode {
                 String data = matcher.group();
 
                 Message message = new Message(String.format("%s : %s", currentIndex, data.substring(2, data.length() - 1)));
-                System.out.println(message); // TODO, 연결된 값에 전달,
+                for (BaseNode node : getOut()) {
+                    ((InputOutputNode) node).getIn().push(message);
+                }
             }
             else {
                 log.error("정규표현식으로 값을 찾지 못했습니다. data를 확인해주세요.");
@@ -67,10 +70,12 @@ public class MarketIndexFetchNode extends InputOutputNode {
         }
     }
 
+    /**
+     * 다른 지수도 필요할 경우 여기에 추가하면 됨.
+     */
     public enum MarketIndex { // - 퍼센트 인코딩이 되어 있음..
         S_AND_P_500("%2Fm%2F016yss"), // S&P 500 지수, /m/016yss
         KOSPI("%2Fm%2F04w0nf"); // /m/04w0nf
-        // KOSDAQ("%2Fm%2F03k1tk"); // /m/03k1tk, 코스닥은 지원 안함..
 
         private final String id;
 
