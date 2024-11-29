@@ -1,5 +1,6 @@
-package node.functional;
+package node.http;
 
+import annotation.OptionField;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.HttpRequestPacket;
@@ -12,26 +13,32 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Slf4j
 @Setter
-public class TestNode extends InputOutputNode {
+public class HttpTestNode extends InputOutputNode {
+    // allowRestrictedHeaders property 적용하지 않을 경우 금지된 헤더.
     private static final Set<String> RESTRICTED_HEADER = Set.of("connection", "content-length", "expect", "host", "upgrade");
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final Set<HttpClient> clients = new HashSet<>();
     private List<HttpRequestPacket> packets;
+    @OptionField
     private String jsonFilePath = "src/main/resources/packet/simple_request2.json"; // test용 파일
+    @OptionField
+    private int clientCount;
 
-    public TestNode() {
-        super(Type.TEST_NODE);
+    public HttpTestNode() {
+        super(Type.HTTP_TESTER);
     }
 
     @Override
     protected void preprocess() {
         packets = Utils.parsePacketCapture(new File(jsonFilePath));
+        for (int i = 0; i < clientCount; ++i) clients.add(HttpClient.newHttpClient());
 
         super.preprocess();
     }
@@ -55,16 +62,18 @@ public class TestNode extends InputOutputNode {
     protected void process() throws Exception {
         for (HttpRequestPacket data : packets) {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .version(HttpClient.Version.HTTP_1_1)
+                    .version(java.net.http.HttpClient.Version.HTTP_1_1)
                     .uri(URI.create(data.getFullUri()))
-                    .method(data.getMethod(), HttpRequest.BodyPublishers.noBody()) // TODO, post, put 미구현.
+                    .method(data.getMethod(), HttpRequest.BodyPublishers.noBody()) // TODO, post, put 구현.
                     .headers(toArray(data.getHeaders()));
 
             HttpRequest httpRequest = builder.build();
             log.info("Request info : {}", httpRequest);
 
-            HttpResponse<String> res = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-            log.info("status code : {} body : {}", res.statusCode(), res.body());
+            for (HttpClient client : clients) {
+                HttpResponse<String> res = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+                log.info("status code : {} body : {}", res.statusCode(), res.body());
+            }
         }
     }
 }
