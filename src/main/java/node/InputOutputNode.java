@@ -12,8 +12,8 @@ public abstract class InputOutputNode extends BaseNode {
     private Pipe in;
     private Set<BaseNode> out;
 
-    protected InputOutputNode(Type type) {
-        super(type);
+    protected InputOutputNode(Type type, String displayName, String description) {
+        super(type, displayName, description);
 
         if (this instanceof Inputable) {
             in = new Pipe();
