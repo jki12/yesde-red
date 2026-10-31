@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.HttpRequestPacket;
 import node.BaseNode;
-import ui.content.BoardPanel;
-import ui.content.TabInfo;
+import content.BoardPanel;
 import ui.frame.YesdeRedFrame;
 import ui.menu.WorkflowNode;
 
@@ -53,7 +52,7 @@ public class Utils {
     }
 
     public static TabInfo getSelectedTabInfo() {
-        JTabbedPane contentPane = (JTabbedPane) YesdeRedFrame.getInstance().getContentPane().getComponent(0);
+        JTabbedPane contentPane = YesdeRedFrame.getInstance().getTabs();
         int selectedIndex = contentPane.getSelectedIndex();
 
         return new TabInfo(selectedIndex, ((BoardPanel) contentPane.getComponentAt(selectedIndex)));
@@ -61,80 +60,6 @@ public class Utils {
 
     public static String toJson(Object object) {
         return GSON.toJson(object);
-    }
-
-    /**
-     * drag 이벤트 발생시에도 해당 함수가 많이 호출될 가능성이 있어 재귀가 아닌 반복문으로 구현.
-     */
-    public static long gcd(long x, long y) {
-        long temp;
-
-        if (x < y) { // x > y로 가정하기 위해.
-            temp = x;
-            x = y;
-            y = temp;
-        }
-
-        while (y != 0) {
-            temp = x % y;
-
-            x = y;
-            y = temp;
-        }
-
-        return x;
-    }
-
-    /**
-     * Point a, b 좌표를 기준으로 3차 함수의 계수를 구합니다.
-     */
-    @Deprecated
-    public static double[] gaussianElimination(Point a, Point b) {
-        double[][] matrix = {
-                { Math.pow(a.x, 3), Math.pow(a.x, 2), a.x, 1, a.y },
-                { Math.pow(b.x, 3), Math.pow(b.x, 2), b.x, 1, b.y },
-                { 0, 3 * Math.pow(a.x, 2), 2 * a.x, a.x, 0 },
-                { 0, 3 * Math.pow(b.x, 2), 2 * b.x, b.x, 0 }
-        };
-
-        double temp;
-        for (int i = 0; i < matrix.length; ++i) {
-            double[] cur = matrix[i];
-
-            // leading 1을 만들어준다.
-            if (cur[i] != 1) {
-                for (int j = cur.length - 1; j >= 0; --j) cur[j] /= cur[i];
-            }
-
-            // 기약 사다리꼴을 만들기 위한 로직.
-            for (int j = i + 1; j < matrix.length; ++j) {
-                if (matrix[j][i] == 0) continue;
-
-                temp = matrix[j][i];
-                for (int k = 0; k < cur.length; ++k) {
-                    matrix[j][k] -= (cur[k] * temp);
-                }
-            }
-        }
-
-        // 기약 사다리꼴을 만들기 위한 로직, 이미 leading 1이 만들어져 있으므로 기약 사다리꼴을 만들기 위한 로직만 있으면 됨.
-        for (int i = matrix.length - 1; i >= 0; --i) {
-            double[] cur = matrix[i];
-
-            for (int j = i - 1; j >= 0; --j) {
-                if (matrix[j][i] == 0) continue;
-
-                temp = matrix[j][i];
-                for (int k = cur.length - 1; k >= 0; --k) {
-                    matrix[j][k] -= (cur[k] * temp);
-                }
-            }
-        }
-
-        double[] result = new double[matrix.length];
-        for (int i = 0; i < matrix.length; ++i) result[i] = matrix[i][matrix[0].length - 1];
-
-        return result;
     }
 
     /**
