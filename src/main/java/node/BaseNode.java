@@ -22,6 +22,8 @@ public abstract class BaseNode implements Runnable {
     private final String id;
     @Expose(deserialize = false)
     private final Type type;
+    private final String displayName;
+    private final String description;
     private final Thread thread;
     @Expose
     private long intervalMilli = DEFAULT_INTERVAL_MILLI;
@@ -31,14 +33,16 @@ public abstract class BaseNode implements Runnable {
     private int y;
     private boolean isRunning;
 
-    public BaseNode(Type type) {
-        this(type, ID_GENERATOR.get());
+    public BaseNode(Type type, String displayName, String description) {
+        this(type, ID_GENERATOR.get(), displayName, description);
     }
 
-    protected BaseNode(Type type, String id) {
+    protected BaseNode(Type type, String id, String displayName, String description) {
         this.createdAt = LocalDateTime.now();
         this.id = id;
         this.type = type;
+        this.displayName = displayName;
+        this.description = description;
 
         this.thread = new Thread(this);
     }
