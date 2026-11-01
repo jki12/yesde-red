@@ -8,10 +8,13 @@ import node.Message;
 import node.Type;
 
 public class DebugNode extends InputOutputNode implements Inputable {
+    public static final String DISPLAY_NAME = "디버그";
+    public static final String DESCRIPTION = "수신한 메시지를 하단 콘솔에 표시합니다.";
+
     private final DebugPanel instance = YesdeRedFrame.getInstance().getDebugPanel();
 
     public DebugNode() {
-        super(Type.DEBUG, "디버그", "수신한 메시지를 하단 콘솔에 표시합니다.");
+        super(Type.DEBUG, DISPLAY_NAME, DESCRIPTION);
     }
 
     @Override
