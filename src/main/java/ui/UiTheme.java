@@ -28,8 +28,45 @@ public final class UiTheme {
         return new JButton(text);
     }
 
+    // 실제 색상 값은 FlatLightLaf.properties에서 관리
+    public static Color getBackgroundColor() {
+        return UIManager.getColor("TextField.background");
+    }
+
+    public static Color getPanelBackgroundColor() {
+        return UIManager.getColor("Panel.background");
+    }
+
+    public static Color getToolbarBackgroundColor() {
+        return UIManager.getColor("ToolBar.background");
+    }
+
+    public static Color getTextColor() {
+        return UIManager.getColor("Label.foreground");
+    }
+
+    public static Color getGridColor() {
+        return UIManager.getColor("Table.gridColor");
+    }
+
+    public static Color getConnectionColor() {
+        return UIManager.getColor("Custom.Connection.lineColor");
+    }
+
+    public static Color getAccentColor() {
+        return UIManager.getColor("Component.accentColor");
+    }
+
+    public static Color getNodeSelectedBackgroundColor() {
+        return UIManager.getColor("Custom.Node.selectedBackground");
+    }
+
+    public static Color getNodeSelectedHeaderBackgroundColor() {
+        return UIManager.getColor("Custom.Node.selectedHeaderBackground");
+    }
+
     public static Color getHeaderBackgroundColor() {
-        return UIManager.getColor("Yesde.headerBackground");
+        return UIManager.getColor("Custom.Header.background");
     }
 
     public static Color getBorderColor() {
