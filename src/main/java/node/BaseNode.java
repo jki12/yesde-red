@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import util.HashIdGenerator;
 
+import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.function.Supplier;
@@ -22,8 +23,6 @@ public abstract class BaseNode implements Runnable {
     private final String id;
     @Expose(deserialize = false)
     private final Type type;
-    private final String displayName;
-    private final String description;
     private final Thread thread;
     @Expose
     private long intervalMilli = DEFAULT_INTERVAL_MILLI;
@@ -33,16 +32,14 @@ public abstract class BaseNode implements Runnable {
     private int y;
     private boolean isRunning;
 
-    public BaseNode(Type type, String displayName, String description) {
-        this(type, ID_GENERATOR.get(), displayName, description);
+    public BaseNode(Type type) {
+        this(type, ID_GENERATOR.get());
     }
 
-    protected BaseNode(Type type, String id, String displayName, String description) {
+    protected BaseNode(Type type, String id) {
         this.createdAt = LocalDateTime.now();
         this.id = id;
         this.type = type;
-        this.displayName = displayName;
-        this.description = description;
 
         this.thread = new Thread(this);
     }
@@ -58,6 +55,12 @@ public abstract class BaseNode implements Runnable {
     }
 
     protected abstract void process() throws Exception;
+
+    public abstract Icon getIcon();
+
+    public abstract String getDisplayName();
+
+    public abstract String getDescription();
 
     protected void postprocess() {
         isRunning = false;
