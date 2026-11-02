@@ -17,11 +17,14 @@ import java.util.Set;
  */
 @Slf4j
 public class TcpServerNode extends BaseNode {
+    public static final String DISPLAY_NAME = "TCP 수신";
+    public static final String DESCRIPTION = "TCP 연결을 받아 수신한 문자열을 표준 출력에 표시합니다.";
+
     private final Set<Socket> sockets = new HashSet<>();
     private ServerSocket serverSocket;
 
     public TcpServerNode() {
-        super(Type.TCP_SERVER);
+        super(Type.TCP_SERVER, DISPLAY_NAME, DESCRIPTION);
     }
 
     @Override
@@ -50,8 +53,6 @@ public class TcpServerNode extends BaseNode {
                         throw new RuntimeException(e);
                     }
                 }
-
-
             }
         });
 
