@@ -1,72 +1,67 @@
 package menu.popup;
 
-import node.Type;
-import org.apache.tika.utils.StringUtils;
+import ui.Codicons;
 
+import com.formdev.flatlaf.FlatClientProperties;
+import ui.UiTheme;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.awt.event.ActionEvent;
 
 public class SearchBar extends JPanel {
-    private static final String SEARCH_ICON_PATH = "src/main/resources/icon/search-16x16.png";
-    private static final int TEXT_FIELD_COLUMNS = 22;
+    private final JTextField textField = new JTextField();
 
-    private final JTextField textField;
-    private final AutoCompletePanel autoCompletePanel;
+    public SearchBar(SearchResultPanel results) {
+        setLayout(new BorderLayout(8, 0));
+        setBackground(UiTheme.getBackgroundColor());
+        setBorder(BorderFactory.createEmptyBorder(4, 10, 7, 10));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        setAlignmentX(LEFT_ALIGNMENT);
 
-    public SearchBar(AutoCompletePanel autoCompletePanel) {
-        this.autoCompletePanel = autoCompletePanel;
+        textField.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, Codicons.icon("search"));
+        textField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "이름 또는 타입 검색");
 
-        ImageIcon searchIcon = new ImageIcon(SEARCH_ICON_PATH);
-        JLabel label = new JLabel(searchIcon);
-
-        textField = new JTextField(TEXT_FIELD_COLUMNS - 3); // TODO, placeholder 추가 ("add a node...")
-        textField.setBorder(BorderFactory.createEmptyBorder());
-        textField.addKeyListener(new KeyAdapter() {
-            private boolean metaPressed;
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_META) {
-                    metaPressed = true;
-                }
-
-                if (metaPressed && e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-                    clear();
-                }
-
-                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    autoCompletePanel.requestFocus();
-                }
+        add(textField, BorderLayout.CENTER);
+        textField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                update();
             }
 
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_META) {
-                    metaPressed = false;
-                }
+            public void removeUpdate(DocumentEvent e) {
+                update();
+            }
 
-                String text = textField.getText().trim().toUpperCase();
-                SwingUtilities.invokeLater(() -> autoCompletePanel.updateSuggestions(text));
+            public void changedUpdate(DocumentEvent e) { }
+
+            private void update() {
+                results.updateSuggestions(textField.getText());
             }
         });
 
-        add(label);
-        add(textField);
+        bind("DOWN", "focusSearchResults", results::focusResults);
+        bind("ENTER", "addSelectedNode", results::addSelectedNode);
+        bind("meta BACK_SPACE", "clearSearchText", this::clear);
 
-        textField.setBorder(BorderFactory.createEmptyBorder());
+        bind("ESCAPE", "closeSearchPopup", () -> {
+            JPopupMenu popup = (JPopupMenu) SwingUtilities.getAncestorOfClass(JPopupMenu.class, SearchBar.this);
+            if (popup != null) popup.setVisible(false);
+        });
+    }
 
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.lightGray));
+    private void bind(String key, String name, Runnable action) {
+        textField.getInputMap().put(KeyStroke.getKeyStroke(key), name);
+        textField.getActionMap().put(name, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) { action.run(); }
+        });
     }
 
     public void clear() {
         textField.setText("");
+    }
+
+    public void focusSearch() {
+        textField.requestFocusInWindow();
     }
 }
