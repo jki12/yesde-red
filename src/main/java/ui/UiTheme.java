@@ -77,6 +77,10 @@ public final class UiTheme {
         return UIManager.getFont("Label.font");
     }
 
+    public static Font getNodeTypeFont() {
+        return UIManager.getFont("Custom.Node.typeFont");
+    }
+
     public static JPanel header(String title, FlatSVGIcon icon) {
         JPanel header = new JPanel(new BorderLayout());
 
