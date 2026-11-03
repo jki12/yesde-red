@@ -12,10 +12,9 @@ import net.HttpRequestPacket;
 import node.BaseNode;
 import content.BoardPanel;
 import ui.frame.YesdeRedFrame;
-import ui.menu.WorkflowNode;
+import ui.menu.NodePanel;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -37,7 +36,7 @@ public class Utils {
     public static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .excludeFieldsWithoutExposeAnnotation()
-            .registerTypeAdapter(WorkflowNode.class, new WorkflowNodeAdapter())
+            .registerTypeAdapter(NodePanel.class, new WorkflowNodeAdapter())
             .registerTypeAdapter(new TypeToken<Set<BaseNode>>() {}.getType(), new WorkflowNodeSetAdapter())
             .create();
 
