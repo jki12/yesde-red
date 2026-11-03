@@ -1,14 +1,38 @@
 package node;
 
 import lombok.extern.slf4j.Slf4j;
+import javax.swing.Icon;
 import node.functional.DebugNode;
 import node.functional.InjectNode;
 import node.functional.MarketIndexFetchNode;
 import node.functional.TcpServerNode;
 import node.http.HttpServerNode;
+import node.http.HttpTestNode;
 
 @Slf4j
 public class NodeFactory {
+
+    public static String getDisplayName(Type type) {
+        return switch (type) {
+            case INJECT -> InjectNode.DISPLAY_NAME;
+            case DEBUG -> DebugNode.DISPLAY_NAME;
+            case TCP_SERVER -> TcpServerNode.DISPLAY_NAME;
+            case MARKET_INDEX_FETCH -> MarketIndexFetchNode.DISPLAY_NAME;
+            case HTTP_SERVER -> HttpServerNode.DISPLAY_NAME;
+            case HTTP_TESTER -> HttpTestNode.DISPLAY_NAME;
+        };
+    }
+
+    public static Icon getIcon(Type type) {
+        return switch (type) {
+            case INJECT -> InjectNode.ICON;
+            case DEBUG -> DebugNode.ICON;
+            case TCP_SERVER -> TcpServerNode.ICON;
+            case MARKET_INDEX_FETCH -> MarketIndexFetchNode.ICON;
+            case HTTP_SERVER -> HttpServerNode.ICON;
+            case HTTP_TESTER -> HttpTestNode.ICON;
+        };
+    }
 
     public static BaseNode createNode(String t) {
         Type type = Type.valueOf(t.toUpperCase());  // type은 항상 올바른 값이 들어온다고 가정한다.
