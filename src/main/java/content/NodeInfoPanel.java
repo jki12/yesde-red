@@ -14,7 +14,7 @@ public class NodeInfoPanel extends JPanel {
     private final JPanel editorContainer = new JPanel(new BorderLayout());
 
     private BaseNode selectedNode;
-    private NodeSettingsEditor settingsEditor;
+    private OptionSettingsEditor settingsEditor;
 
     public NodeInfoPanel() {
         setLayout(new BorderLayout());
@@ -136,7 +136,7 @@ public class NodeInfoPanel extends JPanel {
         }
     }
 
-    private NodeSettingsEditor createSettingsEditor(BaseNode node) {
+    private OptionSettingsEditor createSettingsEditor(BaseNode node) {
         if (node == null || node instanceof DebugNode) return null;
 
         OptionSettingsEditor editor = new OptionSettingsEditor(node);
