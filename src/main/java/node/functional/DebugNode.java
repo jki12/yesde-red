@@ -39,7 +39,7 @@ public class DebugNode extends InputOutputNode implements Inputable {
     protected void process() throws Exception {
         Message message = getIn().poll();
 
-        instance.add("DEBUG " + getId().substring(0, Math.min(6, getId().length())), message.toString());
+        instance.add("DEBUG " + getId(), message.toString());
 
         instance.revalidate();
         instance.repaint();

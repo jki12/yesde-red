@@ -1,6 +1,8 @@
 package node;
 
+import annotation.OptionField;
 import com.google.gson.annotations.Expose;
+import common.enums.FieldType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public abstract class BaseNode implements Runnable {
     private final Type type;
     private final Thread thread;
     @Expose
+    @OptionField(type = FieldType.TEXT)
     private long intervalMilli = DEFAULT_INTERVAL_MILLI;
     @Expose
     private int x; // board panel을 기준으로 한 x, y 값.
@@ -33,7 +36,7 @@ public abstract class BaseNode implements Runnable {
     private boolean isRunning;
 
     public BaseNode(Type type) {
-        this(type, ID_GENERATOR.get());
+        this(type, ID_GENERATOR.get().substring(0, 6));
     }
 
     protected BaseNode(Type type, String id) {

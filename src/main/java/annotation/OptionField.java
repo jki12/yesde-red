@@ -11,4 +11,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface OptionField {
     FieldType type() default FieldType.TEXT;
+    boolean editable() default true;
 }
