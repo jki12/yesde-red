@@ -1,28 +1,52 @@
 package menu.popup;
 
+import ui.Codicons;
+
 import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import ui.UiTheme;
+import java.awt.Dimension;
 
 @Getter
 public class NodePopupMenu extends JPopupMenu {
 
     public NodePopupMenu() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(UiTheme.getBackgroundColor());
+        setPreferredSize(new Dimension(320, 332));
 
-        AutoCompletePanel autoCompletePanel = new AutoCompletePanel();
-        SearchBar searchbar = new SearchBar(autoCompletePanel);
+        JLabel title = UiTheme.label("노드 추가", false);
+
+        title.setIcon(Codicons.icon("add", 16));
+        title.setIconTextGap(6);
+        title.setOpaque(true);
+        title.setBackground(UiTheme.getHeaderBackgroundColor());
+        title.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        title.setBorder(BorderFactory.createEmptyBorder(9, 12, 5, 12));
+        title.setAlignmentX(LEFT_ALIGNMENT);
+        add(title);
+
+        SearchResultPanel searchResultPanel = new SearchResultPanel();
+        SearchBar searchbar = new SearchBar(searchResultPanel);
 
         add(searchbar);
-        add(autoCompletePanel);
+        add(searchResultPanel);
+        JLabel hint = UiTheme.label("↑↓ 선택   Enter 추가   Esc 닫기", true);
+        hint.setFont(UiTheme.getSmallFont());
+        hint.setBorder(BorderFactory.createEmptyBorder(7, 12, 8, 12));
+        hint.setAlignmentX(LEFT_ALIGNMENT);
+        add(hint);
 
         addPopupMenuListener(new PopupMenuListener() {
             @Override
-            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) { // 팝업 실행시
                 searchbar.clear();
-                autoCompletePanel.reset();
+                searchResultPanel.reset();
+
+                SwingUtilities.invokeLater(searchbar::focusSearch);
             }
 
             @Override

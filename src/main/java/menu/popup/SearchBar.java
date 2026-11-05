@@ -40,7 +40,7 @@ public class SearchBar extends JPanel {
             }
         });
 
-        bind("DOWN", "focusSearchResults", results::focusResults);
+        bind("DOWN", "focusSearchResults", results::focusSearchResults);
         bind("ENTER", "addSelectedNode", results::addSelectedNode);
         bind("meta BACK_SPACE", "clearSearchText", this::clear);
 
