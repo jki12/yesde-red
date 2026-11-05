@@ -1,7 +1,6 @@
 package content;
 
 import node.BaseNode;
-import node.InputOutputNode;
 import node.functional.DebugNode;
 import ui.Codicons;
 import ui.UiTheme;
@@ -67,6 +66,7 @@ public class NodeInfoPanel extends JPanel {
         showNode(null);
     }
 
+    // TODO, nodeId만 받고 있음. 사용 안하면 지워야 함
     private static JTextField field(String name) {
         JTextField field = new JTextField();
         field.setName(name);
