@@ -9,7 +9,6 @@ import ui.UiTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Locale;
 
 @Slf4j
 public class SearchResultPanel extends JScrollPane {
@@ -76,7 +75,7 @@ public class SearchResultPanel extends JScrollPane {
                     addSelectedNode();
                 }
                 else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    ((JPopupMenu) getParent()).setVisible(false);
+                    (getParent()).setVisible(false);
                 }
             }
         });
