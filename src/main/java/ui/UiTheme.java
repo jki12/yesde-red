@@ -81,6 +81,10 @@ public final class UiTheme {
         return UIManager.getFont("Custom.Node.typeFont");
     }
 
+    public static Font getSmallFont() {
+        return UIManager.getFont("small.font");
+    }
+
     public static JPanel header(String title, FlatSVGIcon icon) {
         JPanel header = new JPanel(new BorderLayout());
 
