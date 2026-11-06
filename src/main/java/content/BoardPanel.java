@@ -108,19 +108,17 @@ public class BoardPanel extends JPanel {
         if (connectionStartPort == null) return;
 
         try {
-            Component at = getComponentAt(point);
-            if (!(at instanceof NodePanel)) return;
+            JButton targetPort = connectionTargetAt(point);
+            if (targetPort == null) return;
 
             NodePanel origin = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, connectionStartPort);
+            NodePanel other = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, targetPort);
             boolean output = connectionStartPort == origin.getOutputPort();
-            NodePanel other = (NodePanel) at;
-            Point local = SwingUtilities.convertPoint(this, point, other);
-            Component otherPort = SwingUtilities.getDeepestComponentAt(other, local.x, local.y);
 
-            if (output && otherPort == other.getInputPort()) {
+            if (output) {
                 ((Outputable) origin.getNode()).connect((Inputable) other.getNode());
             }
-            else if (!output && otherPort == other.getOutputPort()) {
+            else {
                 ((Outputable) other.getNode()).connect((Inputable) origin.getNode());
             }
 
