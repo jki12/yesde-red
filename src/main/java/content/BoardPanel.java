@@ -208,6 +208,32 @@ public class BoardPanel extends JPanel {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         drawGrid(graphics);
 
+        drawConnections(graphics);
+
+        if (getComponentCount() == 0) { // 비어있는 경우
+            graphics.setColor(UiTheme.getTextColor());
+            graphics.setFont(UiTheme.getFont());
+            String text = "노드 추가 또는 우클릭으로 시작하세요";
+            graphics.drawString(text, Math.max(16, (getWidth() - graphics.getFontMetrics().stringWidth(text)) / 2),
+                    Math.max(70, getHeight() / 2));
+        }
+
+        graphics.dispose();
+    }
+
+    private void drawGrid(Graphics2D graphics) {
+        graphics.setColor(UiTheme.getGridColor());
+
+        for (int x = 0; x < getWidth(); x += GRID_SIZE) {
+            graphics.drawLine(x, 0, x, getHeight());
+        }
+
+        for (int y = 0; y < getHeight(); y += GRID_SIZE) {
+            graphics.drawLine(0, y, getWidth(), y);
+        }
+    }
+
+    private void drawConnections(Graphics2D graphics) {
         graphics.setStroke(new BasicStroke(1.6f));
         for (Component c : getComponents()) {
             if (!(c instanceof NodePanel)) continue;
@@ -234,28 +260,6 @@ public class BoardPanel extends JPanel {
                 graphics.fillPolygon(new int[] {to.x - 12, to.x - 5, to.x - 12},
                         new int[] {to.y - 3, to.y, to.y + 3}, 3);
             }
-        }
-
-        if (getComponentCount() == 0) { // 비어있는 경우
-            graphics.setColor(UiTheme.getTextColor());
-            graphics.setFont(UiTheme.getFont());
-            String text = "노드 추가 또는 우클릭으로 시작하세요";
-            graphics.drawString(text, Math.max(16, (getWidth() - graphics.getFontMetrics().stringWidth(text)) / 2),
-                    Math.max(70, getHeight() / 2));
-        }
-
-        graphics.dispose();
-    }
-
-    private void drawGrid(Graphics2D graphics) {
-        graphics.setColor(UiTheme.getGridColor());
-
-        for (int x = 0; x < getWidth(); x += GRID_SIZE) {
-            graphics.drawLine(x, 0, x, getHeight());
-        }
-
-        for (int y = 0; y < getHeight(); y += GRID_SIZE) {
-            graphics.drawLine(0, y, getWidth(), y);
         }
     }
 
