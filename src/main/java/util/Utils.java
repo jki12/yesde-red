@@ -3,7 +3,7 @@ package util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import json.WorkflowNodeAdapter;
+import json.NodePanelAdapter;
 import json.WorkflowNodeSetAdapter;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -36,7 +36,7 @@ public class Utils {
     public static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .excludeFieldsWithoutExposeAnnotation()
-            .registerTypeAdapter(NodePanel.class, new WorkflowNodeAdapter())
+            .registerTypeAdapter(NodePanel.class, new NodePanelAdapter())
             .registerTypeAdapter(new TypeToken<Set<BaseNode>>() {}.getType(), new WorkflowNodeSetAdapter())
             .create();
 
