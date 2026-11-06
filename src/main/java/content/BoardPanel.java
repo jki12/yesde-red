@@ -206,16 +206,7 @@ public class BoardPanel extends JPanel {
 
         Graphics2D graphics = (Graphics2D) g.create();
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.setColor(UiTheme.getGridColor());
-
-        // 격자 배경화면 그림.
-        for (int x = 0; x < getWidth(); x += GRID_SIZE) {
-            graphics.drawLine(x, 0, x, getHeight());
-        }
-
-        for (int y = 0; y < getHeight(); y += GRID_SIZE) {
-            graphics.drawLine(0, y, getWidth(), y);
-        }
+        drawGrid(graphics);
 
         graphics.setStroke(new BasicStroke(1.6f));
         for (Component c : getComponents()) {
@@ -254,6 +245,18 @@ public class BoardPanel extends JPanel {
         }
 
         graphics.dispose();
+    }
+
+    private void drawGrid(Graphics2D graphics) {
+        graphics.setColor(UiTheme.getGridColor());
+
+        for (int x = 0; x < getWidth(); x += GRID_SIZE) {
+            graphics.drawLine(x, 0, x, getHeight());
+        }
+
+        for (int y = 0; y < getHeight(); y += GRID_SIZE) {
+            graphics.drawLine(0, y, getWidth(), y);
+        }
     }
 
     private Point center(JButton port) {
