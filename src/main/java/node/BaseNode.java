@@ -11,6 +11,8 @@ import util.HashIdGenerator;
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @Getter
@@ -35,6 +37,10 @@ public abstract class BaseNode implements Runnable {
     private int y;
     private boolean isRunning;
 
+    // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
+    private final Pipe in;
+    private final Set<BaseNode> out;
+
     public BaseNode(Type type) {
         this(type, ID_GENERATOR.get().substring(0, 6));
     }
@@ -45,6 +51,24 @@ public abstract class BaseNode implements Runnable {
         this.type = type;
 
         this.thread = new Thread(this);
+        this.in = this instanceof Inputable ? new Pipe() : null;
+        this.out = this instanceof Outputable ? new HashSet<>() : null;
+    }
+
+    public boolean tryConnect(BaseNode other) {
+        if (!canConnect(other) || out.contains(other)) return false;
+
+        out.add(other);
+        log.info("{}노드와 {}노드가 연결되었습니다.", this, other);
+
+        return true;
+    }
+
+    private boolean canConnect(BaseNode other) {
+        if (this.equals(other)) return false;
+
+        return  (this instanceof Inputable && other instanceof Outputable)
+                || (this instanceof Outputable && other instanceof Inputable);
     }
 
     public void setPoint(Point p) {
