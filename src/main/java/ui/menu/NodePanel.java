@@ -190,7 +190,7 @@ public class NodePanel extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 BoardPanel board = board();
 
-                if (board != null && board.getConnectionPort() == port) {
+                if (board != null && board.getConnectionStartPort() == port) {
                     board.updateConnection(SwingUtilities.convertPoint(port, e.getPoint(), board));
                 }
             }
@@ -199,30 +199,9 @@ public class NodePanel extends JPanel {
             public void mouseReleased(MouseEvent e) {
                 BoardPanel board = board();
 
-                if (!SwingUtilities.isLeftMouseButton(e) || board == null || board.getConnectionPort() != port) return;
+                if (!SwingUtilities.isLeftMouseButton(e) || board == null || board.getConnectionStartPort() != port) return;
 
-                try {
-                    // 버튼 → 보드 → 상대 노드 좌표로 변환.
-                    Point point = SwingUtilities.convertPoint(port, e.getPoint(), board);
-                    Component at = board.getComponentAt(point);
-
-                    if (!(at instanceof NodePanel)) return;
-                    NodePanel other = (NodePanel) at;
-                    Point local = SwingUtilities.convertPoint(board, point, other);
-                    Component otherPort = SwingUtilities.getDeepestComponentAt(other, local.x, local.y); // 다른 노드의 포트를 가지고 오기 위해.
-
-                    if (output && otherPort == other.inputPort) {
-                        ((Outputable) node).connect((Inputable) other.node);
-                    }
-                    else if (!output && otherPort == other.outputPort) {
-                        ((Outputable) other.node).connect((Inputable) node);
-                    }
-
-                    board.nodeViewChanged();
-                }
-                finally {
-                    board.cancelConnection();
-                }
+                board.finishConnection(SwingUtilities.convertPoint(port, e.getPoint(), board));
             }
         };
         port.addMouseListener(connectionDrag);

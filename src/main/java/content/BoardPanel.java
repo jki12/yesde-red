@@ -3,7 +3,7 @@ package content;
 import lombok.Getter;
 import menu.popup.NodePopupMenu;
 import node.BaseNode;
-import node.InputOutputNode;
+import node.Inputable;
 import node.Outputable;
 import ui.UiTheme;
 import ui.menu.NodePanel;
@@ -103,6 +103,34 @@ public class BoardPanel extends JPanel {
         repaint();
     }
 
+    // 보드 기준 마우스 위치에서 연결을 확정하고 임시 표시를 정리합니다.
+    public void finishConnection(Point point) {
+        if (connectionStartPort == null) return;
+
+        try {
+            Component at = getComponentAt(point);
+            if (!(at instanceof NodePanel)) return;
+
+            NodePanel origin = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, connectionStartPort);
+            boolean output = connectionStartPort == origin.getOutputPort();
+            NodePanel other = (NodePanel) at;
+            Point local = SwingUtilities.convertPoint(this, point, other);
+            Component otherPort = SwingUtilities.getDeepestComponentAt(other, local.x, local.y);
+
+            if (output && otherPort == other.getInputPort()) {
+                ((Outputable) origin.getNode()).connect((Inputable) other.getNode());
+            }
+            else if (!output && otherPort == other.getOutputPort()) {
+                ((Outputable) other.getNode()).connect((Inputable) origin.getNode());
+            }
+
+            nodeViewChanged();
+        }
+        finally {
+            cancelConnection();
+        }
+    }
+
     private JButton connectionTargetAt(Point point) {
         Component at = getComponentAt(point);
         NodePanel origin = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, connectionStartPort);
@@ -200,7 +228,7 @@ public class BoardPanel extends JPanel {
             // 연결 선 그리는 부분.
             if (!(source.getNode() instanceof Outputable)) continue;
 
-            for (BaseNode target : ((InputOutputNode) source.getNode()).getOut()) {
+            for (BaseNode target : source.getNode().getOut()) {
                 NodePanel destination = NodePanel.NODE_MAP.get(target.getId());
                 if (destination == null || destination.getParent() != this) continue;
 
