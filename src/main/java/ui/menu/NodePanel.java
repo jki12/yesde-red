@@ -59,8 +59,8 @@ public class NodePanel extends JPanel {
         setOpaque(false);
         // setToolTipText(node.getType().name() + " · " + node.getId());
 
-        inputPort = port(node instanceof Inputable, false);
-        outputPort = port(node instanceof Outputable, true);
+        inputPort = port(node instanceof Inputable);
+        outputPort = port(node instanceof Outputable);
 
         add(portContainer(inputPort), BorderLayout.WEST);
         add(portContainer(outputPort), BorderLayout.EAST);
@@ -147,10 +147,10 @@ public class NodePanel extends JPanel {
         return container;
     }
 
-    private JButton port(boolean enabled, boolean output) {
+    private JButton port(boolean visible) {
         JButton port = new JButton();
 
-        port.setVisible(enabled);
+        port.setVisible(visible);
         port.setPreferredSize(new Dimension(16, 16));
         // 아래에서 원형 포트로 그리고 있어 안보이게 설정.
         port.setBorderPainted(false);
