@@ -55,7 +55,7 @@ public abstract class BaseNode implements Runnable {
         this.out = this instanceof Outputable ? new HashSet<>() : null;
     }
 
-    public boolean tryConnect(BaseNode other) {
+    public boolean connect(BaseNode other) {
         if (!canConnect(other) || out.contains(other)) return false;
 
         out.add(other);
@@ -65,10 +65,30 @@ public abstract class BaseNode implements Runnable {
     }
 
     private boolean canConnect(BaseNode other) {
-        if (this.equals(other)) return false;
+        // 드래그를 시작한 방향과 관계없이 모델 연결은 출력 → 입력만 허용합니다.
+        return this instanceof Outputable
+                && other instanceof Inputable
+                && this != other;
+    }
 
-        return  (this instanceof Inputable && other instanceof Outputable)
-                || (this instanceof Outputable && other instanceof Inputable);
+    // 연결된 각 노드의 receive()를 호출해 메시지를 전달합니다.
+    protected void send(Message message) {
+        if (!(this instanceof Outputable)) {
+            throw new IllegalStateException("출력 기능이 없는 노드입니다.");
+        }
+
+        for (BaseNode target : out) {
+            target.receive(message);
+        }
+    }
+
+    // 받은 메시지는 입력 큐에 넣고, 실제 처리는 노드 작업 스레드에 맡깁니다.
+    public void receive(Message message) {
+        if (!(this instanceof Inputable)) {
+            throw new IllegalStateException("입력 기능이 없는 노드입니다.");
+        }
+
+        in.push(message);
     }
 
     public void setPoint(Point p) {

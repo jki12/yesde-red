@@ -1,7 +1,6 @@
 package node;
 
-/**
- * marker 인터페이스 입니다.
- */
+/** 메시지를 받을 수 있는 노드의 입력 동작을 정의합니다. */
 public interface Inputable {
+    void receive(Message message);
 }

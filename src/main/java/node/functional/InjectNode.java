@@ -10,7 +10,7 @@ import node.*;
 
 @Setter
 @Getter
-public class InjectNode extends InputOutputNode implements Outputable {
+public class InjectNode extends BaseNode implements Outputable {
     public static final String DISPLAY_NAME = "메시지 주입";
     public static final String DESCRIPTION = "설정한 메시지 또는 현재 시각을 연결된 노드에 전달합니다.";
     public static final Icon ICON = Codicons.icon("arrow-right", 18);
@@ -41,8 +41,6 @@ public class InjectNode extends InputOutputNode implements Outputable {
     protected void process() throws Exception {
         Message msg = new Message((message != null) ? message : String.valueOf(System.currentTimeMillis()));
 
-        for (BaseNode node : getOut()) {
-            ((InputOutputNode) node).getIn().push(msg);
-        }
+        send(msg);
     }
 }
