@@ -55,7 +55,8 @@ public abstract class BaseNode implements Runnable {
         this.out = this instanceof Outputable ? new HashSet<>() : null;
     }
 
-    public boolean connect(BaseNode other) {
+    public boolean connect(Inputable input) {
+        if (!(input instanceof BaseNode other)) return false;
         if (!canConnect(other) || out.contains(other)) return false;
 
         out.add(other);
