@@ -31,14 +31,11 @@ public class DebugPanel extends JPanel {
 
     /*
      * DebugPanel (JPanel, BorderLayout)
-     * ├─ NORTH: header (JPanel, BorderLayout)
-     * │  ├─ WEST: heading (JPanel, FlowLayout.LEFT)
-     * │  │  ├─ title (JLabel): 터미널 아이콘
-     * │  │  └─ count (JLabel): 로그 개수
-     * │  │
-     * │  └─ EAST: actions (JPanel, FlowLayout.RIGHT)
-     * │     ├─ follow (JCheckBox): 자동 스크롤
-     * │     └─ clear (JButton): 로그 비우기
+     * ├─ NORTH: header (JPanel, GridBagLayout, 한 줄 배치)
+     * │  ├─ title (JLabel): 터미널 아이콘과 제목
+     * │  ├─ countLabel (JLabel): 로그 개수
+     * │  ├─ autoScrollBox (JCheckBox): 자동 스크롤
+     * │  └─ clear (JButton): 로그 비우기
      * │
      * └─ CENTER: scrollPane (JScrollPane)
      *    ├─ columnHeader (JViewport)
@@ -57,45 +54,7 @@ public class DebugPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UiTheme.getBorderColor()));
 
-        JPanel header = new JPanel(new GridBagLayout()); // UiTheme.header("콘솔", Codicons.icon("terminal"));
-        header.setPreferredSize(new Dimension(0, 38)); // 42 -> 38로 크기 조정.
-        header.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.getBorderColor()),
-                BorderFactory.createEmptyBorder(5, 12, 5, 12)));
-        JLabel title = UiTheme.label("디버깅", false);
-
-        title.setFont(UiTheme.getFont().deriveFont(Font.BOLD));
-        title.setIcon(Codicons.icon("terminal", 16));
-        title.setIconTextGap(8);
-
-        autoScrollBox.setOpaque(false);
-        autoScrollBox.setFont(UiTheme.getFont());
-        autoScrollBox.setForeground(UiTheme.getTextColor());
-
-        JButton clear = UiTheme.button("로그 비우기");
-        clear.setIcon(Codicons.icon("clear-all", 16));
-        clear.addActionListener(e -> clear());
-
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridy = 0;
-        constraints.anchor = GridBagConstraints.BASELINE_LEADING;
-        constraints.insets = new Insets(0, 5, 0, 5);
-
-        constraints.gridx = 0;
-        header.add(title, constraints);
-
-        constraints.gridx = 1;
-        constraints.weightx = 1; // 개수 공간
-        header.add(countLabel, constraints);
-
-        constraints.gridx = 2;
-        constraints.weightx = 0;
-        header.add(autoScrollBox, constraints);
-
-        constraints.gridx = 3;
-        header.add(clear, constraints);
-
-        add(header, BorderLayout.NORTH);
+        add(createHeader(), BorderLayout.NORTH);
 
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setFillsViewportHeight(true);
@@ -157,6 +116,48 @@ public class DebugPanel extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(24);
 
         add(scrollPane, BorderLayout.CENTER);
+    }
+
+    private JPanel createHeader() {
+        JPanel header = new JPanel(new GridBagLayout()); // UiTheme.header("콘솔", Codicons.icon("terminal"));
+        header.setPreferredSize(new Dimension(0, 38)); // 42 -> 38로 크기 조정.
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.getBorderColor()),
+                BorderFactory.createEmptyBorder(5, 12, 5, 12)));
+        JLabel title = UiTheme.label("디버깅", false);
+
+        title.setFont(UiTheme.getFont().deriveFont(Font.BOLD));
+        title.setIcon(Codicons.icon("terminal", 16));
+        title.setIconTextGap(8);
+
+        autoScrollBox.setOpaque(false);
+        autoScrollBox.setFont(UiTheme.getFont());
+        autoScrollBox.setForeground(UiTheme.getTextColor());
+
+        JButton clear = UiTheme.button("로그 비우기");
+        clear.setIcon(Codicons.icon("clear-all", 16));
+        clear.addActionListener(e -> clear());
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridy = 0;
+        constraints.anchor = GridBagConstraints.BASELINE_LEADING;
+        constraints.insets = new Insets(0, 5, 0, 5);
+
+        constraints.gridx = 0;
+        header.add(title, constraints);
+
+        constraints.gridx = 1;
+        constraints.weightx = 1; // 개수 공간
+        header.add(countLabel, constraints);
+
+        constraints.gridx = 2;
+        constraints.weightx = 0;
+        header.add(autoScrollBox, constraints);
+
+        constraints.gridx = 3;
+        header.add(clear, constraints);
+
+        return header;
     }
 
     // 로그 메세지가 길어지면 크기 조절하기 위해.
