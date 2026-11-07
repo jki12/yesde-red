@@ -210,13 +210,7 @@ public class BoardPanel extends JPanel {
 
         drawConnections(graphics);
 
-        if (getComponentCount() == 0) { // 비어있는 경우
-            graphics.setColor(UiTheme.getTextColor());
-            graphics.setFont(UiTheme.getFont());
-            String text = "노드 추가 또는 우클릭으로 시작하세요";
-            graphics.drawString(text, Math.max(16, (getWidth() - graphics.getFontMetrics().stringWidth(text)) / 2),
-                    Math.max(70, getHeight() / 2));
-        }
+        drawEmptyMessage(graphics);
 
         graphics.dispose();
     }
@@ -260,6 +254,16 @@ public class BoardPanel extends JPanel {
                 graphics.fillPolygon(new int[] {to.x - 12, to.x - 5, to.x - 12},
                         new int[] {to.y - 3, to.y, to.y + 3}, 3);
             }
+        }
+    }
+
+    private void drawEmptyMessage(Graphics2D graphics) {
+        if (getComponentCount() == 0) { // 비어있는 경우
+            graphics.setColor(UiTheme.getTextColor());
+            graphics.setFont(UiTheme.getFont());
+            String text = "노드 추가 또는 우클릭으로 시작하세요";
+            graphics.drawString(text, Math.max(16, (getWidth() - graphics.getFontMetrics().stringWidth(text)) / 2),
+                    Math.max(70, getHeight() / 2));
         }
     }
 
