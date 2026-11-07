@@ -27,7 +27,7 @@ public class DebugPanel extends JPanel {
     private final JScrollPane scrollPane = new JScrollPane(table);
     private final JCheckBox autoScrollBox = new JCheckBox("자동 스크롤", true);
     private final JLabel countLabel = UiTheme.label(getLogCountText(), true);
-    private int lastTextWidth;
+    private int lastMessageColumnWidth;
 
     /*
      * DebugPanel (JPanel, BorderLayout)
@@ -58,36 +58,14 @@ public class DebugPanel extends JPanel {
 
         configureTable();
 
-        // 렌더러는 여러 셀에서 재사용되므로 선택 색·글꼴·테두리를 매 호출마다 설정해 이전 셀의 상태가 남지 않게 한다.
-        DefaultTableCellRenderer metadata = new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable view, Object value, boolean selected,
-                    boolean focus, int row, int column) {
-                super.getTableCellRendererComponent(view, value, selected, focus, row, column);
-                setFont(view.getFont());
-                setForeground(selected ? view.getSelectionForeground() : view.getForeground());
-                setBackground(selected ? view.getSelectionBackground() : view.getBackground());
-                setVerticalAlignment(TOP);
-                setBorder(BorderFactory.createEmptyBorder(8, 12, 6, 10));
-
-                return this;
-            }
-        };
-
-        table.getColumnModel().getColumn(0).setCellRenderer(metadata);
-        table.getColumnModel().getColumn(1).setCellRenderer(metadata);
-        table.getColumnModel().getColumn(2).setCellRenderer((view, value, selected, focus, row, column) -> {
-            JTextArea area = messageArea(String.valueOf(value));
-            area.setBackground(selected ? view.getSelectionBackground() : view.getBackground());
-            area.setForeground(selected ? view.getSelectionForeground() : view.getForeground());
-            return area;
-        });
+        configureCellRenderers();
 
         table.addComponentListener(new ComponentAdapter() {
-            @Override public void componentResized(ComponentEvent e) { reflowRows(); }
+            @Override public void componentResized(ComponentEvent e) { updateRowHeightsIfWidthChanged(); }
         });
 
         table.getColumnModel().addColumnModelListener(new javax.swing.event.TableColumnModelListener() {
-            public void columnMarginChanged(javax.swing.event.ChangeEvent e) { reflowRows(); }
+            public void columnMarginChanged(javax.swing.event.ChangeEvent e) { updateRowHeightsIfWidthChanged(); }
             public void columnAdded(javax.swing.event.TableColumnModelEvent e) { }
             public void columnRemoved(javax.swing.event.TableColumnModelEvent e) { }
             public void columnMoved(javax.swing.event.TableColumnModelEvent e) { }
@@ -164,6 +142,32 @@ public class DebugPanel extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(900);
     }
 
+    private void configureCellRenderers() {
+        // 렌더러는 여러 셀에서 재사용되므로 선택 색·글꼴·테두리를 매 호출마다 설정해 이전 셀의 상태가 남지 않게 한다.
+        DefaultTableCellRenderer metadata = new DefaultTableCellRenderer() {
+            @Override public Component getTableCellRendererComponent(JTable view, Object value, boolean selected,
+                    boolean focus, int row, int column) {
+                super.getTableCellRendererComponent(view, value, selected, focus, row, column);
+                setFont(view.getFont());
+                setForeground(selected ? view.getSelectionForeground() : view.getForeground());
+                setBackground(selected ? view.getSelectionBackground() : view.getBackground());
+                setVerticalAlignment(TOP);
+                setBorder(BorderFactory.createEmptyBorder(8, 12, 6, 10));
+
+                return this;
+            }
+        };
+
+        table.getColumnModel().getColumn(0).setCellRenderer(metadata);
+        table.getColumnModel().getColumn(1).setCellRenderer(metadata);
+        table.getColumnModel().getColumn(2).setCellRenderer((view, value, selected, focus, row, column) -> {
+            JTextArea area = messageArea(String.valueOf(value));
+            area.setBackground(selected ? view.getSelectionBackground() : view.getBackground());
+            area.setForeground(selected ? view.getSelectionForeground() : view.getForeground());
+            return area;
+        });
+    }
+
     // 로그 메세지가 길어지면 크기 조절하기 위해.
     private JTextArea messageArea(String text) {
         JTextArea area = new JTextArea(text);
@@ -179,17 +183,17 @@ public class DebugPanel extends JPanel {
         return area;
     }
 
-    private void reflowRows() {
+    private void updateRowHeightsIfWidthChanged() {
         int width = table.getColumnModel().getColumn(2).getWidth();
-        if (width == lastTextWidth) return;
+        if (width == lastMessageColumnWidth) return;
 
-        lastTextWidth = width;
+        lastMessageColumnWidth = width;
         for (int i = 0; i < model.getRowCount(); i++) {
-            sizeRow(i);
+            updateRowHeight(i);
         }
     }
 
-    private void sizeRow(int row) {
+    private void updateRowHeight(int row) {
         JTextArea measure = messageArea(getLogText(row));
 
         measure.setSize(Math.max(80, table.getColumnModel().getColumn(2).getWidth()), Short.MAX_VALUE);
@@ -198,7 +202,7 @@ public class DebugPanel extends JPanel {
         if (table.getRowHeight(row) != height) table.setRowHeight(row, height);
     }
 
-    private boolean isBottom() {
+    private boolean isScrolledToBottom() {
         JScrollBar bar = scrollPane.getVerticalScrollBar();
 
         // 4px 정도 오차 허용
@@ -213,14 +217,14 @@ public class DebugPanel extends JPanel {
         LogEntry entry = new LogEntry(TIME.format(LocalTime.now()), outputNode, text);
 
         Runnable append = () -> {
-            boolean isBottom = isBottom();
+            boolean wasScrolledToBottom = isScrolledToBottom();
             int row = model.getRowCount();
 
             model.addRow(new Object[] {entry.time(), entry.source(), entry.text()}); // 행 추가와 변경 알림을 함께 처리합니다.
-            sizeRow(row); // 새 로그 하나의 높이만 계산하며 기존 로그 원문은 유지합니다.
+            updateRowHeight(row); // 새 로그 하나의 높이만 계산하며 기존 로그 원문은 유지합니다.
             countLabel.setText(getLogCountText());
 
-            if (autoScrollBox.isSelected() && isBottom) SwingUtilities.invokeLater(() -> {
+            if (autoScrollBox.isSelected() && wasScrolledToBottom) SwingUtilities.invokeLater(() -> {
                 if (model.getRowCount() > 0) table.scrollRectToVisible(table.getCellRect(model.getRowCount() - 1, 0, true));
             });
         };
