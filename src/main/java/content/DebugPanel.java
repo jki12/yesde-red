@@ -56,23 +56,7 @@ public class DebugPanel extends JPanel {
 
         add(createHeader(), BorderLayout.NORTH);
 
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setFillsViewportHeight(true);
-        table.setRowHeight(32);
-        table.setShowVerticalLines(false);
-        table.setShowHorizontalLines(true);
-        table.setIntercellSpacing(new Dimension(0, 1));
-
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setPreferredSize(new Dimension(0, 30));
-        table.getColumnModel().getColumn(0).setPreferredWidth(108);
-        table.getColumnModel().getColumn(0).setMinWidth(90);
-        table.getColumnModel().getColumn(0).setMaxWidth(125);
-        table.getColumnModel().getColumn(1).setPreferredWidth(180);
-        table.getColumnModel().getColumn(1).setMinWidth(140);
-        table.getColumnModel().getColumn(1).setMaxWidth(260);
-        table.getColumnModel().getColumn(2).setPreferredWidth(900);
+        configureTable();
 
         // 렌더러는 여러 셀에서 재사용되므로 선택 색·글꼴·테두리를 매 호출마다 설정해 이전 셀의 상태가 남지 않게 한다.
         DefaultTableCellRenderer metadata = new DefaultTableCellRenderer() {
@@ -158,6 +142,26 @@ public class DebugPanel extends JPanel {
         header.add(clear, constraints);
 
         return header;
+    }
+
+    private void configureTable() {
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(32);
+        table.setShowVerticalLines(false);
+        table.setShowHorizontalLines(true);
+        table.setIntercellSpacing(new Dimension(0, 1));
+
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setPreferredSize(new Dimension(0, 30));
+        table.getColumnModel().getColumn(0).setPreferredWidth(108);
+        table.getColumnModel().getColumn(0).setMinWidth(90);
+        table.getColumnModel().getColumn(0).setMaxWidth(125);
+        table.getColumnModel().getColumn(1).setPreferredWidth(180);
+        table.getColumnModel().getColumn(1).setMinWidth(140);
+        table.getColumnModel().getColumn(1).setMaxWidth(260);
+        table.getColumnModel().getColumn(2).setPreferredWidth(900);
     }
 
     // 로그 메세지가 길어지면 크기 조절하기 위해.
