@@ -1,15 +1,13 @@
 package ui.inspector;
 
+import node.option.NodeOptions;
 import node.option.OptionField;
 import node.BaseNode;
 import ui.theme.UiTheme;
 
 import javax.swing.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
@@ -31,7 +29,7 @@ public final class NodeOptionsEditor {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
 
-        for (Field field : optionFields(node)) {
+        for (Field field : NodeOptions.fields(node)) {
             OptionInput input = OptionInput.create(field, field.getAnnotation(OptionField.class));
             inputs.put(field, input);
             addRow(field.getName(), input);
@@ -44,20 +42,6 @@ public final class NodeOptionsEditor {
         feedback.setName("nodeOptionsFeedback");
         panel.add(feedback);
         refreshState();
-    }
-
-    // 현재 클래스와 부모 클래스에서 어노테이션이 붙은 변경 가능한 필드를 선언 순서대로 찾습니다.
-    private static List<Field> optionFields(BaseNode node) {
-        List<Field> fields = new ArrayList<>();
-        for (Class<?> type = node.getClass(); type != null; type = type.getSuperclass()) {
-            for (Field field : type.getDeclaredFields()) {
-                if (field.getAnnotation(OptionField.class) == null) continue;
-                if (Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers())) continue;
-                field.setAccessible(true);
-                fields.add(field);
-            }
-        }
-        return fields;
     }
 
     private void addRow(String name, OptionInput input) {
