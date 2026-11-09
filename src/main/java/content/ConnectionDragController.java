@@ -30,7 +30,7 @@ final class ConnectionDragController {
         cancel();
         startPort = port;
         mousePoint = board.center(port);
-        setActive(port, true);
+        highlight(port, true);
 
         board.repaint();
     }
@@ -41,9 +41,9 @@ final class ConnectionDragController {
 
         JButton next = targetAt(point);
         if (next != targetPort) {
-            setActive(targetPort, false);
+            highlight(targetPort, false);
             targetPort = next;
-            setActive(targetPort, true);
+            highlight(targetPort, true);
         }
 
         board.repaint();
@@ -57,8 +57,8 @@ final class ConnectionDragController {
             JButton target = targetAt(point);
             if (target == null) return;
 
-            NodePanel origin = owner(startPort);
-            NodePanel other = owner(target);
+            NodePanel origin = cardOf(startPort);
+            NodePanel other = cardOf(target);
 
             // 드래그를 어느 포트에서 시작했든 모델 연결은 출력 노드 → 입력 노드 방향입니다.
             if (startPort == origin.getOutputPort()) board.connect(origin, other);
@@ -70,15 +70,15 @@ final class ConnectionDragController {
     }
 
     /** 제거된 컴포넌트에 시작 포트나 대상 포트가 포함돼 있으면 true입니다. */
-    boolean involves(Component removed) {
+    boolean usesPortOf(Component removed) {
         if (startPort == null) return false;
         return SwingUtilities.isDescendingFrom(startPort, removed)
                 || targetPort != null && SwingUtilities.isDescendingFrom(targetPort, removed);
     }
 
     void cancel() {
-        setActive(startPort, false);
-        setActive(targetPort, false);
+        highlight(startPort, false);
+        highlight(targetPort, false);
 
         startPort = null;
         targetPort = null;
@@ -90,7 +90,7 @@ final class ConnectionDragController {
     void paintPreview(Graphics g) {
         if (startPort == null || mousePoint == null) return;
 
-        NodePanel origin = owner(startPort);
+        NodePanel origin = cardOf(startPort);
         Point fixed = board.center(startPort);
         Point moving = targetPort == null ? mousePoint : board.center(targetPort);
 
@@ -116,7 +116,7 @@ final class ConnectionDragController {
     // 마우스 아래의 카드에서, 시작 포트와 짝이 되는 포트를 정확히 가리킬 때만 그 포트를 돌려줍니다.
     private JButton targetAt(Point point) {
         Component at = board.getComponentAt(point);
-        NodePanel origin = owner(startPort);
+        NodePanel origin = cardOf(startPort);
 
         if (!(at instanceof NodePanel target) || at == origin) return null;
 
@@ -127,11 +127,11 @@ final class ConnectionDragController {
         return hit == port ? port : null;
     }
 
-    private static NodePanel owner(JButton port) {
+    private static NodePanel cardOf(JButton port) {
         return (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, port);
     }
 
-    private static void setActive(JButton port, boolean active) {
+    private static void highlight(JButton port, boolean active) {
         if (port == null) return;
 
         port.putClientProperty("connectionActive", active ? Boolean.TRUE : null);

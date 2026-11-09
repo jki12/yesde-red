@@ -61,7 +61,7 @@ public class BoardPanel extends JPanel {
 
     // 포트 드래그로 연결을 만드는 동안의 상태와 미리보기는 컨트롤러가 맡습니다.
     @Getter(AccessLevel.NONE)
-    private final ConnectionDragController drag = new ConnectionDragController(this);
+    private final ConnectionDragController connectionDrag = new ConnectionDragController(this);
 
     public BoardPanel(String name) {
         setName(name);
@@ -93,7 +93,7 @@ public class BoardPanel extends JPanel {
                 if (e.getChild() == selectedNode) setSelectedNode(null);
 
                 // 삭제된 노드에 연결 시작 포트나 대상 포트가 포함되어 있으면 연결을 취소
-                if (drag.involves(e.getChild())) cancelConnection();
+                if (connectionDrag.usesPortOf(e.getChild())) cancelConnection();
 
                 fireNodesChanged();
             }
@@ -125,23 +125,23 @@ public class BoardPanel extends JPanel {
     }
 
     public JButton getConnectionStartPort() {
-        return drag.getStartPort();
+        return connectionDrag.getStartPort();
     }
 
     public void beginConnection(JButton port) {
-        drag.begin(port);
+        connectionDrag.begin(port);
     }
 
     public void updateConnection(Point point) {
-        drag.update(point);
+        connectionDrag.update(point);
     }
 
     public void finishConnection(Point point) {
-        drag.finish(point);
+        connectionDrag.finish(point);
     }
 
     public void cancelConnection() {
-        drag.cancel();
+        connectionDrag.cancel();
     }
 
     /** 출력 카드의 노드를 입력 카드의 노드에 연결합니다. 중복 등으로 거부되면 false이며 변경 알림을 보내지 않습니다. */
@@ -286,6 +286,6 @@ public class BoardPanel extends JPanel {
     @Override
     protected void paintChildren(Graphics g) {
         super.paintChildren(g); // 노드 카드
-        drag.paintPreview(g);   // 드래그 중인 연결선은 카드 위에 보여야 합니다.
+        connectionDrag.paintPreview(g);   // 드래그 중인 연결선은 카드 위에 보여야 합니다.
     }
 }
