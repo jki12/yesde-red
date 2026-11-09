@@ -26,11 +26,20 @@ import java.util.Map;
 
 @Getter
 public class BoardPanel extends JPanel {
+    /** 선택 카드가 바뀜. old/new: NodePanel 또는 null */
+    public static final String PROP_SELECTED_NODE = "selectedNode";
+    /** 카드가 추가·제거됨. new: 현재 카드 목록 */
+    public static final String PROP_NODES_CHANGED = "nodesChanged";
+    /** 모델 연결이 추가됨. 값 없음(수신 측이 다시 조회) */
+    public static final String PROP_CONNECTIONS_CHANGED = "connectionsChanged";
+    /** 실행 상태가 바뀜. old/new: RunState */
+    public static final String PROP_BOARD_STATE = "boardState";
+
     private static final int GRID_SIZE = 64;
 
     private final JPopupMenu popupMenu = new NodePopupMenu();
     // private String description; // TODO, tool tip, json 형식으로 export시 사용
-    // 실행 생명주기는 WorkflowRunner가 맡고, 보드는 상태 변경을 "boardState" 속성 이벤트로 전달합니다.
+    // 실행 생명주기는 WorkflowRunner가 맡고, 보드는 상태 변경을 PROP_BOARD_STATE 속성 이벤트로 전달합니다.
     @Getter(AccessLevel.NONE)
     private final WorkflowRunner runner;
     private NodePanel selectedNode;
@@ -45,7 +54,7 @@ public class BoardPanel extends JPanel {
 
     public BoardPanel(String name) {
         setName(name);
-        runner = new WorkflowRunner(name, (previous, current) -> firePropertyChange("boardState", previous, current));
+        runner = new WorkflowRunner(name, (previous, current) -> firePropertyChange(PROP_BOARD_STATE, previous, current));
         setLayout(null); // 노드 자유롭게 배치.
         setBackground(UiTheme.getBackgroundColor());
 
@@ -70,7 +79,7 @@ public class BoardPanel extends JPanel {
                 nodesChanged();
             }
 
-            private void nodesChanged() { firePropertyChange("nodesChanged", null, getNodePanels()); }
+            private void nodesChanged() { firePropertyChange(PROP_NODES_CHANGED, null, getNodePanels()); }
         });
 
         addMouseListener(new MouseAdapter() {
@@ -143,13 +152,13 @@ public class BoardPanel extends JPanel {
 
         selectedNode = node;
         if (node != null) node.setSelected(true);
-        firePropertyChange("selectedNode", previous, node);
+        firePropertyChange(PROP_SELECTED_NODE, previous, node);
         repaint();
     }
 
     private void notifyConnectionsChanged() {
         // 변경 사실만 알리고, 수신 측에서 현재 연결 정보를 다시 조회합니다.
-        firePropertyChange("connectionsChanged", null, null);
+        firePropertyChange(PROP_CONNECTIONS_CHANGED, null, null);
         repaint();
     }
 

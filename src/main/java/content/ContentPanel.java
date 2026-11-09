@@ -89,10 +89,10 @@ public class ContentPanel extends JPanel {
 
         // 현재 보드의 선택·추가/삭제·연결 변경·실행 상태와 탭 전환을 한곳에서 받아 목록·속성·상태를 함께 갱신합니다.
         // 원본 모델을 주기적으로 감시하는 타이머가 아니라 실제 UI 변경 알림에만 반응합니다.
-        tabPanel.addPropertyChangeListener("selectedNode", e -> refreshCurrentBoardView());
-        tabPanel.addPropertyChangeListener("nodesChanged", e -> refreshCurrentBoardView());
-        tabPanel.addPropertyChangeListener("connectionsChanged", e -> refreshCurrentBoardView());
-        tabPanel.addPropertyChangeListener("boardState", e -> refreshCurrentBoardView());
+        tabPanel.addPropertyChangeListener(BoardPanel.PROP_SELECTED_NODE, e -> refreshCurrentBoardView());
+        tabPanel.addPropertyChangeListener(BoardPanel.PROP_NODES_CHANGED, e -> refreshCurrentBoardView());
+        tabPanel.addPropertyChangeListener(BoardPanel.PROP_CONNECTIONS_CHANGED, e -> refreshCurrentBoardView());
+        tabPanel.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> refreshCurrentBoardView());
         tabPanel.addChangeListener(e -> refreshCurrentBoardView());
 
 

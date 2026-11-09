@@ -87,14 +87,11 @@ public class TabPanel extends JTabbedPane {
         BoardPanel board = new BoardPanel(generateTitle());
 
         // 보드의 선택·노드 목록·연결·실행 상태 변경 알림을 상위 패널로 전달합니다.
-        board.addPropertyChangeListener("selectedNode",
-                e -> firePropertyChange("selectedNode", e.getOldValue(), e.getNewValue()));
-        board.addPropertyChangeListener("boardState",
-                e -> firePropertyChange("boardState", e.getOldValue(), e.getNewValue()));
-        board.addPropertyChangeListener("nodesChanged",
-                e -> firePropertyChange("nodesChanged", e.getOldValue(), e.getNewValue()));
-        board.addPropertyChangeListener("connectionsChanged",
-                e -> firePropertyChange("connectionsChanged", e.getOldValue(), e.getNewValue()));
+        for (String property : new String[] {BoardPanel.PROP_SELECTED_NODE, BoardPanel.PROP_BOARD_STATE,
+                BoardPanel.PROP_NODES_CHANGED, BoardPanel.PROP_CONNECTIONS_CHANGED}) {
+            board.addPropertyChangeListener(property,
+                    e -> firePropertyChange(property, e.getOldValue(), e.getNewValue()));
+        }
 
         add(board, idx);
         setSelectedIndex(idx);
