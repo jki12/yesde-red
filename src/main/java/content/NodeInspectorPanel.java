@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.BooleanSupplier;
 
-public class NodeInfoPanel extends JPanel {
+public class NodeInspectorPanel extends JPanel {
     private final JLabel title = UiTheme.label("노드를 선택하세요", false);
     private final JTextField id = createReadOnlyField("nodeId");
     private final JTextArea description = new JTextArea();
@@ -17,7 +17,7 @@ public class NodeInfoPanel extends JPanel {
     private BaseNode selectedNode;
     private NodeOptionsEditor optionsEditor;
 
-    public NodeInfoPanel() {
+    public NodeInspectorPanel() {
         setLayout(new BorderLayout());
         setBorder(UiTheme.separatorBorder(0, 1, 0, 0));
         add(UiTheme.header("노드 속성", Codicons.icon("settings-gear")), BorderLayout.NORTH);

@@ -30,7 +30,7 @@ class WorkspacePanelLayoutTest {
             WorkspacePanel content = layoutAt(1440, 820);
 
             assertEquals(228, nodeList(content).getWidth(), "목록 초기 폭");
-            assertEquals(300, nodeInfo(content).getWidth(), "속성 초기 폭");
+            assertEquals(300, inspector(content).getWidth(), "속성 초기 폭");
             int console = content.getConsole().getHeight();
             assertTrue(console >= 180 && console <= 240, "콘솔 초기 높이는 180~240px 사이: " + console);
             assertEquals(1440 - 228 - 300 - 2 * DIVIDER, content.getTabPanel().getWidth(), "나머지는 캔버스");
@@ -42,7 +42,7 @@ class WorkspacePanelLayoutTest {
         Edt.run(() -> {
             WorkspacePanel content = layoutAt(1440, 820);
             int nodeListWidth = nodeList(content).getWidth();
-            int nodeInfoWidth = nodeInfo(content).getWidth();
+            int nodeInfoWidth = inspector(content).getWidth();
             int consoleHeight = content.getConsole().getHeight();
             int canvasWidth = content.getTabPanel().getWidth();
             int editorHeight = content.getTabPanel().getHeight();
@@ -50,7 +50,7 @@ class WorkspacePanelLayoutTest {
             relayoutAt(content, 1240, 720);
 
             assertEquals(nodeListWidth, nodeList(content).getWidth());
-            assertEquals(nodeInfoWidth, nodeInfo(content).getWidth());
+            assertEquals(nodeInfoWidth, inspector(content).getWidth());
             assertEquals(consoleHeight, content.getConsole().getHeight());
             assertEquals(canvasWidth - 200, content.getTabPanel().getWidth());
             assertEquals(editorHeight - 100, content.getTabPanel().getHeight());
@@ -62,21 +62,21 @@ class WorkspacePanelLayoutTest {
         Edt.run(() -> {
             WorkspacePanel content = layoutAt(1440, 820);
             JSplitPane consoleSplit = (JSplitPane) content.getConsole().getParent();
-            JSplitPane editorSplit = (JSplitPane) nodeInfo(content).getParent();
+            JSplitPane editorSplit = (JSplitPane) inspector(content).getParent();
 
             consoleSplit.setDividerLocation(consoleSplit.getHeight() - 300 - DIVIDER); // 콘솔을 300px로 끌어 놓음
             editorSplit.setDividerLocation(editorSplit.getWidth() - 400 - DIVIDER);    // 속성을 400px로
             layoutAndPaint(content);
             assertEquals(300, content.getConsole().getHeight());
-            assertEquals(400, nodeInfo(content).getWidth());
+            assertEquals(400, inspector(content).getWidth());
 
             layoutAndPaint(content); // 같은 크기에서 다시 배치
             assertEquals(300, content.getConsole().getHeight());
-            assertEquals(400, nodeInfo(content).getWidth());
+            assertEquals(400, inspector(content).getWidth());
 
             relayoutAt(content, 1300, 900);
             assertEquals(300, content.getConsole().getHeight(), "창을 키워도 콘솔 높이 유지");
-            assertEquals(400, nodeInfo(content).getWidth(), "창을 키워도 속성 폭 유지");
+            assertEquals(400, inspector(content).getWidth(), "창을 키워도 속성 폭 유지");
         });
     }
 
@@ -84,18 +84,18 @@ class WorkspacePanelLayoutTest {
     void shrinkingNeverPushesPanelsBelowMinimumSizes() throws Exception {
         Edt.run(() -> {
             WorkspacePanel content = layoutAt(1440, 820);
-            JSplitPane editorSplit = (JSplitPane) nodeInfo(content).getParent();
+            JSplitPane editorSplit = (JSplitPane) inspector(content).getParent();
             editorSplit.setDividerLocation(editorSplit.getWidth() - 600 - DIVIDER); // 속성을 넓게 끌어 놓은 상태
             layoutAndPaint(content);
-            assertEquals(600, nodeInfo(content).getWidth());
+            assertEquals(600, inspector(content).getWidth());
 
             relayoutAt(content, 1100, 720); // 프레임 최소 크기
 
             assertTrue(content.getTabPanel().getWidth() >= 360, "캔버스 최소 폭: " + content.getTabPanel().getWidth());
-            assertTrue(nodeInfo(content).getWidth() >= 280, "속성 최소 폭: " + nodeInfo(content).getWidth());
+            assertTrue(inspector(content).getWidth() >= 280, "속성 최소 폭: " + inspector(content).getWidth());
             assertTrue(nodeList(content).getWidth() >= 180, "목록 최소 폭: " + nodeList(content).getWidth());
             assertTrue(content.getConsole().getHeight() >= 145, "콘솔 최소 높이: " + content.getConsole().getHeight());
-            assertEquals(1100, nodeList(content).getWidth() + content.getTabPanel().getWidth() + nodeInfo(content).getWidth() + 2 * DIVIDER,
+            assertEquals(1100, nodeList(content).getWidth() + content.getTabPanel().getWidth() + inspector(content).getWidth() + 2 * DIVIDER,
                     "세 영역과 구분선이 전체 폭을 정확히 채움");
         });
     }
@@ -119,7 +119,7 @@ class WorkspacePanelLayoutTest {
     }
 
     private static NodeListPanel nodeList(Container root) { return find(root, NodeListPanel.class); }
-    private static NodeInfoPanel nodeInfo(Container root) { return find(root, NodeInfoPanel.class); }
+    private static NodeInspectorPanel inspector(Container root) { return find(root, NodeInspectorPanel.class); }
 
     private static <T> T find(Container root, Class<T> type) {
         for (Component child : root.getComponents()) {

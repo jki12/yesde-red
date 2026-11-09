@@ -29,7 +29,7 @@ public class WorkspacePanel extends JPanel {
     private final TabPanel tabPanel = new TabPanel();
     @Getter
     private final ConsolePanel console = new ConsolePanel();
-    private final NodeInfoPanel nodeInfo = new NodeInfoPanel();
+    private final NodeInspectorPanel inspector = new NodeInspectorPanel();
 
     private final NodeListPanel nodeList = new NodeListPanel();
     private final StatusBar statusBar = new StatusBar();
@@ -61,7 +61,7 @@ public class WorkspacePanel extends JPanel {
      * │   │       ├─ 왼쪽: tabPanel (TabPanel): 워크플로 탭
      * │   │       │   └─ 각 탭: BoardPanel
      * │   │       │       └─ NodePanel: 노드 카드
-     * │   │       └─ 오른쪽: nodeInfo (NodeInfoPanel): 선택한 노드의 속성
+     * │   │       └─ 오른쪽: inspector (NodeInspectorPanel): 선택한 노드의 속성
      * │   └─ 아래: console (ConsolePanel): 실행 로그
      * │
      * └─ SOUTH: statusBar (StatusBar): 실행 상태 / 보드 이름, 노드 수, 연결 수
@@ -78,7 +78,7 @@ public class WorkspacePanel extends JPanel {
         tabPanel.setMinimumSize(new Dimension(MIN_BOARD_WIDTH, 220));
         console.setMinimumSize(new Dimension(600, MIN_CONSOLE_HEIGHT));
         console.setPreferredSize(new Dimension(600, INITIAL_CONSOLE_HEIGHT));
-        JSplitPane editorSplit = split(JSplitPane.HORIZONTAL_SPLIT, tabPanel, nodeInfo, 1.0);
+        JSplitPane editorSplit = split(JSplitPane.HORIZONTAL_SPLIT, tabPanel, inspector, 1.0);
         JSplitPane listSplit = split(JSplitPane.HORIZONTAL_SPLIT, nodeList, editorSplit, 0.0);
         JSplitPane consoleSplit = split(JSplitPane.VERTICAL_SPLIT, listSplit, console, 1.0);
         add(consoleSplit, BorderLayout.CENTER);
@@ -172,7 +172,7 @@ public class WorkspacePanel extends JPanel {
 
         RunState state = board == null ? RunState.IDLE : board.getRunState();
 
-        nodeInfo.showNode(selected == null ? null : selected.getNode(),
+        inspector.showNode(selected == null ? null : selected.getNode(),
                 () -> board != null && board.getRunState() == RunState.IDLE);
         nodeList.showBoard(board);
         statusBar.showBoard(board);
