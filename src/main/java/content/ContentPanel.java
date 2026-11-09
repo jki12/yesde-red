@@ -31,7 +31,7 @@ public class ContentPanel extends JPanel {
     private final DebugPanel debugPanel = new DebugPanel();
     private final NodeInfoPanel nodeInfo = new NodeInfoPanel();
 
-    private final NodeHierarchyPanel hierarchy = new NodeHierarchyPanel();
+    private final NodeListPanel nodeList = new NodeListPanel();
     private final StatusBar statusBar = new StatusBar();
     // 실행은 IDLE이고 노드가 있을 때, 종료는 RUNNING일 때만 누를 수 있습니다. refreshCurrentBoardView()가 맞춥니다.
     private final JButton runButton = UiTheme.button("실행");
@@ -55,8 +55,8 @@ public class ContentPanel extends JPanel {
      * │       └─ newFlow (JButton): 새 워크플로
      * │
      * ├─ CENTER: consoleSplit (JSplitPane, 상하 분할)
-     * │   ├─ 위: hierarchySplit (JSplitPane, 좌우 분할)
-     * │   │   ├─ 왼쪽: hierarchy (NodeHierarchyPanel): 노드 목록
+     * │   ├─ 위: listSplit (JSplitPane, 좌우 분할)
+     * │   │   ├─ 왼쪽: nodeList (NodeListPanel): 노드 목록
      * │   │   └─ 오른쪽: editorSplit (JSplitPane, 좌우 분할)
      * │   │       ├─ 왼쪽: tabPanel (TabPanel): 워크플로 탭
      * │   │       │   └─ 각 탭: BoardPanel
@@ -79,8 +79,8 @@ public class ContentPanel extends JPanel {
         debugPanel.setMinimumSize(new Dimension(600, MIN_CONSOLE_HEIGHT));
         debugPanel.setPreferredSize(new Dimension(600, INITIAL_CONSOLE_HEIGHT));
         JSplitPane editorSplit = split(JSplitPane.HORIZONTAL_SPLIT, tabPanel, nodeInfo, 1.0);
-        JSplitPane hierarchySplit = split(JSplitPane.HORIZONTAL_SPLIT, hierarchy, editorSplit, 0.0);
-        JSplitPane consoleSplit = split(JSplitPane.VERTICAL_SPLIT, hierarchySplit, debugPanel, 1.0);
+        JSplitPane listSplit = split(JSplitPane.HORIZONTAL_SPLIT, nodeList, editorSplit, 0.0);
+        JSplitPane consoleSplit = split(JSplitPane.VERTICAL_SPLIT, listSplit, debugPanel, 1.0);
         add(consoleSplit, BorderLayout.CENTER);
 
 
@@ -174,7 +174,7 @@ public class ContentPanel extends JPanel {
 
         nodeInfo.showNode(selected == null ? null : selected.getNode(),
                 () -> board != null && board.getRunState() == RunState.IDLE);
-        hierarchy.showBoard(board);
+        nodeList.showBoard(board);
         statusBar.showBoard(board);
         runButton.setEnabled(state == RunState.IDLE && board != null && !board.getNodePanels().isEmpty());
         stopButton.setEnabled(state == RunState.RUNNING);

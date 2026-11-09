@@ -29,7 +29,7 @@ class ContentPanelLayoutTest {
         Edt.run(() -> {
             ContentPanel content = layoutAt(1440, 820);
 
-            assertEquals(228, hierarchy(content).getWidth(), "목록 초기 폭");
+            assertEquals(228, nodeList(content).getWidth(), "목록 초기 폭");
             assertEquals(300, nodeInfo(content).getWidth(), "속성 초기 폭");
             int console = content.getDebugPanel().getHeight();
             assertTrue(console >= 180 && console <= 240, "콘솔 초기 높이는 180~240px 사이: " + console);
@@ -41,7 +41,7 @@ class ContentPanelLayoutTest {
     void resizingChangesOnlyTheCanvas() throws Exception {
         Edt.run(() -> {
             ContentPanel content = layoutAt(1440, 820);
-            int hierarchyWidth = hierarchy(content).getWidth();
+            int hierarchyWidth = nodeList(content).getWidth();
             int nodeInfoWidth = nodeInfo(content).getWidth();
             int consoleHeight = content.getDebugPanel().getHeight();
             int canvasWidth = content.getTabPanel().getWidth();
@@ -49,7 +49,7 @@ class ContentPanelLayoutTest {
 
             relayoutAt(content, 1240, 720);
 
-            assertEquals(hierarchyWidth, hierarchy(content).getWidth());
+            assertEquals(hierarchyWidth, nodeList(content).getWidth());
             assertEquals(nodeInfoWidth, nodeInfo(content).getWidth());
             assertEquals(consoleHeight, content.getDebugPanel().getHeight());
             assertEquals(canvasWidth - 200, content.getTabPanel().getWidth());
@@ -93,9 +93,9 @@ class ContentPanelLayoutTest {
 
             assertTrue(content.getTabPanel().getWidth() >= 360, "캔버스 최소 폭: " + content.getTabPanel().getWidth());
             assertTrue(nodeInfo(content).getWidth() >= 280, "속성 최소 폭: " + nodeInfo(content).getWidth());
-            assertTrue(hierarchy(content).getWidth() >= 180, "목록 최소 폭: " + hierarchy(content).getWidth());
+            assertTrue(nodeList(content).getWidth() >= 180, "목록 최소 폭: " + nodeList(content).getWidth());
             assertTrue(content.getDebugPanel().getHeight() >= 145, "콘솔 최소 높이: " + content.getDebugPanel().getHeight());
-            assertEquals(1100, hierarchy(content).getWidth() + content.getTabPanel().getWidth() + nodeInfo(content).getWidth() + 2 * DIVIDER,
+            assertEquals(1100, nodeList(content).getWidth() + content.getTabPanel().getWidth() + nodeInfo(content).getWidth() + 2 * DIVIDER,
                     "세 영역과 구분선이 전체 폭을 정확히 채움");
         });
     }
@@ -118,7 +118,7 @@ class ContentPanelLayoutTest {
         Swing.render(content);
     }
 
-    private static NodeHierarchyPanel hierarchy(Container root) { return find(root, NodeHierarchyPanel.class); }
+    private static NodeListPanel nodeList(Container root) { return find(root, NodeListPanel.class); }
     private static NodeInfoPanel nodeInfo(Container root) { return find(root, NodeInfoPanel.class); }
 
     private static <T> T find(Container root, Class<T> type) {
