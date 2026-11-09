@@ -248,9 +248,9 @@ public class BoardPanel extends JPanel implements Scrollable {
         return menu;
     }
 
-    /** 현재 보드의 노드·위치·옵션·연결을 저장 문서로 만듭니다. */
+    /** 현재 보드의 노드·위치·옵션·연결을 저장 문서로 만듭니다. 노드는 만든 순서대로 적어 불러올 때 같은 순서가 되게 합니다. */
     public WorkflowDocument toDocument() {
-        return WorkflowCodec.toDocument(getName(), List.of(getNodes()));
+        return WorkflowCodec.toDocument(getName(), getNodePanels().stream().map(NodePanel::getNode).toList());
     }
 
     /** 문서의 노드들을 카드로 올립니다. 비어 있고 IDLE인 보드에만 가능하며, 문서가 잘못됐으면 아무것도 올리지 않습니다. */
