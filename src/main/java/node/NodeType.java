@@ -4,6 +4,7 @@ import node.functional.DebugNode;
 import node.functional.HtmlExtractNode;
 import node.functional.HttpRequestNode;
 import node.functional.InjectNode;
+import node.functional.JsonExtractNode;
 
 import java.util.function.Function;
 
@@ -12,7 +13,8 @@ public enum NodeType {
     INJECT("메시지 주입", "설정한 메시지 또는 현재 시각을 연결된 노드에 전달합니다.", "arrow-right", InjectNode::new),
     DEBUG("디버그", "수신한 메시지를 하단 콘솔에 표시합니다.", "bug", DebugNode::new),
     HTTP_REQUEST("HTTP 요청", "메시지를 받을 때마다 URL을 GET으로 호출하고 응답 본문·상태·Content-Type을 payload에 더합니다.", "globe", HttpRequestNode::new),
-    HTML_EXTRACT("HTML 추출", "응답 본문에서 CSS 선택자로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "search", HtmlExtractNode::new);
+    HTML_EXTRACT("HTML 추출", "응답 본문에서 CSS 선택자로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "search", HtmlExtractNode::new),
+    JSON_EXTRACT("JSON 추출", "응답 본문(JSON)에서 경로로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "list-tree", JsonExtractNode::new);
 
     private final String displayName;
     private final String description;
