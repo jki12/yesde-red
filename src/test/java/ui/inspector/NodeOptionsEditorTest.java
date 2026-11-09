@@ -1,7 +1,7 @@
 package ui.inspector;
 
-import annotation.OptionField;
-import annotation.OptionInputType;
+import node.option.OptionField;
+import node.option.OptionInputType;
 import node.MessageSender;
 import node.PollingNode;
 import node.NodeType;

@@ -2,8 +2,8 @@ package node.functional;
 
 import ui.theme.Codicons;
 import javax.swing.Icon;
-import annotation.OptionField;
-import annotation.OptionInputType;
+import node.option.OptionField;
+import node.option.OptionInputType;
 import lombok.Getter;
 import lombok.Setter;
 import node.*;

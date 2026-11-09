@@ -1,6 +1,6 @@
 package ui.inspector;
 
-import annotation.OptionField;
+import node.option.OptionField;
 import ui.theme.UiTheme;
 
 import javax.swing.*;

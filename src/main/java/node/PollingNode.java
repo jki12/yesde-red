@@ -1,7 +1,7 @@
 package node;
 
-import annotation.OptionField;
-import annotation.OptionInputType;
+import node.option.OptionField;
+import node.option.OptionInputType;
 import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
