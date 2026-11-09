@@ -12,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 public class TabPanel extends JTabbedPane {
-    private static final String TAB_TITLE = "워크플로 ";
+    private static final String TAB_TITLE_PREFIX = "워크플로 ";
 
     public TabPanel() {
         registerShortcuts();
@@ -48,15 +48,15 @@ public class TabPanel extends JTabbedPane {
     /**
      * @return 새 탭의 기본 이름을 "워크플로 01" 형식으로 만들어 반환합니다.
      */
-    private String generateTitle() {
+    private String nextTabTitle() {
         List<Integer> titles = new ArrayList<>(getTabCount());
 
         for (int i = 0; i < getTabCount(); ++i) {
             String title = getTitleAt(i);
 
-            if (!title.startsWith(TAB_TITLE)) continue;
+            if (!title.startsWith(TAB_TITLE_PREFIX)) continue;
 
-            String temp = title.substring(TAB_TITLE.length());
+            String temp = title.substring(TAB_TITLE_PREFIX.length());
             if (Utils.isNumeric(temp)) {
                 titles.add(Integer.parseInt(temp));
             }
@@ -71,13 +71,13 @@ public class TabPanel extends JTabbedPane {
             num++;
         }
 
-        return TAB_TITLE + String.format("%02d", num);
+        return TAB_TITLE_PREFIX + String.format("%02d", num);
     }
 
     public void addBoardTab() {
         int idx = getSelectedIndex() + 1; // 시작시에도 + 1을 해주기 때문에 -1을 반환해도 문제 없음.
 
-        add(new BoardPanel(generateTitle()), idx);
+        add(new BoardPanel(nextTabTitle()), idx);
         setSelectedIndex(idx);
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
     }
