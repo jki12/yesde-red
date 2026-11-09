@@ -15,7 +15,7 @@ public enum NodeType {
     INJECT("메시지 주입", "설정한 메시지 또는 현재 시각을 연결된 노드에 전달합니다.", "arrow-right", InjectNode::new),
     DEBUG("디버그", "수신한 메시지를 하단 콘솔에 표시합니다.", "bug", DebugNode::new),
     HTTP_REQUEST("HTTP 요청", "메시지를 받을 때마다 URL을 GET으로 호출하고 응답 본문·상태·Content-Type을 payload에 더합니다.", "globe", HttpRequestNode::new),
-    HTML_EXTRACT("HTML 추출", "응답 본문에서 CSS 선택자로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "search", HtmlExtractNode::new),
+    HTML_EXTRACT("HTML 추출", "응답 본문(HTML 또는 XML/RSS)에서 CSS 선택자로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "search", HtmlExtractNode::new),
     JSON_EXTRACT("JSON 추출", "응답 본문(JSON)에서 경로로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "list-tree", JsonExtractNode::new),
     FILE_WRITE("파일 저장", "받은 메시지를 CSV 또는 JSON Lines 파일에 한 줄씩 기록합니다.", "new-file", FileWriteNode::new),
     DEDUPE("중복 제거", "기준 필드의 값이 처음 보이는 메시지만 통과시킵니다. 수집마다 반복되는 글을 걸러 새 글만 남깁니다.", "clear-all", DedupeNode::new);

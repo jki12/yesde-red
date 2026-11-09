@@ -58,6 +58,42 @@ class HtmlExtractNodeTest {
         assertTrue(warnings.isEmpty());
     }
 
+    private static final String RSS = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0"><channel><title>핫딜</title>
+              <item><title>[스팀] 게임 (4,480원/무료)</title><link>https://bbs.example/read/108874</link>
+                    <category>게임S/W</category><pubDate>Mon, 09 Nov 2026 21:17:40 +0900</pubDate></item>
+              <item><title>[자사몰] 이불 (54,900원)</title><link>http://www.example/view.php?id=hot&amp;no=747388</link></item>
+            </channel></rss>
+            """;
+
+    @Test
+    void xmlModeKeepsRssLinkTextThatTheHtmlParserDrops() throws Exception {
+        node.setXml(true);
+        node.setSelector("item");
+        node.setFields("title = title\nlink = link\ncategory = category\ntime = pubDate");
+        run(new Message(Map.of("body", RSS)));
+
+        assertTrue(sink.awaitMessages(2, 5_000));
+        Message first = sink.received.get(0);
+        assertEquals("[스팀] 게임 (4,480원/무료)", first.get("title"));
+        assertEquals("https://bbs.example/read/108874", first.get("link"), "XML 파서는 <link> 본문을 보존");
+        assertEquals("게임S/W", first.get("category"));
+        assertEquals("Mon, 09 Nov 2026 21:17:40 +0900", first.get("time"), "대소문자 섞인 태그도 선택됨");
+        assertEquals("http://www.example/view.php?id=hot&no=747388", sink.received.get(1).get("link"), "엔티티가 풀림");
+        assertNull(sink.received.get(1).get("category"));
+    }
+
+    @Test
+    void htmlModeLosesRssLinkText() throws Exception {
+        node.setSelector("item");
+        node.setFields("link = link");
+        run(new Message(Map.of("body", RSS)));
+
+        assertTrue(sink.awaitMessages(1, 5_000));
+        assertEquals("", sink.received.get(0).get("link"), "HTML 파서는 <link>를 빈 태그로 취급 — RSS에는 XML 옵션을 켜야 함");
+    }
+
     @Test
     void emptySelectorTreatsTheWholeDocumentAsOneItem() throws Exception {
         node.setFields("count = div.item\nfirst = .item h2 a");

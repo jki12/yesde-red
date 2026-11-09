@@ -12,6 +12,7 @@ import node.option.OptionInputType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Selector;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * payload의 body(HTML)에서 CSS 선택자로 값을 뽑습니다.
+ * payload의 body(HTML 또는 XML/RSS)에서 CSS 선택자로 값을 뽑습니다.
  * 항목 선택자에 맞는 요소마다 메시지 하나를 내보내고, 필드는 "이름 = 선택자 [@속성]" 줄로 정의합니다.
  * 예) title = h2 a / link = h2 a @href / price = .price
  */
@@ -31,6 +32,9 @@ public class HtmlExtractNode extends BaseNode implements Inputable, Outputable {
     private String selector;
     @OptionField(type = OptionInputType.TEXT_AREA, label = "필드 (줄마다 이름 = 선택자 [@속성])")
     private String fields;
+    // HTML 파서는 <link>를 빈 태그로 취급해 RSS의 링크 본문이 사라집니다. RSS/XML은 XML 파서로 읽어야 합니다.
+    @OptionField(type = OptionInputType.CHECK_BOX, label = "XML/RSS로 파싱")
+    private boolean xml;
 
     public HtmlExtractNode(String id) {
         super(NodeType.HTML_EXTRACT, id);
@@ -54,7 +58,9 @@ public class HtmlExtractNode extends BaseNode implements Inputable, Outputable {
         }
 
         String baseUrl = in.getString(HttpRequestNode.URL);
-        Document document = Jsoup.parse(body, baseUrl == null ? "" : baseUrl);
+        Document document = xml
+                ? Jsoup.parse(body, baseUrl == null ? "" : baseUrl, Parser.xmlParser())
+                : Jsoup.parse(body, baseUrl == null ? "" : baseUrl);
         try {
             for (Element item : items(document)) {
                 Map<String, Object> extracted = new LinkedHashMap<>(in.getPayload());
