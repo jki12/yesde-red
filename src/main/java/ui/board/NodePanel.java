@@ -53,8 +53,8 @@ public class NodePanel extends JPanel {
         setLayout(new BorderLayout(6, 0)); // 입력, 출력 포트 사이 간격 설정.
         setOpaque(false);
 
-        inputPort = createPort(node instanceof MessageReceiver);
-        outputPort = createPort(node instanceof MessageSender);
+        inputPort = createPort(node instanceof Inputable);
+        outputPort = createPort(node instanceof Outputable);
 
         add(createPortContainer(inputPort), BorderLayout.WEST);
         add(createPortContainer(outputPort), BorderLayout.EAST);

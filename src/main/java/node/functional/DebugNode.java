@@ -5,11 +5,11 @@ import javax.swing.Icon;
 import ui.console.ConsolePanel;
 import ui.YesdeRedFrame;
 import node.BaseNode;
-import node.MessageReceiver;
+import node.Inputable;
 import node.Message;
 import node.NodeType;
 
-public class DebugNode extends BaseNode implements MessageReceiver {
+public class DebugNode extends BaseNode implements Inputable {
     public static final String DISPLAY_NAME = "디버그";
     public static final String DESCRIPTION = "수신한 메시지를 하단 콘솔에 표시합니다.";
     public static final Icon ICON = Codicons.icon("bug", 18);

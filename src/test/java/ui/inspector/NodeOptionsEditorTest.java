@@ -2,7 +2,7 @@ package ui.inspector;
 
 import node.option.OptionField;
 import node.option.OptionInputType;
-import node.MessageSender;
+import node.Outputable;
 import node.PollingNode;
 import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,7 +25,7 @@ class NodeOptionsEditorTest {
     enum Mode { FAST, SLOW }
 
     /** 지원하는 모든 입력 종류와 편집 불가·static 필드를 가진 스텁입니다. */
-    static final class Stub extends PollingNode implements MessageSender {
+    static final class Stub extends PollingNode implements Outputable {
         @OptionField(type = OptionInputType.TEXT_AREA) String message = "hello";
         @OptionField(type = OptionInputType.SENSITIVE_TEXT) String secret;
         @OptionField(type = OptionInputType.CHECK_BOX) boolean flag = true;
