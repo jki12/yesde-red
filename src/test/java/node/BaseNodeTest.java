@@ -29,7 +29,7 @@ class BaseNodeTest {
             sink.stop();
         }
         sink.getThread().join(1_000);
-        assertFalse(sink.isExecutionActive(), "큐 대기 중 stop()으로 종료돼야 함");
+        assertFalse(sink.isAlive(), "큐 대기 중 stop()으로 종료돼야 함");
     }
 
     @Test
@@ -100,7 +100,7 @@ class BaseNodeTest {
         failing.start();
         failing.getThread().join(2_000);
 
-        assertFalse(failing.isExecutionActive());
+        assertFalse(failing.isAlive());
         assertInstanceOf(IllegalStateException.class, failing.getFailure());
         assertEquals(1, reported.size(), "실패는 한 번만 알림");
         assertSame(failing.getFailure(), reported.get(0));

@@ -40,8 +40,8 @@ class WorkflowRunnerTest {
         });
 
         assertTrue(idle.await(5, TimeUnit.SECONDS), "모든 워커가 끝나면 IDLE로 돌아와야 함");
-        assertFalse(source.isExecutionActive());
-        assertFalse(sink.isExecutionActive());
+        assertFalse(source.isAlive());
+        assertFalse(sink.isAlive());
         assertTrue(sink.seen.get() > 0, "메시지가 실제로 전달돼야 함");
         assertEquals(List.of(RunState.RUNNING, RunState.STOPPING, RunState.IDLE), states);
     }
@@ -87,7 +87,7 @@ class WorkflowRunnerTest {
         assertTrue(idle.await(5, TimeUnit.SECONDS), "실패 후 사용자가 멈추지 않아도 IDLE로 끝나야 함");
         assertEquals(List.of("f1:boom"), failures);
         assertEquals(List.of(RunState.RUNNING, RunState.STOPPING, RunState.IDLE), states);
-        assertFalse(source.isExecutionActive(), "건강한 노드도 함께 종료");
+        assertFalse(source.isAlive(), "건강한 노드도 함께 종료");
         assertNotNull(failing.getFailure());
         assertNull(source.getFailure(), "stop()으로 끝난 노드는 실패가 아님");
     }

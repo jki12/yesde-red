@@ -41,7 +41,7 @@ public final class WorkflowRunner {
 
         if (nodes.isEmpty()) return;
         for (BaseNode node : nodes) {
-            if (node.isExecutionActive()) throw new IllegalStateException("아직 종료되지 않은 노드가 있습니다.");
+            if (node.isAlive()) throw new IllegalStateException("아직 종료되지 않은 노드가 있습니다.");
         }
         // 모든 큐를 먼저 비운 뒤 시작해야 송신·수신 노드의 시작 순서에 따라 메시지가 유실되지 않습니다.
         for (BaseNode node : nodes) node.clearPendingMessages();

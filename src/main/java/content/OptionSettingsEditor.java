@@ -99,7 +99,7 @@ public final class OptionSettingsEditor {
     }
 
     private boolean canEditSettings() {
-        return boardEditable.getAsBoolean() && !node.isExecutionActive();
+        return boardEditable.getAsBoolean() && !node.isAlive();
     }
 
     private void loadSettings() {

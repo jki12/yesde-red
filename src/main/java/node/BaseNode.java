@@ -37,8 +37,9 @@ public abstract class BaseNode implements Runnable {
     private int x; // board panel을 기준으로 한 x, y 값.
     @Expose
     private int y;
+    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    private volatile boolean isRunning;
+    private volatile boolean keepRunning; // stop()이 false로 내리면 루프가 끝납니다. 스레드 생존 여부는 isAlive().
     // 마지막 실행이 예외로 끝났으면 그 예외입니다. start()에서 지웁니다. 종료 요청 뒤의 예외는 실패로 보지 않습니다.
     @Setter(AccessLevel.NONE)
     private volatile Throwable failure;
@@ -139,11 +140,11 @@ public abstract class BaseNode implements Runnable {
         Throwable error = null;
         try {
             // start() 직후 stop()이 호출돼도 종료 요청을 다시 덮어쓰지 않습니다.
-            if (!isRunning || Thread.currentThread().isInterrupted()) return;
+            if (!keepRunning || Thread.currentThread().isInterrupted()) return;
             preprocess();
-            while (isRunning && !Thread.currentThread().isInterrupted()) {
+            while (keepRunning && !Thread.currentThread().isInterrupted()) {
                 process();
-                if (!isRunning) break;
+                if (!keepRunning) break;
                 pause();
             }
         } catch (InterruptedException e) {
@@ -151,7 +152,7 @@ public abstract class BaseNode implements Runnable {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("노드 처리 중 오류가 발생했습니다. id={}", id, e);
-            if (isRunning) error = e; // 종료 요청 중에 난 예외는 정상 종료의 일부로 봅니다.
+            if (keepRunning) error = e; // 종료 요청 중에 난 예외는 정상 종료의 일부로 봅니다.
         } finally {
             try {
                 postprocess();
@@ -159,7 +160,7 @@ public abstract class BaseNode implements Runnable {
                 log.error("노드 종료 정리 중 오류가 발생했습니다. id={}", id, e);
                 if (error == null) error = e;
             } finally {
-                isRunning = false;
+                keepRunning = false;
             }
             if (error != null) reportFailure(error);
         }
@@ -172,34 +173,34 @@ public abstract class BaseNode implements Runnable {
     }
 
     public synchronized void start() {
-        if (isExecutionActive()) throw new IllegalStateException("아직 종료되지 않은 노드입니다.");
+        if (isAlive()) throw new IllegalStateException("아직 종료되지 않은 노드입니다.");
 
         // 큐는 보드가 모든 노드의 시작 전에 한꺼번에 비웁니다.
         // 여기에서 다시 비우면 먼저 실행된 송신 노드의 새 메시지가 사라질 수 있습니다.
         Thread next = new Thread(this, "node-" + id);
         thread = next;
         failure = null;
-        isRunning = true;
+        keepRunning = true;
         try {
             next.start();
         } catch (RuntimeException | Error e) {
-            isRunning = false;
+            keepRunning = false;
             throw e;
         }
     }
 
     public synchronized void stop() {
-        isRunning = false;
+        keepRunning = false;
         if (thread != null) thread.interrupt();
     }
 
     // 종료 플래그가 내려가도 postprocess() 중일 수 있으므로 실제 스레드 생존 여부를 확인합니다.
-    public synchronized boolean isExecutionActive() {
+    public synchronized boolean isAlive() {
         return thread != null && thread.isAlive();
     }
 
     public synchronized void clearPendingMessages() {
-        if (isExecutionActive()) throw new IllegalStateException("실행 중인 노드의 큐는 비울 수 없습니다.");
+        if (isAlive()) throw new IllegalStateException("실행 중인 노드의 큐는 비울 수 없습니다.");
         if (in != null) in.clear();
     }
 }
