@@ -67,6 +67,7 @@ public final class TestNodes {
     public static final class Sink extends BaseNode implements Inputable {
         private final String id;
         public final AtomicInteger seen = new AtomicInteger();
+        public final java.util.List<Message> received = new java.util.concurrent.CopyOnWriteArrayList<>();
 
         public Sink(String id) { super(NodeType.DEBUG); this.id = id; }
 
@@ -74,6 +75,16 @@ public final class TestNodes {
         @Override public Icon getIcon() { return NodeFactory.getIcon(getType()); }
         @Override public String getDisplayName() { return "테스트 입력"; }
         @Override public String getDescription() { return "테스트용 입력 노드"; }
-        @Override protected void process() throws Exception { getInbox().take(); seen.incrementAndGet(); }
+        @Override protected void process() throws Exception { received.add(getInbox().take()); seen.incrementAndGet(); }
+
+        /** 메시지가 count개 도착할 때까지 기다립니다. */
+        public boolean awaitMessages(int count, long timeoutMillis) throws InterruptedException {
+            long deadline = System.currentTimeMillis() + timeoutMillis;
+            while (received.size() < count) {
+                if (System.currentTimeMillis() > deadline) return false;
+                Thread.sleep(10);
+            }
+            return true;
+        }
     }
 }
