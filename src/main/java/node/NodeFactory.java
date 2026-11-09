@@ -11,19 +11,19 @@ import java.util.Arrays;
 public class NodeFactory {
 
     public static String[] getTypeNames() {
-        return Arrays.stream(Type.values())
+        return Arrays.stream(NodeType.values())
                 .map(Enum::toString)
                 .toArray(String[]::new);
     }
 
-    public static String getDisplayName(Type type) {
+    public static String getDisplayName(NodeType type) {
         return switch (type) {
             case INJECT -> InjectNode.DISPLAY_NAME;
             case DEBUG -> DebugNode.DISPLAY_NAME;
         };
     }
 
-    public static Icon getIcon(Type type) {
+    public static Icon getIcon(NodeType type) {
         return switch (type) {
             case INJECT -> InjectNode.ICON;
             case DEBUG -> DebugNode.ICON;
@@ -31,12 +31,12 @@ public class NodeFactory {
     }
 
     public static BaseNode createNode(String t) {
-        Type type = Type.valueOf(t.toUpperCase());  // type은 항상 올바른 값이 들어온다고 가정한다.
+        NodeType type = NodeType.valueOf(t.toUpperCase());  // type은 항상 올바른 값이 들어온다고 가정한다.
 
         BaseNode node;
 
-        if (type == Type.DEBUG) node = new DebugNode();
-        else if (type == Type.INJECT) node = new InjectNode();
+        if (type == NodeType.DEBUG) node = new DebugNode();
+        else if (type == NodeType.INJECT) node = new InjectNode();
         else {
             log.error("node type : {}", type);
             throw new IllegalStateException("지원하지 않는 노드 입니다.");

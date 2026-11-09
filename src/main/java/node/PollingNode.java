@@ -16,7 +16,7 @@ public abstract class PollingNode extends BaseNode {
     @OptionField(type = OptionInputType.TEXT, min = 0)
     private long intervalMillis = DEFAULT_INTERVAL_MILLIS;
 
-    protected PollingNode(Type type) {
+    protected PollingNode(NodeType type) {
         super(type);
     }
 

@@ -30,7 +30,7 @@ public abstract class BaseNode implements Runnable {
     @Expose
     private final String id;
     @Expose(deserialize = false)
-    private final Type type;
+    private final NodeType type;
     @Setter(AccessLevel.NONE)
     private volatile Thread thread;
     @Expose
@@ -52,11 +52,11 @@ public abstract class BaseNode implements Runnable {
     // 순회 중 추가돼도 예외가 나지 않는 복사-쓰기 집합을 씁니다. 연결 순서도 유지됩니다.
     private final Set<BaseNode> targets;
 
-    public BaseNode(Type type) {
+    public BaseNode(NodeType type) {
         this(type, ID_GENERATOR.get().substring(0, 6));
     }
 
-    protected BaseNode(Type type, String id) {
+    protected BaseNode(NodeType type, String id) {
         this.createdAt = LocalDateTime.now();
         this.id = id;
         this.type = type;

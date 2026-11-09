@@ -6,7 +6,7 @@ import node.Message;
 import node.NodeFactory;
 import node.MessageSender;
 import node.PollingNode;
-import node.Type;
+import node.NodeType;
 
 import javax.swing.Icon;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,7 +20,7 @@ public final class TestNodes {
         private final String id;
         public final AtomicInteger sent = new AtomicInteger();
 
-        public Source(String id) { super(Type.INJECT); this.id = id; }
+        public Source(String id) { super(NodeType.INJECT); this.id = id; }
 
         @Override public String getId() { return id; }
         @Override public Icon getIcon() { return NodeFactory.getIcon(getType()); }
@@ -36,7 +36,7 @@ public final class TestNodes {
     public static final class Failing extends BaseNode implements MessageReceiver {
         private final String id;
 
-        public Failing(String id) { super(Type.DEBUG); this.id = id; }
+        public Failing(String id) { super(NodeType.DEBUG); this.id = id; }
 
         @Override public String getId() { return id; }
         @Override public Icon getIcon() { return NodeFactory.getIcon(getType()); }
@@ -53,7 +53,7 @@ public final class TestNodes {
         private final String id;
         public final AtomicInteger seen = new AtomicInteger();
 
-        public Sink(String id) { super(Type.DEBUG); this.id = id; }
+        public Sink(String id) { super(NodeType.DEBUG); this.id = id; }
 
         @Override public String getId() { return id; }
         @Override public Icon getIcon() { return NodeFactory.getIcon(getType()); }

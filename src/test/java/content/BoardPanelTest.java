@@ -1,6 +1,6 @@
 package content;
 
-import node.Type;
+import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -141,7 +141,7 @@ class BoardPanelTest {
             AtomicInteger changes = new AtomicInteger();
             board.addPropertyChangeListener(BoardPanel.PROP_NODES_CHANGED, e -> changes.incrementAndGet());
 
-            NodePanel added = board.addNode(Type.INJECT, new Point(-30, 700));
+            NodePanel added = board.addNode(NodeType.INJECT, new Point(-30, 700));
 
             assertEquals(6, added.getX(), "왼쪽 경계 안으로 보정");
             assertEquals(700, added.getY());

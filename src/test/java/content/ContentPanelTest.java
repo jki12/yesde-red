@@ -1,6 +1,6 @@
 package content;
 
-import node.Type;
+import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import support.Edt;
@@ -27,7 +27,7 @@ class ContentPanelTest {
             BoardPanel first = (BoardPanel) tabs.getComponentAt(0);
             assertTrue(summary(content).contains("노드 0개"), summary(content));
 
-            first.addNode(Type.INJECT, new Point(50, 50));
+            first.addNode(NodeType.INJECT, new Point(50, 50));
             assertTrue(summary(content).contains("노드 1개"), "선택 보드 이벤트는 요약을 갱신: " + summary(content));
 
             tabs.addBoardTab();
@@ -35,10 +35,10 @@ class ContentPanelTest {
             assertNotSame(first, second);
             assertTrue(summary(content).contains("노드 0개"), "탭 전환은 새 보드를 표시: " + summary(content));
 
-            first.addNode(Type.INJECT, new Point(50, 150));
+            first.addNode(NodeType.INJECT, new Point(50, 150));
             assertTrue(summary(content).contains("노드 0개"), "배경 보드 이벤트는 전경을 갱신하지 않음: " + summary(content));
 
-            second.addNode(Type.INJECT, new Point(50, 50));
+            second.addNode(NodeType.INJECT, new Point(50, 50));
             assertTrue(summary(content).contains("노드 1개"), summary(content));
 
             tabs.setSelectedIndex(0);
@@ -91,7 +91,7 @@ class ContentPanelTest {
             assertFalse(run.isEnabled(), "노드가 없으면 실행 불가");
             assertFalse(stop.isEnabled());
 
-            board.addNode(Type.INJECT, new Point(40, 40));
+            board.addNode(NodeType.INJECT, new Point(40, 40));
             assertTrue(run.isEnabled(), "노드가 생기면 실행 가능");
             assertFalse(stop.isEnabled());
 

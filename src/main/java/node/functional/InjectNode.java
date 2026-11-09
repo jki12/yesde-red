@@ -19,7 +19,7 @@ public class InjectNode extends PollingNode implements MessageSender {
     private String message;
 
     public InjectNode() {
-        super(Type.INJECT);
+        super(NodeType.INJECT);
     }
 
     @Override

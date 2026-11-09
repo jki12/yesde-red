@@ -1,6 +1,6 @@
 package node;
 
-public enum Type {
+public enum NodeType {
     INJECT,
     DEBUG,
 }

@@ -7,7 +7,7 @@ import ui.frame.YesdeRedFrame;
 import node.BaseNode;
 import node.MessageReceiver;
 import node.Message;
-import node.Type;
+import node.NodeType;
 
 public class DebugNode extends BaseNode implements MessageReceiver {
     public static final String DISPLAY_NAME = "디버그";
@@ -17,7 +17,7 @@ public class DebugNode extends BaseNode implements MessageReceiver {
     private final ConsolePanel console = YesdeRedFrame.getInstance().getConsole();
 
     public DebugNode() {
-        super(Type.DEBUG);
+        super(NodeType.DEBUG);
     }
 
     @Override

@@ -4,7 +4,7 @@ import annotation.OptionField;
 import annotation.OptionInputType;
 import node.MessageSender;
 import node.PollingNode;
-import node.Type;
+import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class NodeOptionsEditorTest {
         @OptionField(editable = false) int fixed = 7;
         @OptionField static int ignoredStatic = 1;
 
-        Stub() { super(Type.INJECT); }
+        Stub() { super(NodeType.INJECT); }
         @Override public Icon getIcon() { return null; }
         @Override public String getDisplayName() { return "stub"; }
         @Override public String getDescription() { return ""; }

@@ -1,6 +1,6 @@
 package content;
 
-import node.Type;
+import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import support.Edt;
@@ -44,7 +44,7 @@ class TabPanelTest {
             tabs[0] = new TabPanel();
             tabs[0].addBoardTab();
             BoardPanel board = (BoardPanel) tabs[0].getSelectedComponent();
-            board.addNode(Type.INJECT, new Point(40, 40));
+            board.addNode(NodeType.INJECT, new Point(40, 40));
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == RunState.IDLE) idle.countDown(); });
 
             board.startWorkflow();

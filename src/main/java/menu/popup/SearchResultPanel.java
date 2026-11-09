@@ -2,7 +2,7 @@ package menu.popup;
 
 import content.BoardPanel;
 import lombok.extern.slf4j.Slf4j;
-import node.Type;
+import node.NodeType;
 import node.NodeFactory;
 import ui.UiTheme;
 
@@ -24,7 +24,7 @@ public class SearchResultPanel extends JScrollPane {
         suggestions.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         suggestions.setCellRenderer((list, value, index, selected, focus) -> {
-            Type type = Type.valueOf(value);
+            NodeType type = NodeType.valueOf(value);
 
             JPanel row = new JPanel(new BorderLayout(8, 0));
             row.setBackground(selected ? list.getSelectionBackground() : list.getBackground());
@@ -110,7 +110,7 @@ public class SearchResultPanel extends JScrollPane {
 
         String query = text.strip().toLowerCase();
         for (String typeName : typeNames) {
-            if ((typeName + " " + NodeFactory.getDisplayName(Type.valueOf(typeName))).toLowerCase().contains(query)) {
+            if ((typeName + " " + NodeFactory.getDisplayName(NodeType.valueOf(typeName))).toLowerCase().contains(query)) {
                 currentListModel.addElement(typeName);
             }
         }
@@ -136,7 +136,7 @@ public class SearchResultPanel extends JScrollPane {
             SwingUtilities.convertPointFromScreen(location, board);
 
             try {
-                board.addNode(Type.valueOf(suggestions.getSelectedValue()), location);
+                board.addNode(NodeType.valueOf(suggestions.getSelectedValue()), location);
             }
             catch (RuntimeException error) { // 포트 사용 중이거나 이상한 값이 들어왔을 경우
                 JOptionPane.showMessageDialog(board, error.getMessage(), "노드를 만들 수 없습니다",
