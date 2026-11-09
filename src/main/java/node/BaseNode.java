@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import util.HashIdGenerator;
+import util.RandomIdGenerator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +24,7 @@ public abstract class BaseNode implements Runnable {
         void nodeFailed(BaseNode node, Throwable error);
     }
 
-    private static final Supplier<String> ID_GENERATOR = new HashIdGenerator();
+    private static final Supplier<String> ID_GENERATOR = new RandomIdGenerator();
 
     private final LocalDateTime createdAt;
     @Expose
@@ -53,7 +53,7 @@ public abstract class BaseNode implements Runnable {
     private final Set<BaseNode> targets;
 
     public BaseNode(NodeType type) {
-        this(type, ID_GENERATOR.get().substring(0, 6));
+        this(type, ID_GENERATOR.get());
     }
 
     protected BaseNode(NodeType type, String id) {
