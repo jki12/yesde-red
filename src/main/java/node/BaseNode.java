@@ -1,8 +1,6 @@
 package node;
 
-import annotation.OptionField;
 import com.google.gson.annotations.Expose;
-import common.enums.FieldType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +19,6 @@ import java.util.function.Supplier;
 @Setter
 @Slf4j
 public abstract class BaseNode implements Runnable {
-    private static final long DEFAULT_INTERVAL_MILLI = 1_000;
     private static final Supplier<String> ID_GENERATOR = new HashIdGenerator();
 
     private final LocalDateTime createdAt;
@@ -31,9 +28,6 @@ public abstract class BaseNode implements Runnable {
     private final Type type;
     @Setter(AccessLevel.NONE)
     private volatile Thread thread;
-    @Expose
-    @OptionField(type = FieldType.TEXT)
-    private long intervalMilli = DEFAULT_INTERVAL_MILLI;
     @Expose
     private int x; // board panel을 기준으로 한 x, y 값.
     @Expose
@@ -112,6 +106,13 @@ public abstract class BaseNode implements Runnable {
 
     protected abstract void process() throws Exception;
 
+    /**
+     * process() 한 번이 끝난 뒤 다음 처리까지 기다립니다.
+     * 입력 큐를 소비하는 노드는 큐가 빌 때 process()가 블록되므로 기본 구현은 바로 다음 처리로 넘어갑니다.
+     * 주기적으로 스스로 동작하는 노드는 {@link PollingNode}가 간격만큼 쉽니다.
+     */
+    protected void pause() throws InterruptedException { }
+
     public abstract Icon getIcon();
 
     public abstract String getDisplayName();
@@ -131,7 +132,7 @@ public abstract class BaseNode implements Runnable {
             while (isRunning && !Thread.currentThread().isInterrupted()) {
                 process();
                 if (!isRunning) break;
-                Thread.sleep(intervalMilli);
+                pause();
             }
         } catch (InterruptedException e) {
             // 큐 대기나 sleep 중의 인터럽트는 정상적인 종료 요청입니다.
