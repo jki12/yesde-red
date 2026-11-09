@@ -181,12 +181,13 @@ public class BoardPanel extends JPanel implements Scrollable {
     public NodePanel addNode(NodeType type, Point location) {
         NodePanel view = new NodePanel(type.name());
 
-        view.setBounds(Math.max(6, location.x), Math.max(6, location.y), NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
+        view.setBounds(Math.max(0, location.x), Math.max(0, location.y), NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
         view.getNode().setLocation(view.getLocation());
 
         add(view, 0);
         setSelectedNode(view);
         revalidate();
+        scrollRectToVisible(view.getBounds());
         repaint();
         return view;
     }

@@ -142,9 +142,9 @@ class BoardPanelTest {
 
             NodePanel added = board.addNode(NodeType.INJECT, new Point(-30, 700));
 
-            assertEquals(6, added.getX(), "왼쪽 경계 안으로 보정");
+            assertEquals(0, added.getX(), "왼쪽 경계 안으로 보정");
             assertEquals(700, added.getY());
-            assertEquals(6, added.getNode().getX(), "모델 좌표 동기화");
+            assertEquals(0, added.getNode().getX(), "모델 좌표 동기화");
             assertSame(added, board.getSelectedNode());
             assertSame(added, board.getComponent(0), "새 카드가 최상단");
             assertEquals(1, changes.get());

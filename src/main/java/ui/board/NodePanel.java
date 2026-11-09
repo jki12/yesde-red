@@ -109,15 +109,15 @@ public class NodePanel extends JPanel {
 
                 Point current = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), NodePanel.this);
 
-                // 왼쪽, 위쪽 이동 범위를 제한.
-                // TODO: 오른쪽, 아래쪽 경계도 적용해야 함.
-                int x = Math.max(6, getX() + current.x - dragOrigin.x);
-                int y = Math.max(6, getY() + current.y - dragOrigin.y);
+                // 왼쪽·위쪽은 0에서 막고, 오른쪽·아래쪽은 캔버스가 카드를 따라 자랍니다.
+                int x = Math.max(0, getX() + current.x - dragOrigin.x);
+                int y = Math.max(0, getY() + current.y - dragOrigin.y);
 
                 setLocation(x, y);
                 node.setLocation(new Point(x, y));
 
                 board().revalidate(); // 카드 범위에 맞춰 캔버스 크기를 다시 계산합니다.
+                scrollRectToVisible(new Rectangle(0, 0, getWidth(), getHeight())); // 카드가 보이는 영역 밖으로 나가면 따라갑니다.
                 board().repaint();
             }
 
