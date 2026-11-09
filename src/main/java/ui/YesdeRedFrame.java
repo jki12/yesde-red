@@ -19,7 +19,7 @@ public class YesdeRedFrame extends JFrame {
         return YESDE_RED_FRAME;
     }
 
-    public YesdeRedFrame() {
+    private YesdeRedFrame() {
         super(TITLE);
 
         setSize(1440, 920);
