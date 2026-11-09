@@ -90,7 +90,11 @@ public class NodePanel extends JPanel {
                 if (!SwingUtilities.isLeftMouseButton(e)) return; // TODO, 삭제, 복사 창 뜰 수 있게 수정.
 
                 BoardPanel board = board();
-                if (board != null) board.setSelectedNode(NodePanel.this);
+                if (board != null) {
+                    board.setSelectedNode(NodePanel.this);
+                    board.setComponentZOrder(NodePanel.this, 0); // 겹친 카드 중 누른 카드를 맨 앞으로
+                    board.repaint();
+                }
 
                 // 클릭 위치를 NodePanel 기준 좌표로 변환해 저장
                 dragOrigin = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), NodePanel.this);
