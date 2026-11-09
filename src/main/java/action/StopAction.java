@@ -2,7 +2,7 @@ package action;
 
 import content.BoardPanel;
 import lombok.extern.slf4j.Slf4j;
-import ui.frame.YesdeRedFrame;
+import ui.YesdeRedFrame;
 import workflow.RunState;
 
 import javax.swing.*;

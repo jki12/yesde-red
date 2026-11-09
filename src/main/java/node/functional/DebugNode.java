@@ -3,7 +3,7 @@ package node.functional;
 import ui.Codicons;
 import javax.swing.Icon;
 import content.ConsolePanel;
-import ui.frame.YesdeRedFrame;
+import ui.YesdeRedFrame;
 import node.BaseNode;
 import node.MessageReceiver;
 import node.Message;

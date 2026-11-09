@@ -1,4 +1,4 @@
-import ui.frame.YesdeRedFrame;
+import ui.YesdeRedFrame;
 import ui.UiTheme;
 import javax.swing.SwingUtilities;
 

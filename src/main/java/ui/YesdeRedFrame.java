@@ -1,4 +1,4 @@
-package ui.frame;
+package ui;
 
 import content.WorkspacePanel;
 import content.TabPanel;

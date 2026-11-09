@@ -3,7 +3,7 @@ package action;
 import lombok.extern.slf4j.Slf4j;
 import content.BoardPanel;
 import json.Json;
-import ui.frame.YesdeRedFrame;
+import ui.YesdeRedFrame;
 
 import javax.swing.*;
 import java.awt.*;
