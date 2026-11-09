@@ -173,6 +173,13 @@ public class BoardPanel extends JPanel {
                 .sorted(Comparator.comparing(view -> view.getNode().getCreatedAt())).toList();
     }
 
+    /** 이 보드의 출력 노드들이 가진 연결 수 합계입니다. 처리된 메시지 수가 아닙니다. */
+    public long getConnectionCount() {
+        return getNodePanels().stream().map(NodePanel::getNode)
+                .filter(node -> node.getOut() != null)
+                .mapToLong(node -> node.getOut().size()).sum();
+    }
+
     public RunState getRunState() {
         return runner.getState();
     }

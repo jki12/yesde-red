@@ -35,8 +35,7 @@ public class ContentPanel extends JPanel {
     private final NodeInfoPanel nodeInfo = new NodeInfoPanel();
 
     private final NodeHierarchyPanel hierarchy = new NodeHierarchyPanel(); // 확인 필요.
-    private final JLabel status = UiTheme.label("대기 중", true);
-    private final JLabel summary = UiTheme.label("edd", true);
+    private final StatusBar statusBar = new StatusBar();
     private final JSplitPane editorSplit;
     private final JSplitPane hierarchySplit;
     private final JSplitPane consoleSplit;
@@ -69,9 +68,7 @@ public class ContentPanel extends JPanel {
      * │   │       └─ 오른쪽: nodeInfo (NodeInfoPanel): 선택한 노드의 속성
      * │   └─ 아래: debugPanel (DebugPanel): 실행 로그
      * │
-     * └─ SOUTH: footer (JPanel)
-     *     ├─ WEST: status (JLabel): 실행 상태
-     *     └─ EAST: summary (JLabel): 보드 이름, 노드 수, 연결 수
+     * └─ SOUTH: statusBar (StatusBar): 실행 상태 / 보드 이름, 노드 수, 연결 수
      *
      */
     public ContentPanel() {
@@ -91,7 +88,7 @@ public class ContentPanel extends JPanel {
         add(consoleSplit, BorderLayout.CENTER);
 
 
-        add(createFooter(), BorderLayout.SOUTH);
+        add(statusBar, BorderLayout.SOUTH);
 
 
         // 선택된 보드 하나만 구독합니다. 탭이 바뀌면 이전 보드의 구독을 풀고 새 보드에 붙입니다.
@@ -148,22 +145,6 @@ public class ContentPanel extends JPanel {
         toolbar.add(rightActions, BorderLayout.EAST);
 
         return toolbar;
-    }
-
-    private JPanel createFooter() {
-        JPanel footer = new JPanel(new BorderLayout(12, 0));
-        footer.setBackground(UiTheme.getPanelBackgroundColor());
-        footer.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, UiTheme.getBorderColor()),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)));
-
-        status.setFont(UiTheme.getFont().deriveFont(11f));
-        summary.setFont(UiTheme.getFont().deriveFont(11f));
-
-        footer.add(status, BorderLayout.WEST);
-        footer.add(summary, BorderLayout.EAST);
-
-        return footer;
     }
 
     private static JSplitPane split(int orientation, Component first, Component second, double weight) {
@@ -223,19 +204,7 @@ public class ContentPanel extends JPanel {
         nodeInfo.showNode(selected == null ? null : selected.getNode(),
                 () -> board != null && board.getRunState() == RunState.IDLE);
         hierarchy.showBoard(board);
-        RunState state = board == null ? RunState.IDLE : board.getRunState();
-        status.setText(switch (state) {
-            case IDLE -> "대기 중";
-            case RUNNING -> "실행 중";
-            case STOPPING -> "종료 중";
-        });
-        int nodes = board == null ? 0 : board.getNodePanels().size();
-        // 연결 개수는 현재 보드에 있는 출력 모델의 out 크기 합입니다. 처리된 메시지 수나 네트워크 성공 건수가 아닙니다.
-        long connections = board == null ? 0 : board.getNodePanels().stream()
-                .map(NodePanel::getNode).filter(node -> node.getOut() != null)
-                .mapToLong(node -> node.getOut().size()).sum();
-        summary.setText((board == null ? "" : board.getName() + "   |   ")
-                + "노드 " + nodes + "개   ·   연결 " + connections + "개");
+        statusBar.showBoard(board);
     }
 
     public BoardPanel getSelectedBoard() {
