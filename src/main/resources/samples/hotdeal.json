@@ -22,15 +22,16 @@
       "options": { "selector": "tr.table_body:not(.notice)",
                    "fields": "category = td.divsn strong\ntitle = td.subject a.subject_link > strong\nlink = td.subject a.subject_link @href\ncomments = a.num_reply\nrecommend = td.recomd\nhits = td.hit\ntime = td.time" } },
 
-    { "id": "hd0021", "type": "FILE_WRITE", "x": 960, "y": 100,
+    { "id": "hd0020", "type": "DEDUPE", "x": 940, "y": 140,
+      "options": { "key": "link", "maxEntries": 100000, "storePath": "output/hotdeal-seen.txt" } },
+    { "id": "hd0021", "type": "FILE_WRITE", "x": 1240, "y": 60,
       "options": { "path": "output/hotdeal.csv", "format": "CSV",
                    "fields": "url\ncategory\ntitle\nlink\ncomments\nrecommend\nhits\ntime", "append": true } },
-    { "id": "hd0022", "type": "DEBUG", "x": 960, "y": 220, "options": {} }
+    { "id": "hd0022", "type": "DEBUG", "x": 1240, "y": 220, "options": {} }
   ],
   "connections": [
-    { "from": "hd0001", "to": "hd0002" }, { "from": "hd0002", "to": "hd0003" },
-    { "from": "hd0003", "to": "hd0021" }, { "from": "hd0003", "to": "hd0022" },
-    { "from": "hd0011", "to": "hd0012" }, { "from": "hd0012", "to": "hd0013" },
-    { "from": "hd0013", "to": "hd0021" }, { "from": "hd0013", "to": "hd0022" }
+    { "from": "hd0001", "to": "hd0002" }, { "from": "hd0002", "to": "hd0003" }, { "from": "hd0003", "to": "hd0020" },
+    { "from": "hd0011", "to": "hd0012" }, { "from": "hd0012", "to": "hd0013" }, { "from": "hd0013", "to": "hd0020" },
+    { "from": "hd0020", "to": "hd0021" }, { "from": "hd0020", "to": "hd0022" }
   ]
 }

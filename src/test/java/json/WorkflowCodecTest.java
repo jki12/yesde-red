@@ -75,7 +75,7 @@ class WorkflowCodecTest {
     @Test
     void bundledSampleWorkflowsLoad() throws Exception {
         Map<String, int[]> expected = Map.of("/samples/json-api.json", new int[] {5, 4}, "/samples/html-list.json", new int[] {5, 4},
-                "/samples/hotdeal.json", new int[] {8, 8});
+                "/samples/hotdeal.json", new int[] {9, 8});
         for (Map.Entry<String, int[]> sample : expected.entrySet()) {
             try (var in = getClass().getResourceAsStream(sample.getKey())) {
                 assertNotNull(in, sample.getKey() + " 리소스가 없음");
