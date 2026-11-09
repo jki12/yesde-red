@@ -1,4 +1,4 @@
-package menubar.file;
+package ui.menu;
 
 import action.ImportAction;
 

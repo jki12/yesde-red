@@ -1,4 +1,4 @@
-package menubar.run;
+package ui.menu;
 
 import action.RunAction;
 

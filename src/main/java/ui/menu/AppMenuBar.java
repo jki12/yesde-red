@@ -1,7 +1,5 @@
-package menubar;
+package ui.menu;
 
-import menubar.file.FileMenu;
-import menubar.run.RunMenu;
 
 import javax.swing.*;
 

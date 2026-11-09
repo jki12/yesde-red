@@ -1,4 +1,4 @@
-package menubar.run;
+package ui.menu;
 
 import lombok.extern.slf4j.Slf4j;
 
