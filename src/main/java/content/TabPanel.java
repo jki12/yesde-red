@@ -43,11 +43,7 @@ public class TabPanel extends JTabbedPane {
         actionMap.put("metaW", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (getTabCount() > 1) {
-                    int index = getSelectedIndex();
-
-                    remove(index);
-                }
+                closeBoardTab(getSelectedIndex());
             }
         });
     }
@@ -89,8 +85,12 @@ public class TabPanel extends JTabbedPane {
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
     }
 
-    public void remove(int index) {
+    /** 탭을 닫습니다. 마지막 남은 탭은 닫지 않고 false를 돌려줍니다. */
+    public boolean closeBoardTab(int index) {
+        if (getTabCount() <= 1) return false;
+
         removeTabAt(index);
         log.info("탭이 삭제되었습니다.(현재 탭 수 {})", getTabCount());
+        return true;
     }
 }
