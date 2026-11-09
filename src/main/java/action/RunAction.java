@@ -21,7 +21,7 @@ public class RunAction extends AbstractAction {
 
     /** 보드를 직접 아는 호출자(툴바 등)용입니다. */
     public RunAction(Supplier<BoardPanel> selectedBoard) {
-        super("run");
+        super("실행");
         this.selectedBoard = selectedBoard;
     }
 
