@@ -8,8 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 노드 생성과 연결 모델은 재사용하고, 카드 이동·단일 선택·실제 포트 판별과 연결 미리보기 입력을 UI에서 보완했습니다.
@@ -17,7 +15,6 @@ import java.util.Map;
 public class NodePanel extends JPanel {
     public static final int DEFAULT_WIDTH = 236;
     public static final int DEFAULT_HEIGHT = 72;
-    public static final Map<String, NodePanel> NODE_MAP = new HashMap<>(); // TODO, boardPanel 쪽으로 이동
 
     @Getter
     private final BaseNode node;
@@ -53,7 +50,6 @@ public class NodePanel extends JPanel {
     */
     public NodePanel(BaseNode node) {
         this.node = node;
-        NODE_MAP.put(node.getId(), this);
 
         setLayout(new BorderLayout(6, 0)); // 입력, 출력 포트 사이 간격 설정.
         setOpaque(false);
@@ -177,6 +173,11 @@ public class NodePanel extends JPanel {
             }
         });
 
+        registerConnectionDragListeners(port);
+        return port;
+    }
+
+    private void registerConnectionDragListeners(JButton port) {
         MouseAdapter connectionDrag = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -206,7 +207,6 @@ public class NodePanel extends JPanel {
         };
         port.addMouseListener(connectionDrag);
         port.addMouseMotionListener(connectionDrag);
-        return port;
     }
 
     private BoardPanel board() {

@@ -6,6 +6,7 @@ import ui.Codicons;
 import ui.UiTheme;
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.BooleanSupplier;
 
 public class NodeInfoPanel extends JPanel {
     private final JLabel title = UiTheme.label("노드를 선택하세요", false);
@@ -13,6 +14,7 @@ public class NodeInfoPanel extends JPanel {
     private final JTextArea description = new JTextArea();
     private final JPanel editorContainer = new JPanel(new BorderLayout());
 
+    private BooleanSupplier boardEditable = () -> false;
     private BaseNode selectedNode;
     private OptionSettingsEditor settingsEditor;
 
@@ -63,7 +65,7 @@ public class NodeInfoPanel extends JPanel {
         add(scroll, BorderLayout.CENTER);
         setPreferredSize(new Dimension(300, 430));
         setMinimumSize(new Dimension(280, 230));
-        showNode(null);
+        showNode(null, () -> false);
     }
 
     // TODO, nodeId만 받고 있음. 사용 안하면 지워야 함
@@ -99,7 +101,9 @@ public class NodeInfoPanel extends JPanel {
         body.add(Box.createVerticalStrut(8));
     }
 
-    public void showNode(BaseNode node) {
+    public void showNode(BaseNode node, BooleanSupplier boardEditable) {
+        // 적용 순간에도 현재 보드 상태를 읽도록 값 대신 조회 함수를 전달받습니다.
+        this.boardEditable = boardEditable;
         showSettingsEditor(node);
 
         if (node == null) {
@@ -139,7 +143,7 @@ public class NodeInfoPanel extends JPanel {
     private OptionSettingsEditor createSettingsEditor(BaseNode node) {
         if (node == null || node instanceof DebugNode) return null;
 
-        OptionSettingsEditor editor = new OptionSettingsEditor(node);
+        OptionSettingsEditor editor = new OptionSettingsEditor(node, () -> boardEditable.getAsBoolean());
 
         return editor.hasOptions() ? editor : null;
     }

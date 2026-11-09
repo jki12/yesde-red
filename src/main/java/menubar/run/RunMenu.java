@@ -11,6 +11,6 @@ public class RunMenu extends JMenu {
         super("Run");
 
         add(new RunMenuItem());
-        add(new PauseMenuItem());
+        add(new StopMenuItem());
     }
 }

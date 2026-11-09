@@ -20,6 +20,10 @@ public class Pipe {
         return priorityQueue.take();
     }
 
+    public void clear() {
+        priorityQueue.clear();
+    }
+
     public void push(Message message) {
         priorityQueue.add(message);
     }

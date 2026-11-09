@@ -13,11 +13,11 @@ import java.util.List;
 
 @Slf4j
 public class TabPanel extends JTabbedPane {
-    private static final String TAB_TITLE = "무제-";
+    private static final String TAB_TITLE = "워크플로 ";
 
     public TabPanel() {
         registerShortcuts();
-        add();
+        addBoardTab();
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -36,7 +36,7 @@ public class TabPanel extends JTabbedPane {
         actionMap.put("metaT", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                add();
+                addBoardTab();
             }
         });
 
@@ -53,7 +53,7 @@ public class TabPanel extends JTabbedPane {
     }
 
     /**
-     * @return "무제-n"의 형식으로 반환합니다.
+     * @return 새 탭의 기본 이름을 "워크플로 01" 형식으로 만들어 반환합니다.
      */
     private String generateTitle() {
         List<Integer> titles = new ArrayList<>(getTabCount());
@@ -78,13 +78,25 @@ public class TabPanel extends JTabbedPane {
             num++;
         }
 
-        return TAB_TITLE + num;
+        return TAB_TITLE + String.format("%02d", num);
     }
 
-    public void add() {
+    public void addBoardTab() {
         int idx = getSelectedIndex() + 1; // 시작시에도 + 1을 해주기 때문에 -1을 반환해도 문제 없음.
 
-        add(new BoardPanel(generateTitle()), idx);
+        BoardPanel board = new BoardPanel(generateTitle());
+
+        // 보드의 선택·노드 목록·연결·실행 상태 변경 알림을 상위 패널로 전달합니다.
+        board.addPropertyChangeListener("selectedNode",
+                e -> firePropertyChange("selectedNode", e.getOldValue(), e.getNewValue()));
+        board.addPropertyChangeListener("boardState",
+                e -> firePropertyChange("boardState", e.getOldValue(), e.getNewValue()));
+        board.addPropertyChangeListener("nodesChanged",
+                e -> firePropertyChange("nodesChanged", e.getOldValue(), e.getNewValue()));
+        board.addPropertyChangeListener("connectionsChanged",
+                e -> firePropertyChange("connectionsChanged", e.getOldValue(), e.getNewValue()));
+
+        add(board, idx);
         setSelectedIndex(idx);
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
     }

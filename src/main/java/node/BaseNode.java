@@ -3,6 +3,7 @@ package node;
 import annotation.OptionField;
 import com.google.gson.annotations.Expose;
 import common.enums.FieldType;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import util.HashIdGenerator;
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -27,7 +29,8 @@ public abstract class BaseNode implements Runnable {
     private final String id;
     @Expose(deserialize = false)
     private final Type type;
-    private final Thread thread;
+    @Setter(AccessLevel.NONE)
+    private volatile Thread thread;
     @Expose
     @OptionField(type = FieldType.TEXT)
     private long intervalMilli = DEFAULT_INTERVAL_MILLI;
@@ -35,7 +38,8 @@ public abstract class BaseNode implements Runnable {
     private int x; // board panel을 기준으로 한 x, y 값.
     @Expose
     private int y;
-    private boolean isRunning;
+    @Setter(AccessLevel.NONE)
+    private volatile boolean isRunning;
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
     private final Pipe in;
@@ -50,9 +54,14 @@ public abstract class BaseNode implements Runnable {
         this.id = id;
         this.type = type;
 
-        this.thread = new Thread(this);
         this.in = this instanceof Inputable ? new Pipe() : null;
         this.out = this instanceof Outputable ? new HashSet<>() : null;
+    }
+
+    public Set<BaseNode> getOut() {
+        // 외부에서는 연결 목록을 조회만 허용합니다. 복사본이 아니므로 이후 연결 변경도 반영됩니다.
+        // 출력 기능이 없는 노드는 기존처럼 null을 반환합니다.
+        return out == null ? null : Collections.unmodifiableSet(out);
     }
 
     public boolean connect(Inputable input) {
@@ -98,7 +107,6 @@ public abstract class BaseNode implements Runnable {
     }
 
     protected void preprocess() {
-        isRunning = true;
         log.info("pre-process 함수가 정상적으로 실행되었습니다.");
     }
 
@@ -111,33 +119,64 @@ public abstract class BaseNode implements Runnable {
     public abstract String getDescription();
 
     protected void postprocess() {
-        isRunning = false;
         log.info("post-process 함수가 정상적으로 실행되었습니다.");
     }
 
     @Override
     public void run() {
-        preprocess();
-
-        while (isRunning && !Thread.currentThread().isInterrupted()) {
-
-            try {
+        try {
+            // start() 직후 stop()이 호출돼도 종료 요청을 다시 덮어쓰지 않습니다.
+            if (!isRunning || Thread.currentThread().isInterrupted()) return;
+            preprocess();
+            while (isRunning && !Thread.currentThread().isInterrupted()) {
                 process();
+                if (!isRunning) break;
                 Thread.sleep(intervalMilli);
+            }
+        } catch (InterruptedException e) {
+            // 큐 대기나 sleep 중의 인터럽트는 정상적인 종료 요청입니다.
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error("노드 처리 중 오류가 발생했습니다. id={}", id, e);
+        } finally {
+            try {
+                postprocess();
             } catch (Exception e) {
-                log.error(e.getMessage());
-                Thread.currentThread().interrupt();
+                log.error("노드 종료 정리 중 오류가 발생했습니다. id={}", id, e);
+            } finally {
+                isRunning = false;
             }
         }
-
-        postprocess();
     }
 
-    public void start() {
-        thread.start();
+    public synchronized void start() {
+        if (isExecutionActive()) throw new IllegalStateException("아직 종료되지 않은 노드입니다.");
+
+        // 큐는 보드가 모든 노드의 시작 전에 한꺼번에 비웁니다.
+        // 여기에서 다시 비우면 먼저 실행된 송신 노드의 새 메시지가 사라질 수 있습니다.
+        Thread next = new Thread(this, "node-" + id);
+        thread = next;
+        isRunning = true;
+        try {
+            next.start();
+        } catch (RuntimeException | Error e) {
+            isRunning = false;
+            throw e;
+        }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         isRunning = false;
+        if (thread != null) thread.interrupt();
+    }
+
+    // 종료 플래그가 내려가도 postprocess() 중일 수 있으므로 실제 스레드 생존 여부를 확인합니다.
+    public synchronized boolean isExecutionActive() {
+        return thread != null && thread.isAlive();
+    }
+
+    public synchronized void clearPendingMessages() {
+        if (isExecutionActive()) throw new IllegalStateException("실행 중인 노드의 큐는 비울 수 없습니다.");
+        if (in != null) in.clear();
     }
 }

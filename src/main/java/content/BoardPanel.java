@@ -1,6 +1,8 @@
 package content;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import menu.popup.NodePopupMenu;
 import node.BaseNode;
 import node.Inputable;
@@ -16,16 +18,28 @@ import java.awt.event.ContainerEvent;
 import java.awt.geom.CubicCurve2D;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Getter
+@Slf4j
 public class BoardPanel extends JPanel {
+    public enum RunState { IDLE, RUNNING, STOPPING }
+
     private static final int GRID_SIZE = 64;
 
     private final JPopupMenu popupMenu = new NodePopupMenu();
     // private String description; // TODO, tool tip, json 형식으로 export시 사용
-    private boolean isRunning;
+    private RunState runState = RunState.IDLE;
+    @Getter(AccessLevel.NONE)
+    private List<BaseNode> activeNodes = List.of();
     private NodePanel selectedNode;
+
+    // 이 보드에 추가된 카드만 ID로 찾습니다. 외부에서 맵을 수정하지 못하도록 getter는 생성하지 않습니다.
+    @Getter(AccessLevel.NONE)
+    private final Map<String, NodePanel> nodePanelsById = new HashMap<>();
 
     private JButton connectionStartPort;
     private JButton connectionTargetPort;
@@ -38,10 +52,17 @@ public class BoardPanel extends JPanel {
 
         addContainerListener(new ContainerAdapter() {
             @Override public void componentAdded(ContainerEvent e) {
+                if (e.getChild() instanceof NodePanel panel) {
+                    nodePanelsById.put(panel.getNode().getId(), panel);
+                }
                 nodesChanged();
             }
 
             @Override public void componentRemoved(ContainerEvent e) {
+                if (e.getChild() instanceof NodePanel panel) {
+                    // ID와 카드가 모두 일치하는 항목만 제거합니다.
+                    nodePanelsById.remove(panel.getNode().getId(), panel);
+                }
                 if (e.getChild() == selectedNode) setSelectedNode(null);
 
                 // 삭제된 노드에 연결 시작 포트나 대상 포트가 포함되어 있으면 연결을 취소
@@ -115,14 +136,16 @@ public class BoardPanel extends JPanel {
             NodePanel other = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, targetPort);
             boolean output = connectionStartPort == origin.getOutputPort();
 
+            boolean connected;
             if (output) {
-                ((Outputable) origin.getNode()).connect((Inputable) other.getNode());
+                connected = ((Outputable) origin.getNode()).connect((Inputable) other.getNode());
             }
             else {
-                ((Outputable) other.getNode()).connect((Inputable) origin.getNode());
+                connected = ((Outputable) other.getNode()).connect((Inputable) origin.getNode());
             }
 
-            nodeViewChanged();
+            // 중복 등으로 연결이 거부된 경우에는 변경 알림을 보내지 않습니다.
+            if (connected) notifyConnectionsChanged();
         }
         finally {
             cancelConnection();
@@ -171,8 +194,9 @@ public class BoardPanel extends JPanel {
         repaint();
     }
 
-    public void nodeViewChanged() {
-        firePropertyChange("selectedNode", null, selectedNode);
+    private void notifyConnectionsChanged() {
+        // 변경 사실만 알리고, 수신 측에서 현재 연결 정보를 다시 조회합니다.
+        firePropertyChange("connectionsChanged", null, null);
         repaint();
     }
 
@@ -188,16 +212,78 @@ public class BoardPanel extends JPanel {
     }
 
     public void run() {
-        isRunning = true;
-        for (BaseNode node : getNodes()) node.start();
-        firePropertyChange("boardRunning", false, true);
+        requireEventDispatchThread();
+        if (runState != RunState.IDLE) throw new IllegalStateException("실행 중이거나 종료 중인 워크플로입니다.");
+
+        List<BaseNode> nodes = List.of(getNodes());
+        if (nodes.isEmpty()) return;
+        for (BaseNode node : nodes) {
+            if (node.isExecutionActive()) throw new IllegalStateException("아직 종료되지 않은 노드가 있습니다.");
+        }
+        // 모든 큐를 먼저 비운 뒤 시작해야 송신·수신 노드의 시작 순서에 따라 메시지가 유실되지 않습니다.
+        for (BaseNode node : nodes) node.clearPendingMessages();
+        activeNodes = nodes;
+        setRunState(RunState.RUNNING);
+
+        try {
+            for (BaseNode node : nodes) {
+                node.start();
+            }
+        } catch (RuntimeException | Error e) {
+            // 일부만 시작됐어도 전체 실행 대상을 정리합니다. 오류 안내는 실행 액션에서 담당합니다.
+            stop();
+            throw e;
+        } finally {
+            // 시작 도중 실패한 노드도 포함해, 기다릴 스레드를 이 시점의 참조로 고정합니다.
+            watchCompletion(nodes, nodes.stream().map(BaseNode::getThread).filter(Objects::nonNull).toList());
+        }
     }
 
-    // 동작 확인 필요.
     public void stop() {
-        isRunning = false;
-        for (BaseNode node : getNodes()) node.stop();
-        firePropertyChange("boardRunning", true, false);
+        requireEventDispatchThread();
+        if (runState != RunState.RUNNING) return;
+
+        setRunState(RunState.STOPPING);
+        // 화면에서 카드가 추가·제거돼도 이번에 실행한 노드들을 끝까지 종료 대상으로 유지합니다.
+        for (BaseNode node : activeNodes) node.stop();
+    }
+
+    private void watchCompletion(List<BaseNode> nodes, List<Thread> workers) {
+        Thread watcher = new Thread(() -> {
+            boolean interrupted = false;
+            for (Thread worker : workers) {
+                while (worker.isAlive()) {
+                    try {
+                        worker.join();
+                    } catch (InterruptedException e) {
+                        // 대기 스레드가 중단돼도 살아 있는 노드를 종료 완료로 표시하지 않습니다.
+                        interrupted = true;
+                    }
+                }
+            }
+            // 송신 노드까지 모두 끝난 뒤 남은 메시지를 버립니다. EDT는 join()을 기다리지 않습니다.
+            for (BaseNode node : nodes) node.clearPendingMessages();
+            SwingUtilities.invokeLater(() -> {
+                activeNodes = List.of();
+                setRunState(RunState.IDLE);
+                log.info("{} 보드의 실행이 종료되었습니다.", getName());
+            });
+            if (interrupted) Thread.currentThread().interrupt();
+        }, "workflow-completion");
+        watcher.setDaemon(true);
+        watcher.start();
+    }
+
+    private void setRunState(RunState state) {
+        RunState previous = runState;
+        runState = state;
+        firePropertyChange("boardState", previous, state);
+    }
+
+    private void requireEventDispatchThread() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalStateException("보드 실행 상태는 EDT에서 변경해야 합니다.");
+        }
     }
 
     @Override
@@ -238,7 +324,7 @@ public class BoardPanel extends JPanel {
             if (!(source.getNode() instanceof Outputable)) continue;
 
             for (BaseNode target : source.getNode().getOut()) {
-                NodePanel destination = NodePanel.NODE_MAP.get(target.getId());
+                NodePanel destination = nodePanelsById.get(target.getId());
                 if (destination == null || destination.getParent() != this) continue;
 
                 Point from = center(source.getOutputPort());
