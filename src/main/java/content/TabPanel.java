@@ -6,8 +6,6 @@ import workflow.RunState;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,13 +17,6 @@ public class TabPanel extends JTabbedPane {
     public TabPanel() {
         registerShortcuts();
         addBoardTab();
-
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-            }
-        });
     }
 
     private void registerShortcuts() {
