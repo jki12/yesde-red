@@ -31,7 +31,7 @@ public class YesdeRedFrame extends JFrame {
         setContentPane(contentPanel);
     }
 
-    public TabPanel getTabs() {
+    public TabPanel getTabPanel() {
         return contentPanel.getTabPanel();
     }
 

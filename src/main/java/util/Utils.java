@@ -31,7 +31,7 @@ public class Utils {
     }
 
     public static TabInfo getSelectedTabInfo() {
-        JTabbedPane contentPane = YesdeRedFrame.getInstance().getTabs();
+        JTabbedPane contentPane = YesdeRedFrame.getInstance().getTabPanel();
         int selectedIndex = contentPane.getSelectedIndex();
 
         return new TabInfo(selectedIndex, ((BoardPanel) contentPane.getComponentAt(selectedIndex)));
