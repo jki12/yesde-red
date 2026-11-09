@@ -135,10 +135,10 @@ public class BoardPanel extends JPanel {
 
         // 삭제 키는 보드가 포커스를 가질 때만 동작해, 인스펙터 입력란에서 글자를 지울 때 카드가 함께 지워지지 않습니다.
         setFocusable(true);
-        getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteSelectedNode");
-        getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("BACK_SPACE"), "deleteSelectedNode");
-        getActionMap().put("deleteSelectedNode", new AbstractAction() {
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) { deleteSelectedNode(); }
+        getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteSelection");
+        getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("BACK_SPACE"), "deleteSelection");
+        getActionMap().put("deleteSelection", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { deleteSelection(); }
         });
     }
 
@@ -204,8 +204,18 @@ public class BoardPanel extends JPanel {
         return true;
     }
 
-    /** 선택된 카드를 지웁니다. 선택이 없거나 실행 중이면 아무 일도 하지 않고 false입니다. */
-    public boolean deleteSelectedNode() {
+    /** 연결을 끊습니다. 실행 중이거나 종료 중이면, 또는 그런 연결이 없으면 false입니다. */
+    public boolean removeConnection(Connection connection) {
+        if (getRunState() != RunState.IDLE) return false;
+        if (!connection.source().getNode().disconnect((Inputable) connection.target().getNode())) return false;
+
+        fireConnectionsChanged();
+        return true;
+    }
+
+    /** 선택된 연결 또는 카드를 지웁니다. 선택이 없거나 실행 중이면 아무 일도 하지 않고 false입니다. */
+    public boolean deleteSelection() {
+        if (selectedConnection != null) return removeConnection(selectedConnection);
         return selectedNode != null && removeNode(selectedNode);
     }
 

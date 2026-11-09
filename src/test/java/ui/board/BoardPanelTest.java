@@ -204,7 +204,7 @@ class BoardPanelTest {
     @Test
     void deleteKeyRemovesTheSelectedCardOnly() throws Exception {
         Edt.run(() -> {
-            Action delete = board.getActionMap().get("deleteSelectedNode");
+            Action delete = board.getActionMap().get("deleteSelection");
             assertNotNull(board.getInputMap(JComponent.WHEN_FOCUSED).get(KeyStroke.getKeyStroke("DELETE")));
             assertNotNull(board.getInputMap(JComponent.WHEN_FOCUSED).get(KeyStroke.getKeyStroke("BACK_SPACE")));
 
@@ -262,6 +262,37 @@ class BoardPanelTest {
             click(new Point(430, 400));
             assertNull(board.getSelectedNode());
             assertNull(board.getSelectedConnection());
+        });
+    }
+
+    @Test
+    void deleteKeyRemovesTheSelectedWireWithoutTouchingCards() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        Edt.run(() -> {
+            TestNodes.Source src = (TestNodes.Source) source.getNode();
+            src.connect((TestNodes.Sink) sink.getNode());
+            src.connect((TestNodes.Sink) second.getNode());
+            AtomicInteger connectionEvents = new AtomicInteger();
+            board.addPropertyChangeListener(BoardPanel.PROP_CONNECTIONS_CHANGED, e -> connectionEvents.incrementAndGet());
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            BoardPanel.Connection wire = new BoardPanel.Connection(source, sink);
+
+            board.startWorkflow();
+            assertFalse(board.removeConnection(wire), "실행 중에는 끊을 수 없음");
+            board.stopWorkflow();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> {
+            TestNodes.Source src = (TestNodes.Source) source.getNode();
+            board.setSelectedConnection(new BoardPanel.Connection(source, sink));
+            assertTrue(board.deleteSelection());
+
+            assertFalse(src.getTargets().contains(sink.getNode()));
+            assertTrue(src.getTargets().contains(second.getNode()), "다른 연결은 유지");
+            assertEquals(3, board.getNodePanels().size(), "카드는 그대로");
+            assertNull(board.getSelectedConnection(), "끊긴 연결의 선택은 해제");
+            assertFalse(board.deleteSelection(), "선택이 없으면 false");
+            assertFalse(board.removeConnection(new BoardPanel.Connection(source, sink)), "없는 연결은 false");
         });
     }
 
