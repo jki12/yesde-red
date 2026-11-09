@@ -2,7 +2,6 @@ package content;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import menu.popup.NodePopupMenu;
 import node.BaseNode;
 import node.Inputable;
@@ -10,6 +9,7 @@ import node.Outputable;
 import ui.UiTheme;
 import ui.menu.NodePanel;
 import workflow.RunState;
+import workflow.WorkflowRunner;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -22,18 +22,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Getter
-@Slf4j
 public class BoardPanel extends JPanel {
     private static final int GRID_SIZE = 64;
 
     private final JPopupMenu popupMenu = new NodePopupMenu();
     // private String description; // TODO, tool tip, json 형식으로 export시 사용
-    private RunState runState = RunState.IDLE;
+    // 실행 생명주기는 WorkflowRunner가 맡고, 보드는 상태 변경을 "boardState" 속성 이벤트로 전달합니다.
     @Getter(AccessLevel.NONE)
-    private List<BaseNode> activeNodes = List.of();
+    private final WorkflowRunner runner;
     private NodePanel selectedNode;
 
     // 이 보드에 추가된 카드만 ID로 찾습니다. 외부에서 맵을 수정하지 못하도록 getter는 생성하지 않습니다.
@@ -46,6 +44,7 @@ public class BoardPanel extends JPanel {
 
     public BoardPanel(String name) {
         setName(name);
+        runner = new WorkflowRunner(name, (previous, current) -> firePropertyChange("boardState", previous, current));
         setLayout(null); // 노드 자유롭게 배치.
         setBackground(UiTheme.getBackgroundColor());
 
@@ -210,79 +209,16 @@ public class BoardPanel extends JPanel {
                 .sorted(Comparator.comparing(view -> view.getNode().getCreatedAt())).toList();
     }
 
+    public RunState getRunState() {
+        return runner.getState();
+    }
+
     public void run() {
-        requireEventDispatchThread();
-        if (runState != RunState.IDLE) throw new IllegalStateException("실행 중이거나 종료 중인 워크플로입니다.");
-
-        List<BaseNode> nodes = List.of(getNodes());
-        if (nodes.isEmpty()) return;
-        for (BaseNode node : nodes) {
-            if (node.isExecutionActive()) throw new IllegalStateException("아직 종료되지 않은 노드가 있습니다.");
-        }
-        // 모든 큐를 먼저 비운 뒤 시작해야 송신·수신 노드의 시작 순서에 따라 메시지가 유실되지 않습니다.
-        for (BaseNode node : nodes) node.clearPendingMessages();
-        activeNodes = nodes;
-        setRunState(RunState.RUNNING);
-
-        try {
-            for (BaseNode node : nodes) {
-                node.start();
-            }
-        } catch (RuntimeException | Error e) {
-            // 일부만 시작됐어도 전체 실행 대상을 정리합니다. 오류 안내는 실행 액션에서 담당합니다.
-            stop();
-            throw e;
-        } finally {
-            // 시작 도중 실패한 노드도 포함해, 기다릴 스레드를 이 시점의 참조로 고정합니다.
-            watchCompletion(nodes, nodes.stream().map(BaseNode::getThread).filter(Objects::nonNull).toList());
-        }
+        runner.start(List.of(getNodes()));
     }
 
     public void stop() {
-        requireEventDispatchThread();
-        if (runState != RunState.RUNNING) return;
-
-        setRunState(RunState.STOPPING);
-        // 화면에서 카드가 추가·제거돼도 이번에 실행한 노드들을 끝까지 종료 대상으로 유지합니다.
-        for (BaseNode node : activeNodes) node.stop();
-    }
-
-    private void watchCompletion(List<BaseNode> nodes, List<Thread> workers) {
-        Thread watcher = new Thread(() -> {
-            boolean interrupted = false;
-            for (Thread worker : workers) {
-                while (worker.isAlive()) {
-                    try {
-                        worker.join();
-                    } catch (InterruptedException e) {
-                        // 대기 스레드가 중단돼도 살아 있는 노드를 종료 완료로 표시하지 않습니다.
-                        interrupted = true;
-                    }
-                }
-            }
-            // 송신 노드까지 모두 끝난 뒤 남은 메시지를 버립니다. EDT는 join()을 기다리지 않습니다.
-            for (BaseNode node : nodes) node.clearPendingMessages();
-            SwingUtilities.invokeLater(() -> {
-                activeNodes = List.of();
-                setRunState(RunState.IDLE);
-                log.info("{} 보드의 실행이 종료되었습니다.", getName());
-            });
-            if (interrupted) Thread.currentThread().interrupt();
-        }, "workflow-completion");
-        watcher.setDaemon(true);
-        watcher.start();
-    }
-
-    private void setRunState(RunState state) {
-        RunState previous = runState;
-        runState = state;
-        firePropertyChange("boardState", previous, state);
-    }
-
-    private void requireEventDispatchThread() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            throw new IllegalStateException("보드 실행 상태는 EDT에서 변경해야 합니다.");
-        }
+        runner.stop();
     }
 
     @Override
