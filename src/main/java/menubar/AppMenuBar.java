@@ -5,9 +5,9 @@ import menubar.run.RunMenu;
 
 import javax.swing.*;
 
-public class MenuBar extends JMenuBar {
+public class AppMenuBar extends JMenuBar {
 
-    public MenuBar() {
+    public AppMenuBar() {
         add(new FileMenu());
         add(new RunMenu());
     }

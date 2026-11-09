@@ -3,7 +3,7 @@ package ui.frame;
 import content.ContentPanel;
 import content.TabPanel;
 import content.DebugPanel;
-import menubar.MenuBar;
+import menubar.AppMenuBar;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,7 +26,7 @@ public class YesdeRedFrame extends JFrame {
         setLocationByPlatform(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        setJMenuBar(new MenuBar());
+        setJMenuBar(new AppMenuBar());
         contentPanel = new ContentPanel();
         setContentPane(contentPanel);
     }
