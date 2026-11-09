@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "샘플 - Hacker News 제목 수집 (HTML)",
+  "nodes": [
+    { "id": "f1a2b3", "type": "INJECT", "x": 40, "y": 80,
+      "options": { "message": "tick", "intervalMillis": 300000 } },
+    { "id": "a2b3c4", "type": "HTTP_REQUEST", "x": 340, "y": 80,
+      "options": { "url": "https://news.ycombinator.com/", "userAgent": "yesde-red/1.0", "timeoutMillis": 10000, "minIntervalMillis": 1000 } },
+    { "id": "b3c4d5", "type": "HTML_EXTRACT", "x": 640, "y": 80,
+      "options": { "selector": "tr.athing", "fields": "rank = span.rank\ntitle = .titleline > a\nlink = .titleline > a @href" } },
+    { "id": "c4d5e6", "type": "FILE_WRITE", "x": 940, "y": 40,
+      "options": { "path": "output/hackernews.csv", "format": "CSV", "fields": "rank\ntitle\nlink\nurl", "append": true } },
+    { "id": "d5e6f7", "type": "DEBUG", "x": 940, "y": 160, "options": {} }
+  ],
+  "connections": [
+    { "from": "f1a2b3", "to": "a2b3c4" },
+    { "from": "a2b3c4", "to": "b3c4d5" },
+    { "from": "b3c4d5", "to": "c4d5e6" },
+    { "from": "b3c4d5", "to": "d5e6f7" }
+  ]
+}

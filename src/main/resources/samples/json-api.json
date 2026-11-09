@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "name": "샘플 - GitHub 저장소 정보 (JSON API)",
+  "nodes": [
+    { "id": "a1b2c3", "type": "INJECT", "x": 40, "y": 80,
+      "options": { "message": "tick", "intervalMillis": 60000 } },
+    { "id": "b2c3d4", "type": "HTTP_REQUEST", "x": 340, "y": 80,
+      "options": { "url": "https://api.github.com/repos/jhy/jsoup", "headers": "Accept: application/vnd.github+json",
+                   "userAgent": "yesde-red/1.0", "timeoutMillis": 10000, "minIntervalMillis": 1000 } },
+    { "id": "c3d4e5", "type": "JSON_EXTRACT", "x": 640, "y": 80,
+      "options": { "items": "", "fields": "repo = full_name\nstars = stargazers_count\nforks = forks_count\nupdated = updated_at" } },
+    { "id": "d4e5f6", "type": "FILE_WRITE", "x": 940, "y": 40,
+      "options": { "path": "output/github-jsoup.csv", "format": "CSV", "fields": "repo\nstars\nforks\nupdated", "append": true } },
+    { "id": "e5f6a7", "type": "DEBUG", "x": 940, "y": 160, "options": {} }
+  ],
+  "connections": [
+    { "from": "a1b2c3", "to": "b2c3d4" },
+    { "from": "b2c3d4", "to": "c3d4e5" },
+    { "from": "c3d4e5", "to": "d4e5f6" },
+    { "from": "c3d4e5", "to": "e5f6a7" }
+  ]
+}

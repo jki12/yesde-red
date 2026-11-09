@@ -72,6 +72,20 @@ class WorkflowCodecTest {
         assertTrue(message(() -> WorkflowCodec.toNodes(doc(List.of(badOption), List.of()))).contains("숫자여야"));
     }
 
+    @Test
+    void bundledSampleWorkflowsLoad() throws Exception {
+        for (String sample : List.of("/samples/json-api.json", "/samples/html-list.json")) {
+            try (var in = getClass().getResourceAsStream(sample)) {
+                assertNotNull(in, sample + " 리소스가 없음");
+                WorkflowDocument document = WorkflowCodec.fromJson(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+                List<BaseNode> nodes = WorkflowCodec.toNodes(document);
+                assertEquals(5, nodes.size(), sample);
+                assertEquals(4, document.connections().size(), sample);
+                assertEquals(3, nodes.stream().filter(n -> n.getTargets() != null).mapToLong(n -> n.getTargets().size()).sum(), sample + " 연결 복원");
+            }
+        }
+    }
+
     private static WorkflowDocument doc(List<WorkflowDocument.Node> nodes, List<WorkflowDocument.Connection> connections) {
         return new WorkflowDocument(WorkflowDocument.CURRENT_VERSION, "w", nodes, connections);
     }
