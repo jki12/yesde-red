@@ -130,7 +130,9 @@ public class WorkspacePanel extends JPanel {
         addNode.setIcon(Codicons.icon("add"));
         addNode.addActionListener(e -> {
             BoardPanel board = getSelectedBoard();
-            if (board != null) board.getPopupMenu().show(board, 32, 36);
+            if (board == null) return;
+            Rectangle visible = board.getVisibleRect(); // 스크롤된 상태에서도 지금 보이는 곳에 팝업과 새 카드가 놓입니다.
+            board.getPopupMenu().show(board, visible.x + 32, visible.y + 36);
         });
         runButton.setName("runWorkflow");
         runButton.setIcon(Codicons.icon("play"));
