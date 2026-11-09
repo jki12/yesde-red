@@ -82,7 +82,7 @@ public class BoardPanel extends JPanel {
                 if (e.getChild() instanceof NodePanel panel) {
                     nodePanelsById.put(panel.getNode().getId(), panel);
                 }
-                nodesChanged();
+                fireNodesChanged();
             }
 
             @Override public void componentRemoved(ContainerEvent e) {
@@ -95,10 +95,10 @@ public class BoardPanel extends JPanel {
                 // 삭제된 노드에 연결 시작 포트나 대상 포트가 포함되어 있으면 연결을 취소
                 if (drag.involves(e.getChild())) cancelConnection();
 
-                nodesChanged();
+                fireNodesChanged();
             }
 
-            private void nodesChanged() { firePropertyChange(PROP_NODES_CHANGED, null, getNodePanels()); }
+            private void fireNodesChanged() { firePropertyChange(PROP_NODES_CHANGED, null, getNodePanels()); }
         });
 
         addMouseListener(new MouseAdapter() {
@@ -147,7 +147,7 @@ public class BoardPanel extends JPanel {
     /** 출력 카드의 노드를 입력 카드의 노드에 연결합니다. 중복 등으로 거부되면 false이며 변경 알림을 보내지 않습니다. */
     boolean connect(NodePanel source, NodePanel target) {
         boolean connected = ((Outputable) source.getNode()).connect((Inputable) target.getNode());
-        if (connected) notifyConnectionsChanged();
+        if (connected) fireConnectionsChanged();
         return connected;
     }
 
@@ -175,7 +175,7 @@ public class BoardPanel extends JPanel {
         repaint();
     }
 
-    private void notifyConnectionsChanged() {
+    private void fireConnectionsChanged() {
         // 변경 사실만 알리고, 수신 측에서 현재 연결 정보를 다시 조회합니다.
         firePropertyChange(PROP_CONNECTIONS_CHANGED, null, null);
         repaint();
