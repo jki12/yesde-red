@@ -1,4 +1,4 @@
-package content;
+package ui.inspector;
 
 import annotation.OptionField;
 import ui.theme.UiTheme;

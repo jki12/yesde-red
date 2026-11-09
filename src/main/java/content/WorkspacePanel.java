@@ -1,4 +1,5 @@
 package content;
+import ui.inspector.NodeInspectorPanel;
 import ui.board.BoardPanel;
 
 import lombok.Getter;

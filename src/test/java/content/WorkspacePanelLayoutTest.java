@@ -1,4 +1,5 @@
 package content;
+import ui.inspector.NodeInspectorPanel;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
