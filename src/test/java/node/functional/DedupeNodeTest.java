@@ -59,6 +59,36 @@ class DedupeNodeTest {
     }
 
     @Test
+    void rememberedKeysSurviveARestartWhenAStoreFileIsSet(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws Exception {
+        java.nio.file.Path storeFile = dir.resolve("seen/links.txt");
+        node.setStorePath(storeFile.toString()); // 없는 하위 폴더도 만듦
+        start();
+        node.receive(new Message(Map.of("link", "/a")));
+        node.receive(new Message(Map.of("link", "/b")));
+        assertTrue(sink.awaitMessages(2, 5_000));
+        node.stop(); node.getThread().join(2_000);
+        assertEquals(List.of("/a", "/b"), java.nio.file.Files.readAllLines(storeFile));
+
+        DedupeNode restarted = new DedupeNode("dedupe2");
+        restarted.setStorePath(storeFile.toString());
+        TestNodes.Sink second = new TestNodes.Sink("sink02");
+        restarted.connect(second);
+        restarted.start(); second.start();
+        try {
+            restarted.receive(new Message(Map.of("link", "/a"))); // 이전 실행에서 본 값
+            restarted.receive(new Message(Map.of("link", "/c")));
+            assertTrue(second.awaitMessages(1, 5_000));
+            Thread.sleep(100);
+            assertEquals(List.of("/c"), second.received.stream().map(m -> m.getString("link")).toList(), "파일에 있던 값은 걸러짐");
+            assertEquals(3, restarted.getSeenCount());
+        } finally {
+            restarted.stop(); second.stop();
+            restarted.getThread().join(2_000); second.getThread().join(2_000);
+        }
+        assertEquals(List.of("/a", "/b", "/c"), java.nio.file.Files.readAllLines(storeFile), "새 값만 덧붙임");
+    }
+
+    @Test
     void forgetsTheOldestValuesBeyondMaxEntries() {
         node.setMaxEntries(2);
         assertTrue(node.remember("a"));
