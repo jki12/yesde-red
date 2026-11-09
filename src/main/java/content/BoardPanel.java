@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import menu.popup.NodePopupMenu;
 import node.BaseNode;
-import node.Inputable;
-import node.Outputable;
+import node.MessageReceiver;
+import node.MessageSender;
 import node.Type;
 import ui.UiTheme;
 import ui.menu.NodePanel;
@@ -146,7 +146,7 @@ public class BoardPanel extends JPanel {
 
     /** 출력 카드의 노드를 입력 카드의 노드에 연결합니다. 중복 등으로 거부되면 false이며 변경 알림을 보내지 않습니다. */
     boolean connect(NodePanel source, NodePanel target) {
-        boolean connected = ((Outputable) source.getNode()).connect((Inputable) target.getNode());
+        boolean connected = ((MessageSender) source.getNode()).connect((MessageReceiver) target.getNode());
         if (connected) fireConnectionsChanged();
         return connected;
     }
@@ -247,7 +247,7 @@ public class BoardPanel extends JPanel {
             NodePanel source = (NodePanel) c;
 
             // 연결 선 그리는 부분.
-            if (!(source.getNode() instanceof Outputable)) continue;
+            if (!(source.getNode() instanceof MessageSender)) continue;
 
             for (BaseNode target : source.getNode().getOut()) {
                 NodePanel destination = nodePanelsById.get(target.getId());

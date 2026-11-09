@@ -1,10 +1,10 @@
 package support;
 
 import node.BaseNode;
-import node.Inputable;
+import node.MessageReceiver;
 import node.Message;
 import node.NodeFactory;
-import node.Outputable;
+import node.MessageSender;
 import node.PollingNode;
 import node.Type;
 
@@ -16,7 +16,7 @@ public final class TestNodes {
     private TestNodes() { }
 
     /** 간격마다 "m1", "m2", … 메시지를 보내는 폴링 출력 노드입니다. */
-    public static final class Source extends PollingNode implements Outputable {
+    public static final class Source extends PollingNode implements MessageSender {
         private final String id;
         public final AtomicInteger sent = new AtomicInteger();
 
@@ -33,7 +33,7 @@ public final class TestNodes {
     }
 
     /** 메시지를 받으면 예외를 던져 멈추는 입력 노드입니다. 노드 실패 처리 검사에 씁니다. */
-    public static final class Failing extends BaseNode implements Inputable {
+    public static final class Failing extends BaseNode implements MessageReceiver {
         private final String id;
 
         public Failing(String id) { super(Type.DEBUG); this.id = id; }
@@ -49,7 +49,7 @@ public final class TestNodes {
     }
 
     /** 받은 메시지 수만 세는 입력 노드입니다. */
-    public static final class Sink extends BaseNode implements Inputable {
+    public static final class Sink extends BaseNode implements MessageReceiver {
         private final String id;
         public final AtomicInteger seen = new AtomicInteger();
 

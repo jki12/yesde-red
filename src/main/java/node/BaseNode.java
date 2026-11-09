@@ -61,8 +61,8 @@ public abstract class BaseNode implements Runnable {
         this.id = id;
         this.type = type;
 
-        this.in = this instanceof Inputable ? new Pipe() : null;
-        this.out = this instanceof Outputable ? new CopyOnWriteArraySet<>() : null;
+        this.in = this instanceof MessageReceiver ? new Pipe() : null;
+        this.out = this instanceof MessageSender ? new CopyOnWriteArraySet<>() : null;
     }
 
     public Set<BaseNode> getOut() {
@@ -71,7 +71,7 @@ public abstract class BaseNode implements Runnable {
         return out == null ? null : Collections.unmodifiableSet(out);
     }
 
-    public boolean connect(Inputable input) {
+    public boolean connect(MessageReceiver input) {
         if (!(input instanceof BaseNode other)) return false;
         if (!canConnect(other) || !out.add(other)) return false; // 이미 연결돼 있으면 add가 false
 
@@ -82,14 +82,14 @@ public abstract class BaseNode implements Runnable {
 
     private boolean canConnect(BaseNode other) {
         // 드래그를 시작한 방향과 관계없이 모델 연결은 출력 → 입력만 허용합니다.
-        return this instanceof Outputable
-                && other instanceof Inputable
+        return this instanceof MessageSender
+                && other instanceof MessageReceiver
                 && this != other;
     }
 
     // 연결된 각 노드의 receive()를 호출해 메시지를 전달합니다.
     protected void send(Message message) {
-        if (!(this instanceof Outputable)) {
+        if (!(this instanceof MessageSender)) {
             throw new IllegalStateException("출력 기능이 없는 노드입니다.");
         }
 
@@ -100,7 +100,7 @@ public abstract class BaseNode implements Runnable {
 
     // 받은 메시지는 입력 큐에 넣고, 실제 처리는 노드 작업 스레드에 맡깁니다.
     public void receive(Message message) {
-        if (!(this instanceof Inputable)) {
+        if (!(this instanceof MessageReceiver)) {
             throw new IllegalStateException("입력 기능이 없는 노드입니다.");
         }
 
