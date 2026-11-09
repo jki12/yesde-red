@@ -84,16 +84,7 @@ public class TabPanel extends JTabbedPane {
     public void addBoardTab() {
         int idx = getSelectedIndex() + 1; // 시작시에도 + 1을 해주기 때문에 -1을 반환해도 문제 없음.
 
-        BoardPanel board = new BoardPanel(generateTitle());
-
-        // 보드의 선택·노드 목록·연결·실행 상태 변경 알림을 상위 패널로 전달합니다.
-        for (String property : new String[] {BoardPanel.PROP_SELECTED_NODE, BoardPanel.PROP_BOARD_STATE,
-                BoardPanel.PROP_NODES_CHANGED, BoardPanel.PROP_CONNECTIONS_CHANGED}) {
-            board.addPropertyChangeListener(property,
-                    e -> firePropertyChange(property, e.getOldValue(), e.getNewValue()));
-        }
-
-        add(board, idx);
+        add(new BoardPanel(generateTitle()), idx);
         setSelectedIndex(idx);
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
     }

@@ -9,6 +9,7 @@ import ui.menu.NodePanel;
 import workflow.RunState;
 import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyChangeListener;
 
 public class ContentPanel extends JPanel {
     private static final int DIVIDER_SIZE = 5;
@@ -23,6 +24,9 @@ public class ContentPanel extends JPanel {
     private static final int INITIAL_NODE_INFO_WIDTH = 300;
     private static final int INITIAL_CONSOLE_MIN_HEIGHT = 180;
     private static final double INITIAL_CONSOLE_HEIGHT_RATIO = 0.27;
+    // 선택된 보드에서 구독하는 이벤트. 어느 것이든 오면 목록·속성·상태 표시를 다시 그립니다.
+    private static final String[] OBSERVED_BOARD_PROPERTIES = {BoardPanel.PROP_SELECTED_NODE,
+            BoardPanel.PROP_NODES_CHANGED, BoardPanel.PROP_CONNECTIONS_CHANGED, BoardPanel.PROP_BOARD_STATE};
 
     @Getter
     private final TabPanel tabPanel = new TabPanel();
@@ -40,6 +44,9 @@ public class ContentPanel extends JPanel {
     private boolean dividersInitialized;
     private int lastLayoutWidth;
     private int lastLayoutHeight;
+
+    private final PropertyChangeListener boardListener = e -> refreshCurrentBoardView();
+    private BoardPanel observedBoard;
 
     /*
      * ContentPanel 구성
@@ -87,15 +94,22 @@ public class ContentPanel extends JPanel {
         add(createFooter(), BorderLayout.SOUTH);
 
 
-        // 현재 보드의 선택·추가/삭제·연결 변경·실행 상태와 탭 전환을 한곳에서 받아 목록·속성·상태를 함께 갱신합니다.
-        // 원본 모델을 주기적으로 감시하는 타이머가 아니라 실제 UI 변경 알림에만 반응합니다.
-        tabPanel.addPropertyChangeListener(BoardPanel.PROP_SELECTED_NODE, e -> refreshCurrentBoardView());
-        tabPanel.addPropertyChangeListener(BoardPanel.PROP_NODES_CHANGED, e -> refreshCurrentBoardView());
-        tabPanel.addPropertyChangeListener(BoardPanel.PROP_CONNECTIONS_CHANGED, e -> refreshCurrentBoardView());
-        tabPanel.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> refreshCurrentBoardView());
-        tabPanel.addChangeListener(e -> refreshCurrentBoardView());
+        // 선택된 보드 하나만 구독합니다. 탭이 바뀌면 이전 보드의 구독을 풀고 새 보드에 붙입니다.
+        tabPanel.addChangeListener(e -> observeSelectedBoard());
+        observeSelectedBoard();
+    }
 
-
+    private void observeSelectedBoard() {
+        BoardPanel board = getSelectedBoard();
+        if (board != observedBoard) {
+            if (observedBoard != null) {
+                for (String property : OBSERVED_BOARD_PROPERTIES) observedBoard.removePropertyChangeListener(property, boardListener);
+            }
+            if (board != null) {
+                for (String property : OBSERVED_BOARD_PROPERTIES) board.addPropertyChangeListener(property, boardListener);
+            }
+            observedBoard = board;
+        }
         refreshCurrentBoardView();
     }
 
