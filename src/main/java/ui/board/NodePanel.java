@@ -117,6 +117,7 @@ public class NodePanel extends JPanel {
                 setLocation(x, y);
                 node.setLocation(new Point(x, y));
 
+                board().revalidate(); // 카드 범위에 맞춰 캔버스 크기를 다시 계산합니다.
                 board().repaint();
             }
 

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-public class BoardPanel extends JPanel {
+public class BoardPanel extends JPanel implements Scrollable {
     /** 선택 카드가 바뀜. old/new: NodePanel 또는 null */
     public static final String PROP_SELECTED_NODE = "selectedNode";
     /** 카드가 추가·제거됨. new: 현재 카드 목록 */
@@ -48,6 +48,8 @@ public class BoardPanel extends JPanel {
     }
 
     private static final int GRID_SIZE = 64;
+    // 카드 오른쪽·아래로 남겨 두는 여유 공간입니다. 끌어서 캔버스를 계속 넓힐 수 있습니다.
+    private static final int CANVAS_MARGIN = 240;
 
     private final JPopupMenu popupMenu = new AddNodePopup();
     // private String description; // TODO, tool tip, json 형식으로 export시 사용
@@ -206,6 +208,7 @@ public class BoardPanel extends JPanel {
 
         remove(view); // componentRemoved가 선택 해제·드래그 취소·nodesChanged 알림을 처리합니다.
         if (connectionsChanged) fireConnectionsChanged();
+        revalidate(); // 카드 범위가 줄었을 수 있으므로 캔버스 크기를 다시 계산합니다.
         repaint();
         return true;
     }
@@ -314,6 +317,31 @@ public class BoardPanel extends JPanel {
 
     public void stopWorkflow() {
         runner.stop();
+    }
+
+    /** 카드가 차지하는 범위에 여유를 더한 크기입니다. 스크롤 패널 안에서 캔버스가 카드를 따라 자랍니다. */
+    @Override
+    public Dimension getPreferredSize() {
+        int width = 0;
+        int height = 0;
+        for (Component card : getComponents()) {
+            width = Math.max(width, card.getX() + card.getWidth());
+            height = Math.max(height, card.getY() + card.getHeight());
+        }
+        return new Dimension(width + CANVAS_MARGIN, height + CANVAS_MARGIN);
+    }
+
+    // Scrollable: 뷰포트보다 작을 때는 뷰포트를 꽉 채우고, 커지면 스크롤바가 생깁니다.
+    @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+    @Override public int getScrollableUnitIncrement(Rectangle visible, int orientation, int direction) { return GRID_SIZE; }
+    @Override public int getScrollableBlockIncrement(Rectangle visible, int orientation, int direction) {
+        return orientation == SwingConstants.VERTICAL ? visible.height : visible.width;
+    }
+    @Override public boolean getScrollableTracksViewportWidth() {
+        return getParent() instanceof JViewport viewport && viewport.getWidth() > getPreferredSize().width;
+    }
+    @Override public boolean getScrollableTracksViewportHeight() {
+        return getParent() instanceof JViewport viewport && viewport.getHeight() > getPreferredSize().height;
     }
 
     @Override

@@ -312,6 +312,23 @@ class BoardPanelTest {
         });
     }
 
+    @Test
+    void preferredSizeFollowsTheCardsWithAMargin() throws Exception {
+        Edt.run(() -> {
+            // 카드: source(75,95) sink(540,230) second(540,335), 크기 236x72 → 오른쪽 끝 776, 아래 끝 407
+            assertEquals(new Dimension(776 + 240, 407 + 240), board.getPreferredSize());
+
+            second.setLocation(900, 600);
+            assertEquals(new Dimension(1136 + 240, 672 + 240), board.getPreferredSize(), "카드를 옮기면 캔버스가 따라 자람");
+
+            board.removeNode(second);
+            assertEquals(new Dimension(776 + 240, 302 + 240), board.getPreferredSize(), "카드를 지우면 줄어듦");
+
+            board.removeAll();
+            assertEquals(new Dimension(240, 240), board.getPreferredSize(), "빈 보드는 여백만");
+        });
+    }
+
     private void click(Point point) {
         board.dispatchEvent(new java.awt.event.MouseEvent(board, java.awt.event.MouseEvent.MOUSE_CLICKED, 0, 0,
                 point.x, point.y, 1, false, java.awt.event.MouseEvent.BUTTON1));
