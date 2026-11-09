@@ -41,7 +41,7 @@ class ContentPanelLayoutTest {
     void resizingChangesOnlyTheCanvas() throws Exception {
         Edt.run(() -> {
             ContentPanel content = layoutAt(1440, 820);
-            int hierarchyWidth = nodeList(content).getWidth();
+            int nodeListWidth = nodeList(content).getWidth();
             int nodeInfoWidth = nodeInfo(content).getWidth();
             int consoleHeight = content.getConsole().getHeight();
             int canvasWidth = content.getTabPanel().getWidth();
@@ -49,7 +49,7 @@ class ContentPanelLayoutTest {
 
             relayoutAt(content, 1240, 720);
 
-            assertEquals(hierarchyWidth, nodeList(content).getWidth());
+            assertEquals(nodeListWidth, nodeList(content).getWidth());
             assertEquals(nodeInfoWidth, nodeInfo(content).getWidth());
             assertEquals(consoleHeight, content.getConsole().getHeight());
             assertEquals(canvasWidth - 200, content.getTabPanel().getWidth());

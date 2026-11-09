@@ -21,7 +21,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class OptionSettingsEditorTest {
+class NodeOptionsEditorTest {
     enum Mode { FAST, SLOW }
 
     /** 지원하는 모든 입력 종류와 편집 불가·static 필드를 가진 스텁입니다. */
