@@ -2,7 +2,7 @@ package content;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import menu.popup.NodePopupMenu;
+import menu.popup.AddNodePopup;
 import node.BaseNode;
 import node.MessageReceiver;
 import node.MessageSender;
@@ -47,7 +47,7 @@ public class BoardPanel extends JPanel {
 
     private static final int GRID_SIZE = 64;
 
-    private final JPopupMenu popupMenu = new NodePopupMenu();
+    private final JPopupMenu popupMenu = new AddNodePopup();
     // private String description; // TODO, tool tip, json 형식으로 export시 사용
     // 실행 생명주기는 WorkflowRunner가 맡고, 보드는 상태 변경을 PROP_BOARD_STATE 속성 이벤트로 전달합니다.
     @Getter(AccessLevel.NONE)

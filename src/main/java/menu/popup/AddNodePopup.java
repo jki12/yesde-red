@@ -11,9 +11,9 @@ import ui.UiTheme;
 import java.awt.Dimension;
 
 @Getter
-public class NodePopupMenu extends JPopupMenu {
+public class AddNodePopup extends JPopupMenu {
 
-    public NodePopupMenu() {
+    public AddNodePopup() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(UiTheme.getBackgroundColor());
         setPreferredSize(new Dimension(320, 332));
