@@ -2,7 +2,6 @@ package node;
 
 import node.option.OptionField;
 import node.option.OptionInputType;
-import com.google.gson.annotations.Expose;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,8 +10,6 @@ import lombok.Setter;
 @Setter
 public abstract class PollingNode extends BaseNode {
     private static final long DEFAULT_INTERVAL_MILLIS = 1_000;
-
-    @Expose
     @OptionField(type = OptionInputType.TEXT, min = 0)
     private long intervalMillis = DEFAULT_INTERVAL_MILLIS;
 

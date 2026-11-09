@@ -2,11 +2,11 @@ package ui.action;
 
 import lombok.extern.slf4j.Slf4j;
 import ui.board.BoardPanel;
-import json.Json;
+import json.WorkflowCodec;
+import ui.board.NodePanel;
 import ui.YesdeRedFrame;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 
 @Slf4j
@@ -20,11 +20,9 @@ public class ExportAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         BoardPanel board = YesdeRedFrame.getInstance().getSelectedBoard();
 
-        for (Component c : board.getComponents()) { // TODO, file에 쓰는 로직 작성.
-            log.info(Json.toJson(c));
-        }
-
-        // TODO, json 형태로 추출하는 코드, 저장 위치 정하는 file chooser처럼 dialog 구현.
+        // TODO, 파일 선택 대화상자와 저장은 다음 단계에서 붙입니다.
+        log.info(WorkflowCodec.toJson(WorkflowCodec.toDocument(board.getName(),
+                board.getNodePanels().stream().map(NodePanel::getNode).toList())));
         log.info("{} 보드가 추출되었습니다.", board.getName());
     }
 }

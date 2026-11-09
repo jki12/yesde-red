@@ -1,6 +1,5 @@
 package node;
 
-import com.google.gson.annotations.Expose;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,15 +25,11 @@ public abstract class BaseNode implements Runnable {
     private static final RandomIdGenerator ID_GENERATOR = new RandomIdGenerator();
 
     private final LocalDateTime createdAt;
-    @Expose
     private final String id;
-    @Expose(deserialize = false)
     private final NodeType type;
     @Setter(AccessLevel.NONE)
     private volatile Thread thread;
-    @Expose
     private int x; // board panel을 기준으로 한 x, y 값.
-    @Expose
     private int y;
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
