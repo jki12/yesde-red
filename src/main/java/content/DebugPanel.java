@@ -81,14 +81,10 @@ public class DebugPanel extends JPanel {
     }
 
     private JPanel createHeader() {
-        JPanel header = new JPanel(new GridBagLayout()); // UiTheme.header("콘솔", Codicons.icon("terminal"));
-        header.setPreferredSize(new Dimension(0, 38)); // 42 -> 38로 크기 조정.
+        JPanel header = UiTheme.header("디버깅", Codicons.icon("terminal"));
+        // 체크박스·버튼이 들어가므로 기본 머리글보다 2px 높게 잡고 세로 여백을 줄입니다.
+        header.setPreferredSize(new Dimension(0, 38));
         header.setBorder(UiTheme.headerBorder(5, 12));
-        JLabel title = UiTheme.label("디버깅", false);
-
-        title.setFont(UiTheme.getFont().deriveFont(Font.BOLD));
-        title.setIcon(Codicons.icon("terminal", 16));
-        title.setIconTextGap(8);
 
         autoScrollBox.setOpaque(false);
         autoScrollBox.setFont(UiTheme.getFont());
@@ -98,24 +94,13 @@ public class DebugPanel extends JPanel {
         clear.setIcon(Codicons.icon("clear-all", 16));
         clear.addActionListener(e -> clear());
 
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridy = 0;
-        constraints.anchor = GridBagConstraints.BASELINE_LEADING;
-        constraints.insets = new Insets(0, 5, 0, 5);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actions.setOpaque(false);
+        actions.add(autoScrollBox);
+        actions.add(clear);
 
-        constraints.gridx = 0;
-        header.add(title, constraints);
-
-        constraints.gridx = 1;
-        constraints.weightx = 1; // 개수 공간
-        header.add(countLabel, constraints);
-
-        constraints.gridx = 2;
-        constraints.weightx = 0;
-        header.add(autoScrollBox, constraints);
-
-        constraints.gridx = 3;
-        header.add(clear, constraints);
+        header.add(countLabel, BorderLayout.CENTER);
+        header.add(actions, BorderLayout.EAST);
 
         return header;
     }

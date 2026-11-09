@@ -85,8 +85,9 @@ public final class UiTheme {
         return UIManager.getFont("small.font");
     }
 
+    /** 왼쪽에 제목을 둔 패널 머리글입니다. 필요하면 호출 측이 CENTER·EAST에 컴포넌트를 더 붙입니다. */
     public static JPanel header(String title, FlatSVGIcon icon) {
-        JPanel header = new JPanel(new BorderLayout());
+        JPanel header = new JPanel(new BorderLayout(10, 0));
 
         header.setBackground(getHeaderBackgroundColor());
         header.setPreferredSize(new Dimension(0, 36));
