@@ -125,8 +125,10 @@ public final class OptionSettingsEditor {
                 for (var entry : values.entrySet()) entry.getKey().set(node, entry.getValue());
             }
             feedback.setText("적용했습니다.");
+        } catch (OptionInput.InvalidValueException e) {
+            feedback.setText(e.getMessage()); // 범위·타입 안내문. 입력 원문은 들어 있지 않습니다.
         } catch (IllegalArgumentException | IllegalAccessException e) {
-            // 입력 원문에는 웹훅 토큰이 포함될 수 있으므로 예외 메시지는 그대로 표시하지 않습니다.
+            // 숫자 형식 오류 메시지에는 입력 원문(웹훅 토큰일 수 있음)이 포함되므로 그대로 표시하지 않습니다.
             feedback.setText("입력값과 필드 타입을 확인하세요.");
         }
     }

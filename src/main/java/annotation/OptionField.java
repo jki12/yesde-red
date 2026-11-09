@@ -12,4 +12,6 @@ import java.lang.annotation.Target;
 public @interface OptionField {
     FieldType type() default FieldType.TEXT;
     boolean editable() default true;
+    /** 숫자 필드가 가질 수 있는 최솟값입니다. 기본값은 제한 없음입니다. */
+    long min() default Long.MIN_VALUE;
 }

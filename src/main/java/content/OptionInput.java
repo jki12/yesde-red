@@ -20,13 +20,13 @@ abstract class OptionInput {
     /** 어노테이션의 type에 맞는 입력 컴포넌트를 만듭니다. */
     static OptionInput create(Field field, OptionField option) {
         return switch (option.type()) {
-            case TEXT -> new TextInput(field.getType(), new JTextField());
+            case TEXT -> new TextInput(field, option, new JTextField());
             case TEXT_AREA -> {
                 JTextArea area = new JTextArea();
                 area.setFont(UiTheme.getFont());
-                yield new TextInput(field.getType(), area);
+                yield new TextInput(field, option, area);
             }
-            case SENSITIVE_TEXT -> new TextInput(field.getType(), new JPasswordField());
+            case SENSITIVE_TEXT -> new TextInput(field, option, new JPasswordField());
             case CHECK_BOX -> new CheckBoxInput();
             case RADIO_BUTTON -> new RadioInput(field.getType());
         };
@@ -49,19 +49,32 @@ abstract class OptionInput {
     /** 필드의 현재 값을 화면에 반영합니다. */
     abstract void setValue(Object value);
 
-    /** 화면의 입력을 필드 타입의 값으로 변환합니다. 변환할 수 없으면 IllegalArgumentException을 던집니다. */
+    /**
+     * 화면의 입력을 필드 타입의 값으로 변환합니다.
+     * 형식이 틀리면 NumberFormatException 등 일반 IllegalArgumentException을, 범위를 벗어나거나 지원하지 않는 타입이면
+     * 사용자에게 그대로 보여줄 수 있는 메시지를 담은 {@link InvalidValueException}을 던집니다.
+     */
     abstract Object getValue();
+
+    /** 메시지에 입력 원문이 들어가지 않아 화면에 바로 표시해도 되는 입력 오류입니다. */
+    static final class InvalidValueException extends IllegalArgumentException {
+        InvalidValueException(String message) { super(message); }
+    }
 
     /** 한 줄·여러 줄·비밀 문자열 입력. String, int/Integer, long/Long 필드를 지원합니다. */
     private static final class TextInput extends OptionInput {
         private static final int TEXT_AREA_HEIGHT = 130;
 
+        private final String name;
         private final Class<?> type;
+        private final long min;
         private final JTextComponent text;
         private final JComponent view;
 
-        TextInput(Class<?> type, JTextComponent text) {
-            this.type = type;
+        TextInput(Field field, OptionField option, JTextComponent text) {
+            this.name = field.getName();
+            this.type = field.getType();
+            this.min = option.min();
             this.text = text;
             this.view = text instanceof JTextArea ? new JScrollPane(text) : text;
         }
@@ -75,9 +88,14 @@ abstract class OptionInput {
         @Override Object getValue() {
             String value = read();
             if (type == String.class) return value.isEmpty() ? null : value;
-            if (type == int.class || type == Integer.class) return Integer.valueOf(value.strip());
-            if (type == long.class || type == Long.class) return Long.valueOf(value.strip());
-            throw new IllegalArgumentException("지원하지 않는 필드 타입입니다.");
+            if (type == int.class || type == Integer.class) return atLeastMin(Integer.valueOf(value.strip()));
+            if (type == long.class || type == Long.class) return atLeastMin(Long.valueOf(value.strip()));
+            throw new InvalidValueException(name + ": 지원하지 않는 필드 타입입니다.");
+        }
+
+        private <N extends Number> N atLeastMin(N number) {
+            if (number.longValue() < min) throw new InvalidValueException(name + "은(는) " + min + " 이상이어야 합니다.");
+            return number;
         }
 
         private String read() {
