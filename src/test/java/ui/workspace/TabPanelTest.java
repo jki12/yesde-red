@@ -41,6 +41,31 @@ class TabPanelTest {
     }
 
     @Test
+    void canvasFillsTheViewportUntilCardsGrowBeyondIt() throws Exception {
+        Edt.run(() -> {
+            TabPanel tabs = new TabPanel();
+            tabs.setSize(600, 400);
+            JScrollPane scroll = (JScrollPane) tabs.getComponentAt(0);
+            BoardPanel board = tabs.getBoardAt(0);
+            support.Swing.layout(tabs);
+
+            assertEquals(scroll.getViewport().getWidth(), board.getWidth(), "카드가 없으면 보드가 뷰포트를 꽉 채움");
+            assertFalse(scroll.getHorizontalScrollBar().isVisible());
+
+            board.addNode(node.NodeType.INJECT, new Point(900, 600));
+            support.Swing.layout(tabs);
+
+            assertTrue(board.getWidth() >= 900 + ui.board.NodePanel.DEFAULT_WIDTH, "카드를 담을 만큼 캔버스가 커짐");
+            assertTrue(scroll.getHorizontalScrollBar().isVisible(), "가로 스크롤바가 생김");
+            assertTrue(scroll.getVerticalScrollBar().isVisible(), "세로 스크롤바가 생김");
+
+            board.removeNode(board.getNodePanels().get(0));
+            support.Swing.layout(tabs);
+            assertFalse(scroll.getHorizontalScrollBar().isVisible(), "카드가 사라지면 스크롤바도 사라짐");
+        });
+    }
+
+    @Test
     void runningOrStoppingBoardCannotBeClosed() throws Exception {
         CountDownLatch idle = new CountDownLatch(1);
         TabPanel[] tabs = new TabPanel[1];
