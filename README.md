@@ -35,7 +35,7 @@
 |---|---|---|
 | 메시지 주입 | 간격마다 메시지를 보냅니다. 흐름의 시작점 | `message`, `intervalMillis` |
 | HTTP 요청 | payload의 `url`(없으면 옵션 URL)을 GET으로 호출해 `url`·`status`·`contentType`·`body`를 더합니다 | URL, 헤더, User-Agent, 타임아웃, 요청 사이 최소 간격 |
-| HTML 추출 | `body`에서 CSS 선택자로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 선택자, 필드(`이름 = 선택자 [@속성]`) |
+| HTML 추출 | `body`(HTML 또는 XML/RSS)에서 CSS 선택자로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 선택자, 필드(`이름 = 선택자 [@속성]`), XML/RSS로 파싱 |
 | JSON 추출 | `body`(JSON)에서 경로로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 경로(`data.items[*]`), 필드(`이름 = 경로`) |
 | 파일 저장 | 메시지를 CSV 또는 JSON Lines로 한 줄씩 기록합니다 | 파일 경로, 형식, 기록할 필드, 이어 쓰기 |
 | 중복 제거 | 기준 필드 값이 처음 보이는 메시지만 통과시킵니다. 기억 파일을 지정하면 다시 실행해도 유지됩니다 | 기준 필드, 최대 개수, 기억 파일 |
@@ -47,6 +47,7 @@
 
 - HTML: `title = h2 a`(텍스트), `link = h2 a @href`(속성, 상대 주소는 절대 주소로), `price = .price`
 - JSON: `name = title`, `price = price.amount`, `first = tags[0]`. 항목 경로 끝의 `[*]`만 배열 전개를 뜻합니다.
+- RSS: **XML/RSS로 파싱**을 켜고 항목 선택자 `item`, 필드 `title = title`, `link = link`, `time = pubDate`처럼 태그 이름을 씁니다.
 - 줄마다 하나, 빈 줄과 `#` 주석은 무시합니다.
 
 ### 샘플
@@ -55,7 +56,7 @@
 
 - `json-api.json`: GitHub API에서 저장소 정보를 1분마다 받아 `output/github-jsoup.csv`에 기록
 - `html-list.json`: Hacker News 첫 페이지 제목·링크를 5분마다 `output/hackernews.csv`에 기록
-- `hotdeal.json`: 클리앙 알뜰구매와 루리웹 핫딜 게시판 목록을 10분마다 받아, 중복 제거 노드가 `link` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 링크는 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다
+- `hotdeal.json`: 클리앙 알뜰구매(HTML), 루리웹 핫딜(RSS), 뽐뿌(RSS)를 10분마다 받아, 중복 제거 노드가 `link` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 링크는 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다. 사이트가 RSS를 제공하면 HTML 목록보다 RSS가 안정적이고 예의 바른 경로입니다
 
 수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
 
