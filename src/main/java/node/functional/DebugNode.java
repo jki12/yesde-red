@@ -14,7 +14,7 @@ public class DebugNode extends BaseNode implements Inputable {
     public static final String DESCRIPTION = "수신한 메시지를 하단 콘솔에 표시합니다.";
     public static final Icon ICON = Codicons.icon("bug", 18);
 
-    private final DebugPanel instance = YesdeRedFrame.getInstance().getDebugPanel();
+    private final DebugPanel console = YesdeRedFrame.getInstance().getDebugPanel();
 
     public DebugNode() {
         super(Type.DEBUG);
@@ -39,9 +39,9 @@ public class DebugNode extends BaseNode implements Inputable {
     protected void process() throws Exception {
         Message message = getIn().take();
 
-        instance.add("DEBUG " + getId(), message.toString());
+        console.add("DEBUG " + getId(), message.toString());
 
-        instance.revalidate();
-        instance.repaint();
+        console.revalidate();
+        console.repaint();
     }
 }
