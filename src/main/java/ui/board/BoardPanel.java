@@ -37,6 +37,15 @@ public class BoardPanel extends JPanel implements Scrollable {
     public static final String PROP_BOARD_STATE = "boardState";
     /** 실행 중 노드가 예외로 멈춤. new: NodeFailure. 직후 보드 전체가 종료됩니다. */
     public static final String PROP_NODE_FAILED = "nodeFailed";
+    /** 노드가 메시지 하나를 건너뛰며 경고를 남김. new: NodeWarning. 실행은 계속됩니다. */
+    public static final String PROP_NODE_WARNING = "nodeWarning";
+
+    /** 노드가 남긴 경고입니다. */
+    public record NodeWarning(BaseNode node, String message) {
+        public String describe() {
+            return node.getDisplayName() + " " + node.getId() + " — " + message;
+        }
+    }
 
     /** 화면에 그려지는 연결 하나입니다. 출력 카드의 노드가 입력 카드의 노드로 메시지를 보냅니다. */
     public record Connection(NodePanel source, NodePanel target) { }
@@ -80,6 +89,9 @@ public class BoardPanel extends JPanel implements Scrollable {
             @Override public void nodeFailed(BaseNode node, Throwable error) {
                 lastFailure = new NodeFailure(node, error);
                 firePropertyChange(PROP_NODE_FAILED, null, lastFailure);
+            }
+            @Override public void nodeWarned(BaseNode node, String message) {
+                firePropertyChange(PROP_NODE_WARNING, null, new NodeWarning(node, message));
             }
         });
         setLayout(null); // 노드 자유롭게 배치.

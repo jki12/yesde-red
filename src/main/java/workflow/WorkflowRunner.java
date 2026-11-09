@@ -19,6 +19,9 @@ public final class WorkflowRunner {
 
         /** 실행 중 노드가 예외로 멈췄을 때 호출됩니다. 직후 워크플로 전체가 종료됩니다. */
         default void nodeFailed(BaseNode node, Throwable error) { }
+
+        /** 노드가 메시지 하나를 건너뛰며 남긴 경고입니다. 실행은 계속됩니다. */
+        default void nodeWarned(BaseNode node, String message) { }
     }
 
     private final String name;
@@ -51,6 +54,7 @@ public final class WorkflowRunner {
         try {
             for (BaseNode node : activeNodes) {
                 node.setFailureListener(this::onNodeFailed);
+                node.setWarningListener(this::onNodeWarned);
                 node.start();
             }
         } catch (RuntimeException | Error e) {
@@ -88,7 +92,10 @@ public final class WorkflowRunner {
             // 송신 노드까지 모두 끝난 뒤 남은 메시지를 버립니다. EDT는 join()을 기다리지 않습니다.
             for (BaseNode node : nodes) node.clearPendingMessages();
             SwingUtilities.invokeLater(() -> {
-                for (BaseNode node : nodes) node.setFailureListener(null);
+                for (BaseNode node : nodes) {
+                    node.setFailureListener(null);
+                    node.setWarningListener(null);
+                }
                 activeNodes = List.of();
                 setState(RunState.IDLE);
                 log.info("{} 보드의 실행이 종료되었습니다.", name);
@@ -105,6 +112,12 @@ public final class WorkflowRunner {
             if (state != RunState.RUNNING) return; // 종료 중에 난 실패는 사용자가 이미 멈춘 흐름의 일부입니다.
             listener.nodeFailed(node, error);
             stop();
+        });
+    }
+
+    private void onNodeWarned(BaseNode node, String message) {
+        SwingUtilities.invokeLater(() -> {
+            if (state == RunState.RUNNING) listener.nodeWarned(node, message);
         });
     }
 

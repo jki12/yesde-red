@@ -102,6 +102,10 @@ public class WorkspacePanel extends JPanel {
                 BoardPanel.NodeFailure failure = (BoardPanel.NodeFailure) e.getNewValue();
                 console.append("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
             });
+            board.addPropertyChangeListener(BoardPanel.PROP_NODE_WARNING, e -> {
+                BoardPanel.NodeWarning warning = (BoardPanel.NodeWarning) e.getNewValue();
+                console.append("경고 " + board.getName(), warning.describe());
+            });
         }
         if (board != observedBoard) {
             if (observedBoard != null) {

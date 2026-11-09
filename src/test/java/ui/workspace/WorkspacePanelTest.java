@@ -79,6 +79,37 @@ class WorkspacePanelTest {
     }
 
     @Test
+    void nodeWarningsGoToTheConsoleWithoutStoppingTheWorkflow() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        WorkspacePanel[] content = new WorkspacePanel[1];
+        support.TestNodes.Warner warner = new support.TestNodes.Warner("w1");
+        Edt.run(() -> {
+            content[0] = new WorkspacePanel();
+            BoardPanel board = content[0].getSelectedBoard();
+            support.TestNodes.Source source = new support.TestNodes.Source("s1");
+            source.setIntervalMillis(20);
+            source.connect(warner);
+            for (node.BaseNode model : new node.BaseNode[] {source, warner}) {
+                ui.board.NodePanel view = new ui.board.NodePanel(model);
+                view.setBounds(40, 40, ui.board.NodePanel.DEFAULT_WIDTH, ui.board.NodePanel.DEFAULT_HEIGHT);
+                board.add(view);
+            }
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            board.startWorkflow();
+        });
+        Thread.sleep(250);
+        Edt.run(() -> {
+            BoardPanel board = content[0].getSelectedBoard();
+            assertEquals(workflow.RunState.RUNNING, board.getRunState(), "경고는 실행을 멈추지 않음");
+            assertNull(board.getLastFailure());
+            assertTrue(consoleRows(content[0]) >= 2, "경고가 콘솔에 쌓임: " + consoleRows(content[0]));
+            assertTrue(warner.warned.get() >= 2, "경고 뒤에도 메시지를 계속 처리함");
+            board.stopWorkflow();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+    }
+
+    @Test
     void runAndStopButtonsFollowBoardState() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
         WorkspacePanel[] content = new WorkspacePanel[1];

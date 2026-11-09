@@ -22,6 +22,11 @@ public abstract class BaseNode implements Runnable {
         void nodeFailed(BaseNode node, Throwable error);
     }
 
+    /** 노드가 메시지 하나를 처리하지 못했지만 계속 실행할 때(404, 선택자 불일치 등) 워커 스레드에서 호출됩니다. */
+    public interface WarningListener {
+        void nodeWarned(BaseNode node, String message);
+    }
+
     private static final RandomIdGenerator ID_GENERATOR = new RandomIdGenerator();
 
     private final LocalDateTime createdAt;
@@ -39,6 +44,8 @@ public abstract class BaseNode implements Runnable {
     private volatile Throwable failure;
     @Getter(AccessLevel.NONE)
     private volatile FailureListener failureListener;
+    @Getter(AccessLevel.NONE)
+    private volatile WarningListener warningListener;
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
     private final Pipe inbox;
@@ -174,6 +181,13 @@ public abstract class BaseNode implements Runnable {
             }
             if (error != null) reportFailure(error);
         }
+    }
+
+    /** 메시지 단위 문제를 알립니다. 노드는 멈추지 않고 다음 메시지로 넘어갑니다. */
+    protected void warn(String message) {
+        log.warn("[{}] {}", id, message);
+        WarningListener listener = warningListener;
+        if (listener != null) listener.nodeWarned(this, message);
     }
 
     private void reportFailure(Throwable error) {

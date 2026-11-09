@@ -48,6 +48,21 @@ public final class TestNodes {
         }
     }
 
+    /** 메시지를 받을 때마다 경고를 남기고 계속 실행하는 입력 노드입니다. 경고 채널 검사에 씁니다. */
+    public static final class Warner extends BaseNode implements Inputable {
+        private final String id;
+        public final AtomicInteger warned = new AtomicInteger();
+
+        public Warner(String id) { super(NodeType.DEBUG); this.id = id; }
+
+        @Override public String getId() { return id; }
+        @Override protected void process() throws Exception {
+            Message message = getInbox().take();
+            warned.incrementAndGet();
+            warn("처리할 수 없는 메시지: " + message);
+        }
+    }
+
     /** 받은 메시지 수만 세는 입력 노드입니다. */
     public static final class Sink extends BaseNode implements Inputable {
         private final String id;
