@@ -30,9 +30,10 @@ public final class NodeOptionsEditor {
         panel.setOpaque(false);
 
         for (Field field : NodeOptions.fields(node)) {
-            OptionInput input = OptionInput.create(field, field.getAnnotation(OptionField.class));
+            OptionField option = field.getAnnotation(OptionField.class);
+            OptionInput input = OptionInput.create(field, option);
             inputs.put(field, input);
-            addRow(field.getName(), input);
+            addRow(field.getName(), option.label().isEmpty() ? field.getName() : option.label(), input);
         }
 
         apply.setName("applyNodeOptions");
@@ -44,10 +45,10 @@ public final class NodeOptionsEditor {
         refreshState();
     }
 
-    private void addRow(String name, OptionInput input) {
+    private void addRow(String name, String labelText, OptionInput input) {
         JComponent editor = input.getEditor();
         editor.setName("option." + name);
-        JLabel label = UiTheme.label(name, false);
+        JLabel label = UiTheme.label(labelText, false);
         label.setLabelFor(editor);
 
         JComponent view = input.getView();

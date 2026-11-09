@@ -26,7 +26,7 @@ class NodeOptionsEditorTest {
 
     /** 지원하는 모든 입력 종류와 편집 불가·static 필드를 가진 스텁입니다. */
     static final class Stub extends PollingNode implements Outputable {
-        @OptionField(type = OptionInputType.TEXT_AREA) String message = "hello";
+        @OptionField(type = OptionInputType.TEXT_AREA, label = "메시지") String message = "hello";
         @OptionField(type = OptionInputType.SENSITIVE_TEXT) String secret;
         @OptionField(type = OptionInputType.CHECK_BOX) boolean flag = true;
         @OptionField(type = OptionInputType.RADIO_BUTTON) Mode mode = Mode.SLOW;
@@ -68,6 +68,8 @@ class NodeOptionsEditorTest {
             assertEquals(List.of("option.message", "option.secret", "option.flag", "option.mode", "option.fixed", "option.intervalMillis"), names);
 
             assertInstanceOf(JScrollPane.class, text("message").getParent().getParent(), "여러 줄 입력은 스크롤 패널로 감쌈");
+            assertEquals("메시지", ((JLabel) text("message").getClientProperty("labeledBy")).getText(), "label이 있으면 그 이름으로 표시");
+            assertEquals("secret", ((JLabel) text("secret").getClientProperty("labeledBy")).getText(), "없으면 필드명");
             assertEquals(130, text("message").getParent().getParent().getPreferredSize().height);
             assertEquals(32, text("intervalMillis").getPreferredSize().height);
             assertEquals(60, find("option.mode").getPreferredSize().height, "라디오는 상수 수 × 30");
