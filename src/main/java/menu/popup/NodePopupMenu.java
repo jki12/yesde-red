@@ -29,11 +29,11 @@ public class NodePopupMenu extends JPopupMenu {
         title.setAlignmentX(LEFT_ALIGNMENT);
         add(title);
 
-        SearchResultPanel searchResultPanel = new SearchResultPanel();
-        SearchBar searchbar = new SearchBar(searchResultPanel);
+        NodeTypeListPanel typeList = new NodeTypeListPanel();
+        SearchBar searchbar = new SearchBar(typeList);
 
         add(searchbar);
-        add(searchResultPanel);
+        add(typeList);
         JLabel hint = UiTheme.label("↑↓ 선택   Enter 추가   Esc 닫기", true);
         hint.setFont(UiTheme.getSmallFont());
         hint.setBorder(BorderFactory.createEmptyBorder(7, 12, 8, 12));
@@ -44,7 +44,7 @@ public class NodePopupMenu extends JPopupMenu {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) { // 팝업 실행시
                 searchbar.clear();
-                searchResultPanel.reset();
+                typeList.reset();
 
                 SwingUtilities.invokeLater(searchbar::focusSearch);
             }

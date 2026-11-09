@@ -11,12 +11,12 @@ import java.awt.*;
 import java.awt.event.*;
 
 @Slf4j
-public class SearchResultPanel extends JScrollPane {
+public class NodeTypeListPanel extends JScrollPane {
     private final String[] typeNames = NodeFactory.getTypeNames();
     private final JList<String> suggestions;
     private final JLabel empty = UiTheme.label("검색 결과가 없습니다", true);
 
-    public SearchResultPanel() {
+    public NodeTypeListPanel() {
         suggestions = new JList<>(new DefaultListModel<>());
 
         suggestions.setFixedCellHeight(44);

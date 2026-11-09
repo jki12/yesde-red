@@ -12,7 +12,7 @@ import java.awt.event.ActionEvent;
 public class SearchBar extends JPanel {
     private final JTextField textField = new JTextField();
 
-    public SearchBar(SearchResultPanel results) {
+    public SearchBar(NodeTypeListPanel results) {
         setLayout(new BorderLayout(8, 0));
         setBackground(UiTheme.getBackgroundColor());
         setBorder(BorderFactory.createEmptyBorder(4, 10, 7, 10));
