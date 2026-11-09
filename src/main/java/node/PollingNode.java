@@ -27,7 +27,7 @@ public abstract class PollingNode extends BaseNode {
     }
 
     @Override
-    protected void pause() throws InterruptedException {
+    protected void awaitNextCycle() throws InterruptedException {
         Thread.sleep(intervalMilli);
     }
 }
