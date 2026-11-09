@@ -52,7 +52,7 @@ public class DebugPanel extends JPanel {
      */
     public DebugPanel() {
         setLayout(new BorderLayout());
-        setBorder(UiTheme.separator(1, 0, 0, 0));
+        setBorder(UiTheme.separatorBorder(1, 0, 0, 0));
 
         add(createHeader(), BorderLayout.NORTH);
 

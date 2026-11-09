@@ -108,19 +108,19 @@ public final class UiTheme {
     }
 
     /** 지정한 변에만 1px 구분선을 그리는 테두리입니다. 인접한 패널끼리 경계를 나눌 때 사용합니다. */
-    public static Border separator(int top, int left, int bottom, int right) {
+    public static Border separatorBorder(int top, int left, int bottom, int right) {
         return BorderFactory.createMatteBorder(top, left, bottom, right, getBorderColor());
     }
 
     /** 아래쪽 구분선과 안쪽 여백을 합친 테두리입니다. 툴바와 패널 머리글에 사용합니다. */
     public static Border headerBorder(int vertical, int horizontal) {
-        return BorderFactory.createCompoundBorder(separator(0, 0, 1, 0),
+        return BorderFactory.createCompoundBorder(separatorBorder(0, 0, 1, 0),
                 BorderFactory.createEmptyBorder(vertical, horizontal, vertical, horizontal));
     }
 
     /** 위쪽 구분선과 안쪽 여백을 합친 테두리입니다. 상태 표시줄 같은 하단 영역에 사용합니다. */
     public static Border footerBorder(int vertical, int horizontal) {
-        return BorderFactory.createCompoundBorder(separator(1, 0, 0, 0),
+        return BorderFactory.createCompoundBorder(separatorBorder(1, 0, 0, 0),
                 BorderFactory.createEmptyBorder(vertical, horizontal, vertical, horizontal));
     }
 

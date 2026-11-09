@@ -30,7 +30,7 @@ public class NodeHierarchyPanel extends JPanel {
 
     public NodeHierarchyPanel() {
         setLayout(new BorderLayout());
-        setBorder(UiTheme.separator(0, 0, 0, 1)); // 오른쪽 경계로 캔버스와 목록을 구분합니다.
+        setBorder(UiTheme.separatorBorder(0, 0, 0, 1)); // 오른쪽 경계로 캔버스와 목록을 구분합니다.
 
         add(createHeader(), BorderLayout.NORTH);
         configureTree();
