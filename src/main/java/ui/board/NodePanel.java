@@ -93,6 +93,7 @@ public class NodePanel extends JPanel {
                 if (board != null) {
                     board.setSelectedNode(NodePanel.this);
                     board.setComponentZOrder(NodePanel.this, 0); // 겹친 카드 중 누른 카드를 맨 앞으로
+                    board.requestFocusInWindow(); // Delete 키로 선택 카드를 지울 수 있게 보드가 포커스를 가집니다.
                     board.repaint();
                 }
 

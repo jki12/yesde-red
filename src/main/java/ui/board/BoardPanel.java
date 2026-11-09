@@ -101,6 +101,7 @@ public class BoardPanel extends JPanel {
 
         addMouseListener(new MouseAdapter() {
             @Override public void mousePressed(MouseEvent e) {
+                requestFocusInWindow(); // 키 입력(Delete, Esc)을 받기 위해 보드가 포커스를 가집니다.
                 if (e.isPopupTrigger()) showPopup(e);
             }
             @Override public void mouseReleased(MouseEvent e) {
@@ -115,10 +116,17 @@ public class BoardPanel extends JPanel {
             }
         });
 
-        // TODO, 노드 삭제하는 이벤트 추가
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "cancelConnection");
         getActionMap().put("cancelConnection", new AbstractAction() {
             @Override public void actionPerformed(java.awt.event.ActionEvent e) { cancelConnection(); }
+        });
+
+        // 삭제 키는 보드가 포커스를 가질 때만 동작해, 인스펙터 입력란에서 글자를 지울 때 카드가 함께 지워지지 않습니다.
+        setFocusable(true);
+        getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DELETE"), "deleteSelectedNode");
+        getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("BACK_SPACE"), "deleteSelectedNode");
+        getActionMap().put("deleteSelectedNode", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) { deleteSelectedNode(); }
         });
     }
 
@@ -182,6 +190,11 @@ public class BoardPanel extends JPanel {
         if (connectionsChanged) fireConnectionsChanged();
         repaint();
         return true;
+    }
+
+    /** 선택된 카드를 지웁니다. 선택이 없거나 실행 중이면 아무 일도 하지 않고 false입니다. */
+    public boolean deleteSelectedNode() {
+        return selectedNode != null && removeNode(selectedNode);
     }
 
     public void setSelectedNode(NodePanel node) {

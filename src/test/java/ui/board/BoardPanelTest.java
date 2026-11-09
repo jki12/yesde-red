@@ -202,6 +202,24 @@ class BoardPanelTest {
     }
 
     @Test
+    void deleteKeyRemovesTheSelectedCardOnly() throws Exception {
+        Edt.run(() -> {
+            Action delete = board.getActionMap().get("deleteSelectedNode");
+            assertNotNull(board.getInputMap(JComponent.WHEN_FOCUSED).get(KeyStroke.getKeyStroke("DELETE")));
+            assertNotNull(board.getInputMap(JComponent.WHEN_FOCUSED).get(KeyStroke.getKeyStroke("BACK_SPACE")));
+
+            delete.actionPerformed(new ActionEvent(board, 0, "test"));
+            assertEquals(3, board.getNodePanels().size(), "선택이 없으면 아무것도 지우지 않음");
+
+            board.setSelectedNode(second);
+            delete.actionPerformed(new ActionEvent(board, 0, "test"));
+            assertEquals(2, board.getNodePanels().size());
+            assertFalse(board.getNodePanels().contains(second));
+            assertNull(board.getSelectedNode());
+        });
+    }
+
+    @Test
     void nodeFailureIsRememberedUntilNextRun() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
         java.util.List<Object> failedEvents = new java.util.concurrent.CopyOnWriteArrayList<>();
