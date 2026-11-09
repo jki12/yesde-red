@@ -163,6 +163,45 @@ class BoardPanelTest {
     }
 
     @Test
+    void removeNodeCutsIncomingAndOutgoingLinksAndClearsSelection() throws Exception {
+        Edt.run(() -> {
+            TestNodes.Source src = (TestNodes.Source) source.getNode();
+            src.connect((TestNodes.Sink) sink.getNode());
+            src.connect((TestNodes.Sink) second.getNode());
+            AtomicInteger connectionEvents = new AtomicInteger();
+            board.addPropertyChangeListener(BoardPanel.PROP_CONNECTIONS_CHANGED, e -> connectionEvents.incrementAndGet());
+            board.setSelectedNode(sink);
+
+            assertTrue(board.removeNode(sink));
+
+            assertEquals(2, board.getNodePanels().size());
+            assertFalse(src.getTargets().contains(sink.getNode()), "들어오던 연결이 끊김");
+            assertTrue(src.getTargets().contains(second.getNode()), "다른 연결은 유지");
+            assertNull(board.getSelectedNode(), "지운 카드의 선택이 해제됨");
+            assertEquals(1, connectionEvents.get());
+
+            assertTrue(board.removeNode(source));
+            assertTrue(src.getTargets().isEmpty(), "나가던 연결도 끊김");
+            assertEquals(1, board.getNodePanels().size());
+            assertFalse(board.removeNode(source), "이미 지운 카드는 false");
+        });
+    }
+
+    @Test
+    void removeNodeIsRefusedWhileRunning() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        Edt.run(() -> {
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            board.startWorkflow();
+            assertFalse(board.removeNode(sink), "실행 중에는 지울 수 없음");
+            assertEquals(3, board.getNodePanels().size());
+            board.stopWorkflow();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> assertTrue(board.removeNode(sink), "IDLE로 돌아오면 지울 수 있음"));
+    }
+
+    @Test
     void nodeFailureIsRememberedUntilNextRun() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
         java.util.List<Object> failedEvents = new java.util.concurrent.CopyOnWriteArrayList<>();

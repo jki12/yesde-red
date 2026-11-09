@@ -163,6 +163,27 @@ public class BoardPanel extends JPanel {
         return view;
     }
 
+    /**
+     * 카드를 보드에서 지우고 들어오고 나가는 연결을 모두 끊습니다.
+     * 실행 중이거나 종료 중이면(노드 스레드가 살아 있을 수 있음) 지우지 않고 false를 돌려줍니다.
+     */
+    public boolean removeNode(NodePanel view) {
+        if (getRunState() != RunState.IDLE || view.getParent() != this) return false;
+
+        BaseNode removed = view.getNode();
+        boolean connectionsChanged = removed.disconnectAll();
+        if (removed instanceof Inputable target) {
+            for (BaseNode node : getNodes()) {
+                if (node.disconnect(target)) connectionsChanged = true;
+            }
+        }
+
+        remove(view); // componentRemoved가 선택 해제·드래그 취소·nodesChanged 알림을 처리합니다.
+        if (connectionsChanged) fireConnectionsChanged();
+        repaint();
+        return true;
+    }
+
     public void setSelectedNode(NodePanel node) {
         NodePanel previous = selectedNode;
         if (previous != null) previous.setSelected(false);
