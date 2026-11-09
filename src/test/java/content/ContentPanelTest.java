@@ -113,7 +113,7 @@ class ContentPanelTest {
     }
 
     private static int consoleRows(ContentPanel content) {
-        JTable table = findTable(content.getDebugPanel());
+        JTable table = findTable(content.getConsole());
         assertNotNull(table, "콘솔 표가 없음");
         return table.getRowCount();
     }

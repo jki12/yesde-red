@@ -2,7 +2,7 @@ package ui.frame;
 
 import content.ContentPanel;
 import content.TabPanel;
-import content.DebugPanel;
+import content.ConsolePanel;
 import menubar.AppMenuBar;
 
 import javax.swing.*;
@@ -35,7 +35,7 @@ public class YesdeRedFrame extends JFrame {
         return contentPanel.getTabPanel();
     }
 
-    public DebugPanel getDebugPanel() {
-        return contentPanel.getDebugPanel();
+    public ConsolePanel getConsole() {
+        return contentPanel.getConsole();
     }
 }

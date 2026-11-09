@@ -12,7 +12,7 @@ import java.awt.event.ComponentEvent;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-public class DebugPanel extends JPanel {
+public class ConsolePanel extends JPanel {
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final String[] COLUMN_NAMES =  { "시간", "출력 노드", "메시지" };
 
@@ -30,7 +30,7 @@ public class DebugPanel extends JPanel {
     private int lastMessageColumnWidth;
 
     /*
-     * DebugPanel (JPanel, BorderLayout)
+     * ConsolePanel (JPanel, BorderLayout)
      * ├─ NORTH: header (JPanel, GridBagLayout, 한 줄 배치)
      * │  ├─ title (JLabel): 터미널 아이콘과 제목
      * │  ├─ countLabel (JLabel): 로그 개수
@@ -50,7 +50,7 @@ public class DebugPanel extends JPanel {
      *    └─ verticalScrollBar (JScrollBar): 세로 스크롤
      *
      */
-    public DebugPanel() {
+    public ConsolePanel() {
         setLayout(new BorderLayout());
         setBorder(UiTheme.separatorBorder(1, 0, 0, 0));
 

@@ -28,7 +28,7 @@ public class ContentPanel extends JPanel {
     @Getter
     private final TabPanel tabPanel = new TabPanel();
     @Getter
-    private final DebugPanel debugPanel = new DebugPanel();
+    private final ConsolePanel console = new ConsolePanel();
     private final NodeInfoPanel nodeInfo = new NodeInfoPanel();
 
     private final NodeListPanel nodeList = new NodeListPanel();
@@ -62,7 +62,7 @@ public class ContentPanel extends JPanel {
      * │   │       │   └─ 각 탭: BoardPanel
      * │   │       │       └─ NodePanel: 노드 카드
      * │   │       └─ 오른쪽: nodeInfo (NodeInfoPanel): 선택한 노드의 속성
-     * │   └─ 아래: debugPanel (DebugPanel): 실행 로그
+     * │   └─ 아래: console (ConsolePanel): 실행 로그
      * │
      * └─ SOUTH: statusBar (StatusBar): 실행 상태 / 보드 이름, 노드 수, 연결 수
      *
@@ -76,11 +76,11 @@ public class ContentPanel extends JPanel {
         // 중앙/속성을 먼저 가로로 묶고, 왼쪽 목록을 붙인 뒤, 전체 아래에 콘솔을 세로로 붙입니다.
         // 초기 크기는 목록·속성·콘솔의 선호 크기에서 오고, 창 크기 변화는 캔버스가 모두 흡수합니다(split() 참고).
         tabPanel.setMinimumSize(new Dimension(MIN_BOARD_WIDTH, 220));
-        debugPanel.setMinimumSize(new Dimension(600, MIN_CONSOLE_HEIGHT));
-        debugPanel.setPreferredSize(new Dimension(600, INITIAL_CONSOLE_HEIGHT));
+        console.setMinimumSize(new Dimension(600, MIN_CONSOLE_HEIGHT));
+        console.setPreferredSize(new Dimension(600, INITIAL_CONSOLE_HEIGHT));
         JSplitPane editorSplit = split(JSplitPane.HORIZONTAL_SPLIT, tabPanel, nodeInfo, 1.0);
         JSplitPane listSplit = split(JSplitPane.HORIZONTAL_SPLIT, nodeList, editorSplit, 0.0);
-        JSplitPane consoleSplit = split(JSplitPane.VERTICAL_SPLIT, listSplit, debugPanel, 1.0);
+        JSplitPane consoleSplit = split(JSplitPane.VERTICAL_SPLIT, listSplit, console, 1.0);
         add(consoleSplit, BorderLayout.CENTER);
 
 
@@ -97,7 +97,7 @@ public class ContentPanel extends JPanel {
         if (board != null && consoleBoundBoards.add(board)) {
             board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> {
                 BoardPanel.NodeFailure failure = (BoardPanel.NodeFailure) e.getNewValue();
-                debugPanel.append("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
+                console.append("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
             });
         }
         if (board != observedBoard) {

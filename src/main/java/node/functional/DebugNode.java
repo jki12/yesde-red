@@ -2,7 +2,7 @@ package node.functional;
 
 import ui.Codicons;
 import javax.swing.Icon;
-import content.DebugPanel;
+import content.ConsolePanel;
 import ui.frame.YesdeRedFrame;
 import node.BaseNode;
 import node.Inputable;
@@ -14,7 +14,7 @@ public class DebugNode extends BaseNode implements Inputable {
     public static final String DESCRIPTION = "수신한 메시지를 하단 콘솔에 표시합니다.";
     public static final Icon ICON = Codicons.icon("bug", 18);
 
-    private final DebugPanel console = YesdeRedFrame.getInstance().getDebugPanel();
+    private final ConsolePanel console = YesdeRedFrame.getInstance().getConsole();
 
     public DebugNode() {
         super(Type.DEBUG);
