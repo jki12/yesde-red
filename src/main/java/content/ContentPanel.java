@@ -4,6 +4,7 @@ import lombok.Getter;
 import ui.Codicons;
 
 import action.RunAction;
+import action.StopAction;
 import ui.UiTheme;
 import ui.menu.NodePanel;
 import workflow.RunState;
@@ -40,6 +41,9 @@ public class ContentPanel extends JPanel {
 
     private final NodeHierarchyPanel hierarchy = new NodeHierarchyPanel(); // 확인 필요.
     private final StatusBar statusBar = new StatusBar();
+    // 실행은 IDLE이고 노드가 있을 때, 종료는 RUNNING일 때만 누를 수 있습니다. refreshCurrentBoardView()가 맞춥니다.
+    private final JButton runButton = UiTheme.button("실행");
+    private final JButton stopButton = UiTheme.button("종료");
     private final JSplitPane editorSplit;
     private final JSplitPane hierarchySplit;
     private final JSplitPane consoleSplit;
@@ -60,7 +64,8 @@ public class ContentPanel extends JPanel {
      * ├─ NORTH: toolbar (JPanel)
      * │   ├─ CENTER: leftActions
      * │   │   ├─ addNode (JButton): 노드 추가
-     * │   │   └─ run (JButton): 실행
+     * │   │   ├─ runButton (JButton): 실행
+     * │   │   └─ stopButton (JButton): 종료
      * │   └─ EAST: rightActions
      * │       └─ newFlow (JButton): 새 워크플로
      * │
@@ -139,16 +144,20 @@ public class ContentPanel extends JPanel {
             BoardPanel board = getSelectedBoard();
             if (board != null) board.getPopupMenu().show(board, 32, 36);
         });
-        JButton run = UiTheme.button("실행");
-        run.setIcon(Codicons.icon("play"));
-        run.addActionListener(new RunAction());
+        runButton.setName("runWorkflow");
+        runButton.setIcon(Codicons.icon("play"));
+        runButton.addActionListener(new RunAction(this::getSelectedBoard));
+        stopButton.setName("stopWorkflow");
+        stopButton.setIcon(Codicons.icon("debug-stop"));
+        stopButton.addActionListener(new StopAction(this::getSelectedBoard));
 
         JButton newFlow = UiTheme.button("새 워크플로");
         newFlow.setIcon(Codicons.icon("new-file"));
         newFlow.addActionListener(e -> tabPanel.addBoardTab());
 
         leftActions.add(addNode);
-        leftActions.add(run);
+        leftActions.add(runButton);
+        leftActions.add(stopButton);
         rightActions.add(newFlow);
 
         toolbar.add(leftActions, BorderLayout.CENTER);
@@ -211,10 +220,14 @@ public class ContentPanel extends JPanel {
         BoardPanel board = getSelectedBoard();
         NodePanel selected = board == null ? null : board.getSelectedNode();
 
+        RunState state = board == null ? RunState.IDLE : board.getRunState();
+
         nodeInfo.showNode(selected == null ? null : selected.getNode(),
                 () -> board != null && board.getRunState() == RunState.IDLE);
         hierarchy.showBoard(board);
         statusBar.showBoard(board);
+        runButton.setEnabled(state == RunState.IDLE && board != null && !board.getNodePanels().isEmpty());
+        stopButton.setEnabled(state == RunState.RUNNING);
     }
 
     public BoardPanel getSelectedBoard() {

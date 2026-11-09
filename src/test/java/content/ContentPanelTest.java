@@ -77,6 +77,41 @@ class ContentPanelTest {
         });
     }
 
+    @Test
+    void runAndStopButtonsFollowBoardState() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        ContentPanel[] content = new ContentPanel[1];
+        Edt.run(() -> {
+            content[0] = new ContentPanel();
+            JButton run = (JButton) support.Swing.find(content[0], "runWorkflow");
+            JButton stop = (JButton) support.Swing.find(content[0], "stopWorkflow");
+            BoardPanel board = content[0].getSelectedBoard();
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+
+            assertFalse(run.isEnabled(), "노드가 없으면 실행 불가");
+            assertFalse(stop.isEnabled());
+
+            board.addNode(Type.INJECT, new Point(40, 40));
+            assertTrue(run.isEnabled(), "노드가 생기면 실행 가능");
+            assertFalse(stop.isEnabled());
+
+            run.doClick();
+            assertEquals(workflow.RunState.RUNNING, board.getRunState());
+            assertFalse(run.isEnabled());
+            assertTrue(stop.isEnabled());
+
+            stop.doClick();
+            assertEquals(workflow.RunState.STOPPING, board.getRunState());
+            assertFalse(run.isEnabled(), "종료 중에는 둘 다 불가");
+            assertFalse(stop.isEnabled());
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> {
+            assertTrue(((JButton) support.Swing.find(content[0], "runWorkflow")).isEnabled(), "IDLE로 돌아오면 다시 실행 가능");
+            assertFalse(((JButton) support.Swing.find(content[0], "stopWorkflow")).isEnabled());
+        });
+    }
+
     private static int consoleRows(ContentPanel content) {
         JTable table = findTable(content.getDebugPanel());
         assertNotNull(table, "콘솔 표가 없음");
