@@ -2,15 +2,12 @@ package ui.board;
 
 import ui.theme.Codicons;
 
-import lombok.Getter;
-
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import ui.theme.UiTheme;
 import java.awt.Dimension;
 
-@Getter
 public class AddNodePopup extends JPopupMenu {
 
     public AddNodePopup() {

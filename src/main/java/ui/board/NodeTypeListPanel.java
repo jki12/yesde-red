@@ -1,6 +1,5 @@
 package ui.board;
 
-import lombok.extern.slf4j.Slf4j;
 import node.NodeType;
 import node.NodeFactory;
 import ui.theme.UiTheme;
@@ -9,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-@Slf4j
 public class NodeTypeListPanel extends JScrollPane {
     private final String[] typeNames = NodeFactory.getTypeNames();
     private final JList<String> suggestions;
