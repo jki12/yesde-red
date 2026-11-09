@@ -37,12 +37,9 @@ public class TabPanel extends JTabbedPane {
         actionMap.put("metaW", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (getSelectedComponent() instanceof BoardPanel board && board.getRunState() != RunState.IDLE) {
-                    JOptionPane.showMessageDialog(TabPanel.this,
-                            "실행 중이거나 종료 중인 워크플로는 닫을 수 없습니다. 먼저 종료하세요.");
-                    return;
-                }
-                closeBoardTab(getSelectedIndex());
+                if (closeBoardTab(getSelectedIndex()) || getTabCount() <= 1) return;
+                JOptionPane.showMessageDialog(TabPanel.this,
+                        "실행 중이거나 종료 중인 워크플로는 닫을 수 없습니다. 먼저 종료하세요.");
             }
         });
     }
