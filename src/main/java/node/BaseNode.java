@@ -80,6 +80,18 @@ public abstract class BaseNode implements Runnable {
         return true;
     }
 
+    public boolean disconnect(Inputable input) {
+        if (!(input instanceof BaseNode other) || targets == null) return false;
+        return targets.remove(other);
+    }
+
+    /** 나가는 연결을 모두 끊습니다. 노드를 보드에서 지울 때 씁니다. 끊은 것이 하나라도 있으면 true입니다. */
+    public boolean disconnectAll() {
+        if (targets == null || targets.isEmpty()) return false;
+        targets.clear();
+        return true;
+    }
+
     private boolean canConnect(BaseNode other) {
         // 드래그를 시작한 방향과 관계없이 모델 연결은 출력 → 입력만 허용합니다.
         return this instanceof Outputable

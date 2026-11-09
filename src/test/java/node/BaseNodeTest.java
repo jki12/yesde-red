@@ -125,6 +125,25 @@ class BaseNodeTest {
         assertTrue(reported.isEmpty());
     }
 
+    @Test
+    void disconnectRemovesOnlyThatLinkAndReportsWhetherItExisted() {
+        TestNodes.Source source = new TestNodes.Source("s1");
+        TestNodes.Sink first = new TestNodes.Sink("d1");
+        TestNodes.Sink second = new TestNodes.Sink("d2");
+        source.connect(first);
+        source.connect(second);
+
+        assertTrue(source.disconnect(first));
+        assertFalse(source.disconnect(first), "이미 끊긴 연결은 false");
+        assertEquals(1, source.getTargets().size());
+        assertTrue(source.getTargets().contains(second));
+
+        assertTrue(source.disconnectAll());
+        assertTrue(source.getTargets().isEmpty());
+        assertFalse(source.disconnectAll(), "끊을 것이 없으면 false");
+        assertFalse(first.disconnectAll(), "입력 전용 노드는 나가는 연결이 없음");
+    }
+
     private static void waitUntil(java.util.function.BooleanSupplier condition, long timeoutMillis) throws InterruptedException {
         long deadline = System.currentTimeMillis() + timeoutMillis;
         while (!condition.getAsBoolean()) {
