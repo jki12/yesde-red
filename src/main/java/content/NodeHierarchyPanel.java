@@ -52,10 +52,8 @@ public class NodeHierarchyPanel extends JPanel {
         searchBox.setBorder(UiTheme.padding(12));
         searchBox.add(UiTheme.label("이름 또는 타입 검색", true), BorderLayout.NORTH);
         search.setName("nodeSearch");
-        // [Codicons] 검색창의 테두리·포커스는 FlatLaf에 맡기고 공식 SVG만 추가합니다.
         search.putClientProperty(com.formdev.flatlaf.FlatClientProperties.TEXT_FIELD_LEADING_ICON,
                 Codicons.icon("search", 16));
-        // [FlatLaf] 검색창의 글꼴·테두리·안쪽 여백은 공통 테마를 사용합니다.
         searchBox.add(search, BorderLayout.CENTER);
         heading.add(searchBox, BorderLayout.SOUTH);
         return heading;
@@ -63,18 +61,16 @@ public class NodeHierarchyPanel extends JPanel {
 
     private void configureTree() {
         tree.setName("nodeHierarchyTree");
-        // [비율] 목록 아이콘 16px과 32px 행 높이로 밀도를 맞춥니다.
-        tree.setRowHeight(32);
+        tree.setRowHeight(32); // 16px 아이콘에 맞춘 행 높이
         tree.setBorder(BorderFactory.createEmptyBorder(5, 4, 5, 0));
         tree.setShowsRootHandles(false);
         tree.setCellRenderer(new Renderer());
-        // 이 UI는 단일 노드 선택만 지원합니다. 원본 TODO의 다중 선택을 구현한 설정은 아닙니다.
         tree.getSelectionModel().setSelectionMode(javax.swing.tree.TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
 
     private void registerListeners() {
         tree.addTreeSelectionListener(e -> {
-            // 사용자가 행을 고른 경우만 기존 보드 선택 메서드에 전달합니다. 루트/선택 없음은 보드 선택을 비웁니다.
+            // 루트를 고르거나 선택이 없으면 보드 선택도 비웁니다.
             if (syncingSelection || board == null) return;
             Object selected = tree.getLastSelectedPathComponent();
             Object value = selected instanceof DefaultMutableTreeNode
@@ -108,7 +104,7 @@ public class NodeHierarchyPanel extends JPanel {
                         + " " + view.getNode().getId();
                 if (text.toLowerCase(Locale.ROOT).contains(query)) root.add(new DefaultMutableTreeNode(view));
             }
-            // 검색 중에는 표시된 수/전체 수, 검색어가 없을 때는 전체 수를 제목에 표시합니다. 실행 처리량 통계는 아닙니다.
+            // 제목에 노드 수를 표시하고, 검색 중에는 "표시 수/전체 수"로 보여줍니다.
             root.setUserObject((board == null ? "워크플로" : board.getName())
                     + " (" + root.getChildCount() + (query.isEmpty() ? "" : "/" + boardNodes.size()) + ")");
             model.reload();
@@ -139,10 +135,8 @@ public class NodeHierarchyPanel extends JPanel {
         tree.clearSelection();
     }
 
-    // [FlatLaf 기본값] 선택/비활성 색상은 기본 렌더러에 맡겨 흰 글자와 배경의 조합을 함께 맞춥니다.
+    // 선택·비활성 색상은 기본 렌더러에 맡겨 글자와 배경 조합이 테마와 맞게 합니다.
     private static final class Renderer extends DefaultTreeCellRenderer {
-        // 행의 표시만 바꿉니다. 모델의 ID는 그대로 두고 화면에서만 앞 여섯 글자를 보여 줍니다.
-        // 전체 ID 기반 연결 검색이나 원본 ID 생성 방식 자체를 보완하는 코드는 아닙니다.
         @Override public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
                 boolean expanded, boolean leaf, int row, boolean focus) {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, focus);
@@ -152,7 +146,7 @@ public class NodeHierarchyPanel extends JPanel {
                 NodePanel node = (NodePanel) item;
                 String id = node.getNode().getId();
                 setText(node.getNode().getDisplayName() + "  " + id);
-                // 노드의 아이콘을 사용하되 목록의 기존 16px 크기만 유지합니다.
+                // 노드 아이콘을 목록용 16px로 줄여 씁니다.
                 Icon icon = node.getNode().getIcon();
                 setIcon(icon instanceof FlatSVGIcon svg ? svg.derive(16, 16) : icon);
                 setIconTextGap(8);
