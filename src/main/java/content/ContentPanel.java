@@ -97,7 +97,7 @@ public class ContentPanel extends JPanel {
         if (board != null && consoleBoundBoards.add(board)) {
             board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> {
                 BoardPanel.NodeFailure failure = (BoardPanel.NodeFailure) e.getNewValue();
-                debugPanel.add("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
+                debugPanel.append("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
             });
         }
         if (board != observedBoard) {

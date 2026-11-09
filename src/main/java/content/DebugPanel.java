@@ -196,8 +196,8 @@ public class DebugPanel extends JPanel {
         return String.format("%3d개", model.getRowCount());
     }
 
-    public void add(String outputNode, String text) {
-        LogEntry entry = new LogEntry(TIME.format(LocalTime.now()), outputNode, text);
+    public void append(String source, String text) {
+        LogEntry entry = new LogEntry(TIME.format(LocalTime.now()), source, text);
 
         Runnable append = () -> {
             boolean wasScrolledToBottom = isScrolledToBottom();

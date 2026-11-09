@@ -39,7 +39,7 @@ public class DebugNode extends BaseNode implements Inputable {
     protected void process() throws Exception {
         Message message = getIn().take();
 
-        console.add("DEBUG " + getId(), message.toString());
+        console.append("DEBUG " + getId(), message.toString());
 
         console.revalidate();
         console.repaint();
