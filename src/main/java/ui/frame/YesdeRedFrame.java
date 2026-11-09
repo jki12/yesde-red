@@ -2,6 +2,7 @@ package ui.frame;
 
 import content.WorkspacePanel;
 import content.TabPanel;
+import content.BoardPanel;
 import content.ConsolePanel;
 import menubar.AppMenuBar;
 
@@ -37,5 +38,10 @@ public class YesdeRedFrame extends JFrame {
 
     public ConsolePanel getConsole() {
         return workspace.getConsole();
+    }
+
+    /** 현재 선택된 탭의 보드입니다. 탭은 항상 하나 이상 있습니다. */
+    public BoardPanel getSelectedBoard() {
+        return workspace.getSelectedBoard();
     }
 }

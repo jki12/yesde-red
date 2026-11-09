@@ -1,9 +1,9 @@
 package action;
 
 import lombok.extern.slf4j.Slf4j;
-import util.TabInfo;
+import content.BoardPanel;
 import json.Json;
-import util.Utils;
+import ui.frame.YesdeRedFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,13 +18,13 @@ public class ExportAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        TabInfo tabInfo = Utils.getSelectedTabInfo();
+        BoardPanel board = YesdeRedFrame.getInstance().getSelectedBoard();
 
-        for (Component c : tabInfo.getBoard().getComponents()) { // TODO, file에 쓰는 로직 작성.
+        for (Component c : board.getComponents()) { // TODO, file에 쓰는 로직 작성.
             log.info(Json.toJson(c));
         }
 
         // TODO, json 형태로 추출하는 코드, 저장 위치 정하는 file chooser처럼 dialog 구현.
-        log.info("{} 보드가 추출되었습니다. (index : {})", tabInfo.getBoard().getName(), tabInfo.getSelectedIndex());
+        log.info("{} 보드가 추출되었습니다.", board.getName());
     }
 }

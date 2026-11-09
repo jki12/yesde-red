@@ -2,7 +2,7 @@ package action;
 
 import content.BoardPanel;
 import lombok.extern.slf4j.Slf4j;
-import util.Utils;
+import ui.frame.YesdeRedFrame;
 import workflow.RunState;
 
 import javax.swing.*;
@@ -16,7 +16,7 @@ public class StopAction extends AbstractAction {
 
     /** 메뉴용. 메뉴는 프레임 생성 중에 만들어지므로 보드는 클릭 시점에 프레임에서 찾습니다. */
     public StopAction() {
-        this(() -> Utils.getSelectedTabInfo().getBoard());
+        this(() -> YesdeRedFrame.getInstance().getSelectedBoard());
     }
 
     /** 보드를 직접 아는 호출자(툴바 등)용입니다. */
