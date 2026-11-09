@@ -11,8 +11,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Supplier;
 
 @Getter
@@ -37,6 +37,8 @@ public abstract class BaseNode implements Runnable {
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
     private final Pipe in;
+    // 연결 변경은 드물고(EDT에서 사용자 조작) 순회는 메시지마다 워커 스레드에서 일어나므로,
+    // 순회 중 추가돼도 예외가 나지 않는 복사-쓰기 집합을 씁니다. 연결 순서도 유지됩니다.
     private final Set<BaseNode> out;
 
     public BaseNode(Type type) {
@@ -49,7 +51,7 @@ public abstract class BaseNode implements Runnable {
         this.type = type;
 
         this.in = this instanceof Inputable ? new Pipe() : null;
-        this.out = this instanceof Outputable ? new HashSet<>() : null;
+        this.out = this instanceof Outputable ? new CopyOnWriteArraySet<>() : null;
     }
 
     public Set<BaseNode> getOut() {
@@ -60,9 +62,8 @@ public abstract class BaseNode implements Runnable {
 
     public boolean connect(Inputable input) {
         if (!(input instanceof BaseNode other)) return false;
-        if (!canConnect(other) || out.contains(other)) return false;
+        if (!canConnect(other) || !out.add(other)) return false; // 이미 연결돼 있으면 add가 false
 
-        out.add(other);
         log.info("{}노드와 {}노드가 연결되었습니다.", this, other);
 
         return true;
