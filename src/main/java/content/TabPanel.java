@@ -2,6 +2,7 @@ package content;
 
 import lombok.extern.slf4j.Slf4j;
 import util.Utils;
+import workflow.RunState;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -43,6 +44,11 @@ public class TabPanel extends JTabbedPane {
         actionMap.put("metaW", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (getSelectedComponent() instanceof BoardPanel board && board.getRunState() != RunState.IDLE) {
+                    JOptionPane.showMessageDialog(TabPanel.this,
+                            "실행 중이거나 종료 중인 워크플로는 닫을 수 없습니다. 먼저 종료하세요.");
+                    return;
+                }
                 closeBoardTab(getSelectedIndex());
             }
         });
@@ -85,9 +91,11 @@ public class TabPanel extends JTabbedPane {
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
     }
 
-    /** 탭을 닫습니다. 마지막 남은 탭은 닫지 않고 false를 돌려줍니다. */
+    /** 탭을 닫습니다. 마지막 남은 탭이거나 보드가 실행 중(또는 종료 중)이면 닫지 않고 false를 돌려줍니다. */
     public boolean closeBoardTab(int index) {
         if (getTabCount() <= 1) return false;
+        // 닫힌 보드의 워커·감시 스레드가 고아가 되지 않도록 IDLE일 때만 닫습니다.
+        if (getComponentAt(index) instanceof BoardPanel board && board.getRunState() != RunState.IDLE) return false;
 
         removeTabAt(index);
         log.info("탭이 삭제되었습니다.(현재 탭 수 {})", getTabCount());
