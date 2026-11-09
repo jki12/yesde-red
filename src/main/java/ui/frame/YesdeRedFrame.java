@@ -1,6 +1,6 @@
 package ui.frame;
 
-import content.ContentPanel;
+import content.WorkspacePanel;
 import content.TabPanel;
 import content.ConsolePanel;
 import menubar.AppMenuBar;
@@ -12,7 +12,7 @@ public class YesdeRedFrame extends JFrame {
     private static final YesdeRedFrame YESDE_RED_FRAME = new YesdeRedFrame();
 
     private static final String TITLE = "yesde-red";
-    private final ContentPanel contentPanel;
+    private final WorkspacePanel workspace;
 
     public static YesdeRedFrame getInstance() {
         return YESDE_RED_FRAME;
@@ -27,15 +27,15 @@ public class YesdeRedFrame extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         setJMenuBar(new AppMenuBar());
-        contentPanel = new ContentPanel();
-        setContentPane(contentPanel);
+        workspace = new WorkspacePanel();
+        setContentPane(workspace);
     }
 
     public TabPanel getTabPanel() {
-        return contentPanel.getTabPanel();
+        return workspace.getTabPanel();
     }
 
     public ConsolePanel getConsole() {
-        return contentPanel.getConsole();
+        return workspace.getConsole();
     }
 }

@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-public class ContentPanel extends JPanel {
+public class WorkspacePanel extends JPanel {
     private static final int DIVIDER_SIZE = 5;
     private static final int MIN_BOARD_WIDTH = 360;
     private static final int MIN_CONSOLE_HEIGHT = 145;
@@ -43,9 +43,9 @@ public class ContentPanel extends JPanel {
     private final Set<BoardPanel> consoleBoundBoards = Collections.newSetFromMap(new WeakHashMap<>());
 
     /*
-     * ContentPanel 구성
+     * WorkspacePanel 구성
      *
-     * ContentPanel (JPanel, BorderLayout)
+     * WorkspacePanel (JPanel, BorderLayout)
      * ├─ NORTH: toolbar (JPanel)
      * │   ├─ CENTER: leftActions
      * │   │   ├─ addNode (JButton): 노드 추가
@@ -67,7 +67,7 @@ public class ContentPanel extends JPanel {
      * └─ SOUTH: statusBar (StatusBar): 실행 상태 / 보드 이름, 노드 수, 연결 수
      *
      */
-    public ContentPanel() {
+    public WorkspacePanel() {
         setLayout(new BorderLayout());
 
         add(createToolbar(), BorderLayout.NORTH);

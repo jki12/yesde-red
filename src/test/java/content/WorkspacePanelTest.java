@@ -11,8 +11,8 @@ import java.awt.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** ContentPanel이 선택된 보드의 이벤트만 구독해 상태 표시를 갱신하는지 검사합니다. */
-class ContentPanelTest {
+/** WorkspacePanel이 선택된 보드의 이벤트만 구독해 상태 표시를 갱신하는지 검사합니다. */
+class WorkspacePanelTest {
 
     @BeforeAll
     static void installTheme() throws Exception {
@@ -22,7 +22,7 @@ class ContentPanelTest {
     @Test
     void refreshesOnlyForTheSelectedBoard() throws Exception {
         Edt.run(() -> {
-            ContentPanel content = new ContentPanel();
+            WorkspacePanel content = new WorkspacePanel();
             TabPanel tabs = content.getTabPanel();
             BoardPanel first = (BoardPanel) tabs.getComponentAt(0);
             assertTrue(summary(content).contains("노드 0개"), summary(content));
@@ -52,9 +52,9 @@ class ContentPanelTest {
     @Test
     void nodeFailureShowsInStatusBarAndConsole() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
-        ContentPanel[] content = new ContentPanel[1];
+        WorkspacePanel[] content = new WorkspacePanel[1];
         Edt.run(() -> {
-            content[0] = new ContentPanel();
+            content[0] = new WorkspacePanel();
             BoardPanel board = content[0].getSelectedBoard();
             support.TestNodes.Source source = new support.TestNodes.Source("s1");
             support.TestNodes.Failing failing = new support.TestNodes.Failing("f1");
@@ -80,9 +80,9 @@ class ContentPanelTest {
     @Test
     void runAndStopButtonsFollowBoardState() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
-        ContentPanel[] content = new ContentPanel[1];
+        WorkspacePanel[] content = new WorkspacePanel[1];
         Edt.run(() -> {
-            content[0] = new ContentPanel();
+            content[0] = new WorkspacePanel();
             JButton run = (JButton) support.Swing.find(content[0], "runWorkflow");
             JButton stop = (JButton) support.Swing.find(content[0], "stopWorkflow");
             BoardPanel board = content[0].getSelectedBoard();
@@ -112,7 +112,7 @@ class ContentPanelTest {
         });
     }
 
-    private static int consoleRows(ContentPanel content) {
+    private static int consoleRows(WorkspacePanel content) {
         JTable table = findTable(content.getConsole());
         assertNotNull(table, "콘솔 표가 없음");
         return table.getRowCount();

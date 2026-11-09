@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 의도: 처음에는 목록·속성·콘솔이 적당한 크기를 갖고, 이후 창 크기가 바뀌면 캔버스만 늘고 줄며,
  * 사용자가 끌어 놓은 경계는 유지되고, 어떤 패널도 최소 크기 아래로 줄지 않습니다.
  */
-class ContentPanelLayoutTest {
+class WorkspacePanelLayoutTest {
     private static final int DIVIDER = 5;
 
     @BeforeAll
@@ -27,7 +27,7 @@ class ContentPanelLayoutTest {
     @Test
     void initialDividersGiveSidePanelsTheirIntendedSizes() throws Exception {
         Edt.run(() -> {
-            ContentPanel content = layoutAt(1440, 820);
+            WorkspacePanel content = layoutAt(1440, 820);
 
             assertEquals(228, nodeList(content).getWidth(), "목록 초기 폭");
             assertEquals(300, nodeInfo(content).getWidth(), "속성 초기 폭");
@@ -40,7 +40,7 @@ class ContentPanelLayoutTest {
     @Test
     void resizingChangesOnlyTheCanvas() throws Exception {
         Edt.run(() -> {
-            ContentPanel content = layoutAt(1440, 820);
+            WorkspacePanel content = layoutAt(1440, 820);
             int nodeListWidth = nodeList(content).getWidth();
             int nodeInfoWidth = nodeInfo(content).getWidth();
             int consoleHeight = content.getConsole().getHeight();
@@ -60,7 +60,7 @@ class ContentPanelLayoutTest {
     @Test
     void draggedDividersSurviveRelayoutAndResize() throws Exception {
         Edt.run(() -> {
-            ContentPanel content = layoutAt(1440, 820);
+            WorkspacePanel content = layoutAt(1440, 820);
             JSplitPane consoleSplit = (JSplitPane) content.getConsole().getParent();
             JSplitPane editorSplit = (JSplitPane) nodeInfo(content).getParent();
 
@@ -83,7 +83,7 @@ class ContentPanelLayoutTest {
     @Test
     void shrinkingNeverPushesPanelsBelowMinimumSizes() throws Exception {
         Edt.run(() -> {
-            ContentPanel content = layoutAt(1440, 820);
+            WorkspacePanel content = layoutAt(1440, 820);
             JSplitPane editorSplit = (JSplitPane) nodeInfo(content).getParent();
             editorSplit.setDividerLocation(editorSplit.getWidth() - 600 - DIVIDER); // 속성을 넓게 끌어 놓은 상태
             layoutAndPaint(content);
@@ -100,20 +100,20 @@ class ContentPanelLayoutTest {
         });
     }
 
-    private static ContentPanel layoutAt(int width, int height) {
-        ContentPanel content = new ContentPanel();
+    private static WorkspacePanel layoutAt(int width, int height) {
+        WorkspacePanel content = new WorkspacePanel();
         relayoutAt(content, width, height);
         return content;
     }
 
-    private static void relayoutAt(ContentPanel content, int width, int height) {
+    private static void relayoutAt(WorkspacePanel content, int width, int height) {
         content.setSize(width, height);
         layoutAndPaint(content);
     }
 
     // JSplitPane은 한 번 그려진 뒤부터 resizeWeight로 크기 변화를 배분합니다(그 전에는 선호 크기로 다시 계산).
     // 실제 앱은 사용자가 창 크기를 바꾸기 전에 반드시 그려지므로, 테스트도 배치마다 한 번 그려 같은 조건을 만듭니다.
-    private static void layoutAndPaint(ContentPanel content) {
+    private static void layoutAndPaint(WorkspacePanel content) {
         Swing.layout(content);
         Swing.render(content);
     }
