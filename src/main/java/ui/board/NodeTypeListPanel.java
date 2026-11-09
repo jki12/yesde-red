@@ -7,6 +7,7 @@ import ui.theme.UiTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Locale;
 
 public class NodeTypeListPanel extends JScrollPane {
     private final String[] typeNames = NodeFactory.getTypeNames();
@@ -105,9 +106,9 @@ public class NodeTypeListPanel extends JScrollPane {
             text = "";
         }
 
-        String query = text.strip().toLowerCase();
+        String query = text.strip().toLowerCase(Locale.ROOT);
         for (String typeName : typeNames) {
-            if ((typeName + " " + NodeFactory.getDisplayName(NodeType.valueOf(typeName))).toLowerCase().contains(query)) {
+            if ((typeName + " " + NodeFactory.getDisplayName(NodeType.valueOf(typeName))).toLowerCase(Locale.ROOT).contains(query)) {
                 currentListModel.addElement(typeName);
             }
         }
