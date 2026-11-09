@@ -2,6 +2,7 @@ package action;
 
 import lombok.extern.slf4j.Slf4j;
 import util.TabInfo;
+import json.Json;
 import util.Utils;
 
 import javax.swing.*;
@@ -20,7 +21,7 @@ public class ExportAction extends AbstractAction {
         TabInfo tabInfo = Utils.getSelectedTabInfo();
 
         for (Component c : tabInfo.getBoard().getComponents()) { // TODO, file에 쓰는 로직 작성.
-            log.info(Utils.toJson(c));
+            log.info(Json.toJson(c));
         }
 
         // TODO, json 형태로 추출하는 코드, 저장 위치 정하는 file chooser처럼 dialog 구현.

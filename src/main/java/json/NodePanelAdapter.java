@@ -5,7 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import ui.menu.NodePanel;
-import util.Utils;
+import json.Json;
 
 import java.lang.reflect.Type;
 
@@ -13,6 +13,6 @@ public class NodePanelAdapter implements JsonSerializer<NodePanel> { // TODO, im
 
     @Override
     public JsonElement serialize(NodePanel src, Type typeOfSrc, JsonSerializationContext context) {
-        return JsonParser.parseString(Utils.toJson(src.getNode()));
+        return JsonParser.parseString(Json.toJson(src.getNode()));
     }
 }
