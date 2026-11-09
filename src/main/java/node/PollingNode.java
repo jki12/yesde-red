@@ -20,6 +20,10 @@ public abstract class PollingNode extends BaseNode {
         super(type);
     }
 
+    protected PollingNode(NodeType type, String id) {
+        super(type, id);
+    }
+
     /** 음수 간격은 Thread.sleep에서 예외를 일으켜 노드가 조용히 멈추므로 코드 경로에서도 막습니다. */
     public void setIntervalMillis(long intervalMillis) {
         if (intervalMillis < 0) throw new IllegalArgumentException("intervalMillis은(는) 0 이상이어야 합니다.");

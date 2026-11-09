@@ -20,6 +20,11 @@ public class DebugNode extends BaseNode implements Inputable {
         super(NodeType.DEBUG);
     }
 
+    /** 저장된 워크플로를 불러올 때처럼 ID가 정해져 있는 경우에 씁니다. */
+    public DebugNode(String id) {
+        super(NodeType.DEBUG, id);
+    }
+
     @Override
     public Icon getIcon() {
         return ICON;

@@ -191,7 +191,7 @@ public class BoardPanel extends JPanel implements Scrollable {
 
     /** 타입의 노드를 새로 만들어 보드 좌표 location에 카드를 놓고 선택합니다. 노드 생성 실패 예외는 호출 측에서 처리합니다. */
     public NodePanel addNode(NodeType type, Point location) {
-        NodePanel view = new NodePanel(type.name());
+        NodePanel view = new NodePanel(type);
 
         view.setBounds(Math.max(0, location.x), Math.max(0, location.y), NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
         view.getNode().setLocation(view.getLocation());

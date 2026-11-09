@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.Supplier;
 
 @Getter
 @Setter
@@ -24,7 +23,7 @@ public abstract class BaseNode implements Runnable {
         void nodeFailed(BaseNode node, Throwable error);
     }
 
-    private static final Supplier<String> ID_GENERATOR = new RandomIdGenerator();
+    private static final RandomIdGenerator ID_GENERATOR = new RandomIdGenerator();
 
     private final LocalDateTime createdAt;
     @Expose
@@ -57,6 +56,7 @@ public abstract class BaseNode implements Runnable {
     }
 
     protected BaseNode(NodeType type, String id) {
+        ID_GENERATOR.reserve(id); // 불러온 ID가 이후 새 노드의 ID와 겹치지 않게 합니다.
         this.createdAt = LocalDateTime.now();
         this.id = id;
         this.type = type;

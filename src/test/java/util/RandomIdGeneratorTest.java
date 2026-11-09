@@ -27,6 +27,21 @@ class RandomIdGeneratorTest {
     }
 
     @Test
+    void reservedIdsAreNeverIssued() {
+        RandomIdGenerator generator = new RandomIdGenerator();
+        for (int i = 0; i < 0x1000; i++) generator.reserve(String.format("%06x", i)); // 000000~000fff 예약
+        for (int i = 0; i < 2_000; i++) assertFalse(generator.get().startsWith("000"), "예약된 ID가 발급됨");
+    }
+
+    @Test
+    void factoryCreatesNodesWithAGivenId() {
+        node.BaseNode created = node.NodeFactory.createNode(node.NodeType.INJECT, "abc123");
+        assertEquals("abc123", created.getId());
+        assertEquals(node.NodeType.INJECT, created.getType());
+        assertNotEquals("abc123", node.NodeFactory.createNode(node.NodeType.INJECT).getId(), "새 노드는 다른 ID");
+    }
+
+    @Test
     void nodesCreatedBackToBackGetDistinctIds() {
         // 이전 구현(밀리초 해시)에서는 같은 밀리초에 만든 노드들이 같은 ID를 받았습니다.
         Set<String> ids = new HashSet<>();

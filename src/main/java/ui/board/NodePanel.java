@@ -26,7 +26,7 @@ public class NodePanel extends JPanel {
     private Point dragOrigin;
     private boolean selected;
 
-    public NodePanel(String type) {
+    public NodePanel(NodeType type) {
         this(NodeFactory.createNode(type));
     }
 

@@ -15,6 +15,11 @@ public final class RandomIdGenerator implements Supplier<String> {
     private final SecureRandom random = new SecureRandom();
     private final Set<String> issued = new HashSet<>();
 
+    /** 밖에서 들어온 ID(불러온 워크플로 등)를 발급된 것으로 기록해 새 ID와 겹치지 않게 합니다. */
+    public synchronized void reserve(String id) {
+        issued.add(id);
+    }
+
     @Override
     public synchronized String get() {
         while (true) {

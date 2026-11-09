@@ -30,20 +30,17 @@ public class NodeFactory {
         };
     }
 
-    public static BaseNode createNode(String t) {
-        NodeType type = NodeType.valueOf(t.toUpperCase());  // type은 항상 올바른 값이 들어온다고 가정한다.
+    public static BaseNode createNode(NodeType type) {
+        return createNode(type, null);
+    }
 
-        BaseNode node;
-
-        if (type == NodeType.DEBUG) node = new DebugNode();
-        else if (type == NodeType.INJECT) node = new InjectNode();
-        else {
-            log.error("node type : {}", type);
-            throw new IllegalStateException("지원하지 않는 노드 입니다.");
-        }
-
+    /** id가 null이면 새 ID를 받습니다. 불러오기처럼 ID가 정해진 경우 그 ID로 만듭니다. */
+    public static BaseNode createNode(NodeType type, String id) {
+        BaseNode node = switch (type) {
+            case DEBUG -> id == null ? new DebugNode() : new DebugNode(id);
+            case INJECT -> id == null ? new InjectNode() : new InjectNode(id);
+        };
         log.info("{}가 생성 되었습니다", node.getClass().getSimpleName());
-
         return node;
     }
 }
