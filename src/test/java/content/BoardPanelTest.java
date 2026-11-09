@@ -163,6 +163,36 @@ class BoardPanelTest {
         });
     }
 
+    @Test
+    void nodeFailureIsRememberedUntilNextRun() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        java.util.List<Object> failedEvents = new java.util.concurrent.CopyOnWriteArrayList<>();
+        Edt.run(() -> {
+            board.removeAll();
+            NodePanel src = add(new TestNodes.Source("s1"), 75, 95);
+            NodePanel failing = add(new TestNodes.Failing("f1"), 540, 230);
+            ((TestNodes.Source) src.getNode()).setIntervalMilli(10);
+            ((TestNodes.Source) src.getNode()).connect((TestNodes.Failing) failing.getNode());
+            board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> failedEvents.add(e.getNewValue()));
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            assertNull(board.getLastFailure());
+            board.run();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> {
+            assertEquals(1, failedEvents.size());
+            assertNotNull(board.getLastFailure());
+            assertEquals("f1", board.getLastFailure().node().getId());
+            assertEquals("테스트 실패 f1 — boom", board.getLastFailure().describe());
+
+            board.removeAll();
+            add(new TestNodes.Source("s2"), 75, 95);
+            board.run();
+            assertNull(board.getLastFailure(), "다음 실행을 시작하면 지워짐");
+            board.stop();
+        });
+    }
+
     private NodePanel add(node.BaseNode model, int x, int y) {
         NodePanel view = new NodePanel(model);
         view.setBounds(x, y, NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);

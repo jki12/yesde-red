@@ -26,11 +26,14 @@ final class StatusBar extends JPanel {
 
     void showBoard(BoardPanel board) {
         RunState state = board == null ? RunState.IDLE : board.getRunState();
-        status.setText(switch (state) {
+        String text = switch (state) {
             case IDLE -> "대기 중";
             case RUNNING -> "실행 중";
             case STOPPING -> "종료 중";
-        });
+        };
+        BoardPanel.NodeFailure failure = board == null ? null : board.getLastFailure();
+        if (failure != null) text += "   ·   오류로 종료: " + failure.describe();
+        status.setText(text);
 
         int nodes = board == null ? 0 : board.getNodePanels().size();
         long connections = board == null ? 0 : board.getConnectionCount();

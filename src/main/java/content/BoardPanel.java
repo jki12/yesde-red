@@ -34,6 +34,16 @@ public class BoardPanel extends JPanel {
     public static final String PROP_CONNECTIONS_CHANGED = "connectionsChanged";
     /** 실행 상태가 바뀜. old/new: RunState */
     public static final String PROP_BOARD_STATE = "boardState";
+    /** 실행 중 노드가 예외로 멈춤. new: NodeFailure. 직후 보드 전체가 종료됩니다. */
+    public static final String PROP_NODE_FAILED = "nodeFailed";
+
+    /** 실패한 노드와 예외입니다. 다음 실행을 시작할 때까지 보드가 기억합니다. */
+    public record NodeFailure(BaseNode node, Throwable error) {
+        public String describe() {
+            String message = error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage();
+            return node.getDisplayName() + " " + node.getId() + " — " + message;
+        }
+    }
 
     private static final int GRID_SIZE = 64;
 
@@ -42,6 +52,7 @@ public class BoardPanel extends JPanel {
     // 실행 생명주기는 WorkflowRunner가 맡고, 보드는 상태 변경을 PROP_BOARD_STATE 속성 이벤트로 전달합니다.
     @Getter(AccessLevel.NONE)
     private final WorkflowRunner runner;
+    private NodeFailure lastFailure;
     private NodePanel selectedNode;
 
     // 이 보드에 추가된 카드만 ID로 찾습니다. 외부에서 맵을 수정하지 못하도록 getter는 생성하지 않습니다.
@@ -54,7 +65,15 @@ public class BoardPanel extends JPanel {
 
     public BoardPanel(String name) {
         setName(name);
-        runner = new WorkflowRunner(name, (previous, current) -> firePropertyChange(PROP_BOARD_STATE, previous, current));
+        runner = new WorkflowRunner(name, new WorkflowRunner.StateListener() {
+            @Override public void stateChanged(RunState previous, RunState current) {
+                firePropertyChange(PROP_BOARD_STATE, previous, current);
+            }
+            @Override public void nodeFailed(BaseNode node, Throwable error) {
+                lastFailure = new NodeFailure(node, error);
+                firePropertyChange(PROP_NODE_FAILED, null, lastFailure);
+            }
+        });
         setLayout(null); // 노드 자유롭게 배치.
         setBackground(UiTheme.getBackgroundColor());
 
@@ -185,6 +204,7 @@ public class BoardPanel extends JPanel {
     }
 
     public void run() {
+        lastFailure = null;
         runner.start(List.of(getNodes()));
     }
 

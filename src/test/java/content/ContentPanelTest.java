@@ -49,6 +49,51 @@ class ContentPanelTest {
         });
     }
 
+    @Test
+    void nodeFailureShowsInStatusBarAndConsole() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        ContentPanel[] content = new ContentPanel[1];
+        Edt.run(() -> {
+            content[0] = new ContentPanel();
+            BoardPanel board = content[0].getSelectedBoard();
+            support.TestNodes.Source source = new support.TestNodes.Source("s1");
+            support.TestNodes.Failing failing = new support.TestNodes.Failing("f1");
+            source.setIntervalMilli(10);
+            source.connect(failing);
+            for (node.BaseNode model : new node.BaseNode[] {source, failing}) {
+                ui.menu.NodePanel view = new ui.menu.NodePanel(model);
+                view.setBounds(40, 40, ui.menu.NodePanel.DEFAULT_WIDTH, ui.menu.NodePanel.DEFAULT_HEIGHT);
+                board.add(view);
+            }
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            assertEquals(0, consoleRows(content[0]));
+            board.run();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> { }); // 콘솔 기록은 invokeLater로 들어오므로 EDT 큐를 한 번 비웁니다.
+        Edt.run(() -> {
+            assertEquals("대기 중   ·   오류로 종료: 테스트 실패 f1 — boom", status(content[0]));
+            assertEquals(1, consoleRows(content[0]), "콘솔에 오류 한 줄");
+        });
+    }
+
+    private static int consoleRows(ContentPanel content) {
+        JTable table = findTable(content.getDebugPanel());
+        assertNotNull(table, "콘솔 표가 없음");
+        return table.getRowCount();
+    }
+
+    private static JTable findTable(Container container) {
+        for (Component child : container.getComponents()) {
+            if (child instanceof JTable table) return table;
+            if (child instanceof Container nested) {
+                JTable found = findTable(nested);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
     private static String status(Container content) { return labels(content)[0]; }
     private static String summary(Container content) { return labels(content)[1]; }
 

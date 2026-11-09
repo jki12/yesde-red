@@ -10,6 +10,9 @@ import workflow.RunState;
 import javax.swing.*;
 import java.awt.*;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 public class ContentPanel extends JPanel {
     private static final int DIVIDER_SIZE = 5;
@@ -26,7 +29,8 @@ public class ContentPanel extends JPanel {
     private static final double INITIAL_CONSOLE_HEIGHT_RATIO = 0.27;
     // 선택된 보드에서 구독하는 이벤트. 어느 것이든 오면 목록·속성·상태 표시를 다시 그립니다.
     private static final String[] OBSERVED_BOARD_PROPERTIES = {BoardPanel.PROP_SELECTED_NODE,
-            BoardPanel.PROP_NODES_CHANGED, BoardPanel.PROP_CONNECTIONS_CHANGED, BoardPanel.PROP_BOARD_STATE};
+            BoardPanel.PROP_NODES_CHANGED, BoardPanel.PROP_CONNECTIONS_CHANGED, BoardPanel.PROP_BOARD_STATE,
+            BoardPanel.PROP_NODE_FAILED};
 
     @Getter
     private final TabPanel tabPanel = new TabPanel();
@@ -46,6 +50,8 @@ public class ContentPanel extends JPanel {
 
     private final PropertyChangeListener boardListener = e -> refreshCurrentBoardView();
     private BoardPanel observedBoard;
+    // 콘솔은 모든 보드가 공유하므로, 배경 탭의 보드가 실패해도 기록되도록 보드마다 한 번씩 붙입니다.
+    private final Set<BoardPanel> consoleBoundBoards = Collections.newSetFromMap(new WeakHashMap<>());
 
     /*
      * ContentPanel 구성
@@ -98,6 +104,12 @@ public class ContentPanel extends JPanel {
 
     private void observeSelectedBoard() {
         BoardPanel board = getSelectedBoard();
+        if (board != null && consoleBoundBoards.add(board)) {
+            board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> {
+                BoardPanel.NodeFailure failure = (BoardPanel.NodeFailure) e.getNewValue();
+                debugPanel.add("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
+            });
+        }
         if (board != observedBoard) {
             if (observedBoard != null) {
                 for (String property : OBSERVED_BOARD_PROPERTIES) observedBoard.removePropertyChangeListener(property, boardListener);
