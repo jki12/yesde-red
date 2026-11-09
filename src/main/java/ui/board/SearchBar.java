@@ -1,4 +1,4 @@
-package menu.popup;
+package ui.board;
 
 import ui.theme.Codicons;
 

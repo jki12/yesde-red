@@ -2,7 +2,6 @@ package ui.board;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import menu.popup.AddNodePopup;
 import node.BaseNode;
 import node.MessageReceiver;
 import node.MessageSender;
