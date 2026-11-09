@@ -62,6 +62,37 @@ class WorkflowRunnerTest {
     }
 
     @Test
+    void nodeFailureStopsTheWholeWorkflowAndIsReportedOnce() throws Exception {
+        TestNodes.Source source = new TestNodes.Source("s1");
+        TestNodes.Failing failing = new TestNodes.Failing("f1");
+        source.setIntervalMilli(10);
+        source.connect(failing);
+
+        List<RunState> states = new CopyOnWriteArrayList<>();
+        List<String> failures = new CopyOnWriteArrayList<>();
+        CountDownLatch idle = new CountDownLatch(1);
+        WorkflowRunner runner = new WorkflowRunner("test", new WorkflowRunner.StateListener() {
+            @Override public void stateChanged(RunState previous, RunState current) {
+                states.add(current);
+                if (current == RunState.IDLE) idle.countDown();
+            }
+            @Override public void nodeFailed(node.BaseNode node, Throwable error) {
+                assertTrue(javax.swing.SwingUtilities.isEventDispatchThread(), "실패 알림은 EDT에서");
+                failures.add(node.getId() + ":" + error.getMessage());
+            }
+        });
+
+        Edt.run(() -> runner.start(List.of(source, failing)));
+
+        assertTrue(idle.await(5, TimeUnit.SECONDS), "실패 후 사용자가 멈추지 않아도 IDLE로 끝나야 함");
+        assertEquals(List.of("f1:boom"), failures);
+        assertEquals(List.of(RunState.RUNNING, RunState.STOPPING, RunState.IDLE), states);
+        assertFalse(source.isExecutionActive(), "건강한 노드도 함께 종료");
+        assertNotNull(failing.getFailure());
+        assertNull(source.getFailure(), "stop()으로 끝난 노드는 실패가 아님");
+    }
+
+    @Test
     void emptyNodeListStaysIdle() throws Exception {
         WorkflowRunner runner = new WorkflowRunner("test", (previous, current) -> fail("상태가 바뀌면 안 됨"));
         Edt.run(() -> {

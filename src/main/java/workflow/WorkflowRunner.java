@@ -13,9 +13,12 @@ import java.util.Objects;
  */
 @Slf4j
 public final class WorkflowRunner {
-    /** 상태가 바뀔 때 EDT에서 호출됩니다. */
+    /** 상태 변경과 노드 실패를 EDT에서 전달받습니다. */
     public interface StateListener {
         void stateChanged(RunState previous, RunState current);
+
+        /** 실행 중 노드가 예외로 멈췄을 때 호출됩니다. 직후 워크플로 전체가 종료됩니다. */
+        default void nodeFailed(BaseNode node, Throwable error) { }
     }
 
     private final String name;
@@ -47,6 +50,7 @@ public final class WorkflowRunner {
 
         try {
             for (BaseNode node : activeNodes) {
+                node.setFailureListener(this::onNodeFailed);
                 node.start();
             }
         } catch (RuntimeException | Error e) {
@@ -84,6 +88,7 @@ public final class WorkflowRunner {
             // 송신 노드까지 모두 끝난 뒤 남은 메시지를 버립니다. EDT는 join()을 기다리지 않습니다.
             for (BaseNode node : nodes) node.clearPendingMessages();
             SwingUtilities.invokeLater(() -> {
+                for (BaseNode node : nodes) node.setFailureListener(null);
                 activeNodes = List.of();
                 setState(RunState.IDLE);
                 log.info("{} 보드의 실행이 종료되었습니다.", name);
@@ -92,6 +97,15 @@ public final class WorkflowRunner {
         }, "workflow-completion");
         watcher.setDaemon(true);
         watcher.start();
+    }
+
+    // 워커 스레드에서 호출됩니다. 노드 하나가 죽으면 상류 노드의 메시지가 큐에 쌓이기만 하므로 전체를 종료합니다.
+    private void onNodeFailed(BaseNode node, Throwable error) {
+        SwingUtilities.invokeLater(() -> {
+            if (state != RunState.RUNNING) return; // 종료 중에 난 실패는 사용자가 이미 멈춘 흐름의 일부입니다.
+            listener.nodeFailed(node, error);
+            stop();
+        });
     }
 
     private void setState(RunState next) {
