@@ -9,6 +9,7 @@ import node.Inputable;
 import node.Outputable;
 import ui.UiTheme;
 import ui.menu.NodePanel;
+import workflow.RunState;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -26,8 +27,6 @@ import java.util.Objects;
 @Getter
 @Slf4j
 public class BoardPanel extends JPanel {
-    public enum RunState { IDLE, RUNNING, STOPPING }
-
     private static final int GRID_SIZE = 64;
 
     private final JPopupMenu popupMenu = new NodePopupMenu();

@@ -3,6 +3,7 @@ package action;
 import content.BoardPanel;
 import ui.frame.YesdeRedFrame;
 import lombok.extern.slf4j.Slf4j;
+import workflow.RunState;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -25,8 +26,8 @@ public class RunAction extends AbstractAction {
         }
 
         if (!(contentPane.getSelectedComponent() instanceof BoardPanel board)) return;
-        if (board.getRunState() != BoardPanel.RunState.IDLE) {
-            String message = board.getRunState() == BoardPanel.RunState.STOPPING
+        if (board.getRunState() != RunState.IDLE) {
+            String message = board.getRunState() == RunState.STOPPING
                     ? "워크플로가 종료 중입니다. 종료 완료 후 다시 실행하세요."
                     : "이 워크플로는 이미 실행 중입니다.";
             JOptionPane.showMessageDialog(contentPane, message);

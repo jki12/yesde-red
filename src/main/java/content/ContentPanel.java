@@ -6,6 +6,7 @@ import ui.Codicons;
 import action.RunAction;
 import ui.UiTheme;
 import ui.menu.NodePanel;
+import workflow.RunState;
 import javax.swing.*;
 import java.awt.*;
 
@@ -206,9 +207,9 @@ public class ContentPanel extends JPanel {
         NodePanel selected = board == null ? null : board.getSelectedNode();
 
         nodeInfo.showNode(selected == null ? null : selected.getNode(),
-                () -> board != null && board.getRunState() == BoardPanel.RunState.IDLE);
+                () -> board != null && board.getRunState() == RunState.IDLE);
         hierarchy.showBoard(board);
-        BoardPanel.RunState state = board == null ? BoardPanel.RunState.IDLE : board.getRunState();
+        RunState state = board == null ? RunState.IDLE : board.getRunState();
         status.setText(switch (state) {
             case IDLE -> "대기 중";
             case RUNNING -> "실행 중";
