@@ -35,3 +35,6 @@ target/
 
 ### IntelliJ module files ###
 *.iml
+
+### Claude Code / MCP 로컬 설정 ###
+.mcp.json
