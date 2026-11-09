@@ -72,17 +72,29 @@ class HtmlExtractNodeTest {
         node.setSelector("div.item");
         node.setFields("broken line");
         run(new Message("no body"));
+        assertTrue(awaitWarnings(1), "body 없음 경고");
+        assertTrue(warnings.get(0).contains("body가 없습니다"));
+
         node.receive(new Message(Map.of("body", HTML)));
-        node.setFields("title = h2 a");
+        assertTrue(awaitWarnings(2), "필드 옵션 경고");
+        assertTrue(warnings.get(1).startsWith("필드 옵션 오류"));
+
+        node.setFields("title = h2 a"); // 옵션 변경은 이전 메시지 처리가 끝난 뒤에
         node.setSelector("div[");
         node.receive(new Message(Map.of("body", HTML)));
-
-        Thread.sleep(400);
-        assertEquals(3, warnings.size(), "경고: " + warnings);
-        assertTrue(warnings.get(0).contains("body가 없습니다"));
-        assertTrue(warnings.get(1).startsWith("필드 옵션 오류"));
+        assertTrue(awaitWarnings(3), "선택자 경고");
         assertTrue(warnings.get(2).startsWith("선택자 오류"));
+
         assertTrue(sink.received.isEmpty());
         assertNull(node.getFailure());
+    }
+
+    private boolean awaitWarnings(int count) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (warnings.size() < count) {
+            if (System.currentTimeMillis() > deadline) return false;
+            Thread.sleep(10);
+        }
+        return true;
     }
 }

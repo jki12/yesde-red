@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 노드 사이를 오가는 데이터 한 건입니다. payload는 이름 → 값의 순서 있는 맵이며 만든 뒤에는 바뀌지 않습니다.
@@ -14,8 +15,11 @@ public final class Message implements Comparable<Message> {
     public static final String TEXT = "text";
     private static final int DEFAULT_PRIORITY = 0;
     private static final Gson GSON = new Gson();
+    private static final AtomicLong SEQUENCE = new AtomicLong();
 
     private final int priority;
+    // 같은 우선순위끼리는 만든 순서대로 처리되도록 하는 순번입니다. 우선순위 큐만으로는 순서가 보장되지 않습니다.
+    private final long sequence = SEQUENCE.incrementAndGet();
     private final Map<String, Object> payload;
 
     public Message(int priority, Map<String, ?> payload) {
@@ -76,7 +80,8 @@ public final class Message implements Comparable<Message> {
 
     @Override
     public int compareTo(Message o) {
-        return o.priority - this.priority; // 우선순위가 높은 메시지가 먼저 처리됩니다.
+        int byPriority = Integer.compare(o.priority, this.priority); // 우선순위가 높은 메시지가 먼저
+        return byPriority != 0 ? byPriority : Long.compare(this.sequence, o.sequence); // 같으면 먼저 만든 것부터
     }
 
     /** text 하나뿐이면 그 문자열, 아니면 payload 전체를 한 줄 JSON으로. 콘솔 표시에 씁니다. */

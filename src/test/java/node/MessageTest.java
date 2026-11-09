@@ -44,7 +44,13 @@ class MessageTest {
     }
 
     @Test
-    void higherPriorityComesFirst() {
+    void higherPriorityComesFirstAndEqualPriorityKeepsCreationOrder() throws Exception {
         assertTrue(new Message(5, "high").compareTo(new Message(1, "low")) < 0);
+
+        Pipe pipe = new Pipe();
+        for (int i = 0; i < 50; i++) pipe.put(new Message("m" + i));
+        pipe.put(new Message(9, "urgent"));
+        assertEquals("urgent", pipe.take().toString(), "높은 우선순위가 먼저");
+        for (int i = 0; i < 50; i++) assertEquals("m" + i, pipe.take().toString(), "같은 우선순위는 넣은 순서대로");
     }
 }

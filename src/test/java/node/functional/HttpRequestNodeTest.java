@@ -48,6 +48,15 @@ class HttpRequestNodeTest {
         server.stop(0);
     }
 
+    private boolean awaitWarnings(int count, long timeoutMillis) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        while (warnings.size() < count) {
+            if (System.currentTimeMillis() > deadline) return false;
+            Thread.sleep(10);
+        }
+        return true;
+    }
+
     private static void respond(com.sun.net.httpserver.HttpExchange exchange, int status, String contentType, String body) throws java.io.IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", contentType);
@@ -94,7 +103,7 @@ class HttpRequestNodeTest {
         node.receive(new Message(Map.of("url", base + "/page"))); // 경고들 뒤에도 계속 동작
 
         assertTrue(sink.awaitMessages(1, 8_000), "정상 요청은 도착해야 함");
-        assertEquals(4, warnings.size(), "경고 4건: " + warnings);
+        assertTrue(awaitWarnings(4, 8_000), "경고 4건이 쌓여야 함: " + warnings);
         assertTrue(warnings.get(0).startsWith("HTTP 404"));
         assertTrue(warnings.get(1).startsWith("URL이 올바르지 않습니다"));
         assertTrue(warnings.get(2).startsWith("요청 실패"));
