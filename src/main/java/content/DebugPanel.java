@@ -203,8 +203,8 @@ public class DebugPanel extends JPanel {
             boolean wasScrolledToBottom = isScrolledToBottom();
             int row = model.getRowCount();
 
-            model.addRow(new Object[] {entry.time(), entry.source(), entry.text()}); // 행 추가와 변경 알림을 함께 처리합니다.
-            updateRowHeight(row); // 새 로그 하나의 높이만 계산하며 기존 로그 원문은 유지합니다.
+            model.addRow(new Object[] {entry.time(), entry.source(), entry.text()});
+            updateRowHeight(row); // 새 행 하나의 높이만 계산합니다.
             countLabel.setText(getLogCountText());
 
             if (autoScrollBox.isSelected() && wasScrolledToBottom) SwingUtilities.invokeLater(() -> {

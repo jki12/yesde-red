@@ -31,7 +31,7 @@ public class ContentPanel extends JPanel {
     private final DebugPanel debugPanel = new DebugPanel();
     private final NodeInfoPanel nodeInfo = new NodeInfoPanel();
 
-    private final NodeHierarchyPanel hierarchy = new NodeHierarchyPanel(); // 확인 필요.
+    private final NodeHierarchyPanel hierarchy = new NodeHierarchyPanel();
     private final StatusBar statusBar = new StatusBar();
     // 실행은 IDLE이고 노드가 있을 때, 종료는 RUNNING일 때만 누를 수 있습니다. refreshCurrentBoardView()가 맞춥니다.
     private final JButton runButton = UiTheme.button("실행");

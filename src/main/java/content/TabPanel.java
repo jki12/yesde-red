@@ -62,7 +62,7 @@ public class TabPanel extends JTabbedPane {
             }
         }
 
-        Collections.sort(titles); // 정렬하지 않으면 발생하는 문제 있었음.. (옵시디언에 정리)
+        Collections.sort(titles); // 오름차순으로 훑어야 비어 있는 가장 작은 번호를 찾을 수 있습니다.
 
         int num = 1;
         for (int n : titles) {

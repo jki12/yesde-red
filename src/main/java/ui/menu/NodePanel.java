@@ -10,7 +10,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 /**
- * 노드 생성과 연결 모델은 재사용하고, 카드 이동·단일 선택·실제 포트 판별과 연결 미리보기 입력을 UI에서 보완했습니다.
+ * 보드 위의 노드 카드입니다. 카드 이동, 선택, 포트에서 시작하는 연결 드래그 입력을 처리합니다.
  */
 public class NodePanel extends JPanel {
     public static final int DEFAULT_WIDTH = 236;
@@ -53,7 +53,6 @@ public class NodePanel extends JPanel {
 
         setLayout(new BorderLayout(6, 0)); // 입력, 출력 포트 사이 간격 설정.
         setOpaque(false);
-        // setToolTipText(node.getType().name() + " · " + node.getId());
 
         inputPort = port(node instanceof Inputable);
         outputPort = port(node instanceof Outputable);
@@ -126,7 +125,6 @@ public class NodePanel extends JPanel {
 
         // 내부 라벨·패널에서도 동일하게 노드를 선택하고 드래그할 수 있도록 등록.
         for (JComponent component : new JComponent[] {this, body, text, icon, name, type}) {
-            // component.setToolTipText(getToolTipText());
 
             component.addMouseListener(drag);
             component.addMouseMotionListener(drag);
@@ -218,7 +216,7 @@ public class NodePanel extends JPanel {
         repaint();
     }
 
-    // 선택 여부에 따라 배경·제목 띠·선택 테두리는 직접 그리고, 글자·아이콘·포트는 자식 컴포넌트가
+    // 선택 여부에 따라 배경·제목 띠·테두리를 직접 그립니다. 글자·아이콘·포트는 자식 컴포넌트가 그립니다.
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D copy = (Graphics2D) g.create();

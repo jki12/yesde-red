@@ -66,7 +66,7 @@ public abstract class BaseNode implements Runnable {
 
     public Set<BaseNode> getOut() {
         // 외부에서는 연결 목록을 조회만 허용합니다. 복사본이 아니므로 이후 연결 변경도 반영됩니다.
-        // 출력 기능이 없는 노드는 기존처럼 null을 반환합니다.
+        // 출력 기능이 없는 노드는 null을 반환합니다.
         return out == null ? null : Collections.unmodifiableSet(out);
     }
 

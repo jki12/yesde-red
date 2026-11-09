@@ -19,6 +19,5 @@ public class ImportAction extends AbstractAction {
         fileChooser.setCurrentDirectory(fileChooser.getCurrentDirectory()); // null이 들어오면 유저 디폴트 디렉토리로 열림.
 
         fileChooser.showOpenDialog(null); // TODO, test.
-//        log.info("{} 보드가 일시정지 되었습니다. (index : {})", tabInfo.getBoard().getName(), tabInfo.getSelectedIndex());
     }
 }
