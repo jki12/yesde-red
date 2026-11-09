@@ -3,7 +3,7 @@ package ui;
 import content.WorkspacePanel;
 import content.TabPanel;
 import ui.board.BoardPanel;
-import content.ConsolePanel;
+import ui.console.ConsolePanel;
 import menubar.AppMenuBar;
 
 import javax.swing.*;

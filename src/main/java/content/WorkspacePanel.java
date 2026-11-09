@@ -1,4 +1,5 @@
 package content;
+import ui.console.ConsolePanel;
 import ui.inspector.NodeInspectorPanel;
 import ui.board.BoardPanel;
 

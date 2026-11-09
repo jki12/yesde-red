@@ -1,4 +1,4 @@
-package content;
+package ui.console;
 
 import ui.theme.Codicons;
 

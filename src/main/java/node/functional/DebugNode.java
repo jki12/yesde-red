@@ -2,7 +2,7 @@ package node.functional;
 
 import ui.theme.Codicons;
 import javax.swing.Icon;
-import content.ConsolePanel;
+import ui.console.ConsolePanel;
 import ui.YesdeRedFrame;
 import node.BaseNode;
 import node.MessageReceiver;
