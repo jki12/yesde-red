@@ -220,6 +220,26 @@ class BoardPanelTest {
     }
 
     @Test
+    void cardContextMenuDeletesTheCardAndIsDisabledWhileRunning() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        Edt.run(() -> {
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            board.startWorkflow();
+            JMenuItem running = (JMenuItem) Swing.find(second.createContextMenu(board), "deleteNode");
+            assertFalse(running.isEnabled(), "실행 중에는 삭제 비활성");
+            board.stopWorkflow();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> {
+            JMenuItem delete = (JMenuItem) Swing.find(second.createContextMenu(board), "deleteNode");
+            assertTrue(delete.isEnabled());
+            delete.doClick();
+            assertFalse(board.getNodePanels().contains(second));
+            assertEquals(2, board.getNodePanels().size());
+        });
+    }
+
+    @Test
     void nodeFailureIsRememberedUntilNextRun() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
         java.util.List<Object> failedEvents = new java.util.concurrent.CopyOnWriteArrayList<>();

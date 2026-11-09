@@ -3,6 +3,7 @@ package ui.board;
 import lombok.Getter;
 import node.*;
 import ui.theme.UiTheme;
+import workflow.RunState;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -87,7 +88,8 @@ public class NodePanel extends JPanel {
         MouseAdapter drag = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if (!SwingUtilities.isLeftMouseButton(e)) return; // TODO, 삭제, 복사 창 뜰 수 있게 수정.
+                if (e.isPopupTrigger()) { showContextMenu(e); return; }
+                if (!SwingUtilities.isLeftMouseButton(e)) return;
 
                 BoardPanel board = board();
                 if (board != null) {
@@ -121,6 +123,7 @@ public class NodePanel extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 dragOrigin = null;
+                if (e.isPopupTrigger()) showContextMenu(e); // 플랫폼에 따라 누를 때 또는 놓을 때 팝업이 뜹니다.
             }
         };
 
@@ -206,6 +209,25 @@ public class NodePanel extends JPanel {
         };
         port.addMouseListener(connectionDrag);
         port.addMouseMotionListener(connectionDrag);
+    }
+
+    private void showContextMenu(MouseEvent e) {
+        BoardPanel board = board();
+        if (board == null) return;
+
+        board.setSelectedNode(this);
+        createContextMenu(board).show(e.getComponent(), e.getX(), e.getY());
+    }
+
+    /** 카드 우클릭 메뉴입니다. 실행 중이거나 종료 중이면 삭제가 비활성화됩니다. */
+    JPopupMenu createContextMenu(BoardPanel board) {
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem delete = new JMenuItem("삭제");
+        delete.setName("deleteNode");
+        delete.setEnabled(board.getRunState() == RunState.IDLE);
+        delete.addActionListener(e -> board.removeNode(this));
+        menu.add(delete);
+        return menu;
     }
 
     private BoardPanel board() {
