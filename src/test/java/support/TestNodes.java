@@ -32,6 +32,22 @@ public final class TestNodes {
         public void emit() { process(); }
     }
 
+    /** 메시지를 받으면 예외를 던져 멈추는 입력 노드입니다. 노드 실패 처리 검사에 씁니다. */
+    public static final class Failing extends BaseNode implements Inputable {
+        private final String id;
+
+        public Failing(String id) { super(Type.DEBUG); this.id = id; }
+
+        @Override public String getId() { return id; }
+        @Override public Icon getIcon() { return NodeFactory.getIcon(getType()); }
+        @Override public String getDisplayName() { return "테스트 실패"; }
+        @Override public String getDescription() { return "메시지를 받으면 예외를 던지는 테스트 노드"; }
+        @Override protected void process() throws Exception {
+            getIn().poll();
+            throw new IllegalStateException("boom");
+        }
+    }
+
     /** 받은 메시지 수만 세는 입력 노드입니다. */
     public static final class Sink extends BaseNode implements Inputable {
         private final String id;

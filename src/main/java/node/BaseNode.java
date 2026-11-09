@@ -19,6 +19,11 @@ import java.util.function.Supplier;
 @Setter
 @Slf4j
 public abstract class BaseNode implements Runnable {
+    /** 노드가 예외로 멈췄을 때 워커 스레드에서 호출됩니다. */
+    public interface FailureListener {
+        void nodeFailed(BaseNode node, Throwable error);
+    }
+
     private static final Supplier<String> ID_GENERATOR = new HashIdGenerator();
 
     private final LocalDateTime createdAt;
@@ -34,6 +39,11 @@ public abstract class BaseNode implements Runnable {
     private int y;
     @Setter(AccessLevel.NONE)
     private volatile boolean isRunning;
+    // 마지막 실행이 예외로 끝났으면 그 예외입니다. start()에서 지웁니다. 종료 요청 뒤의 예외는 실패로 보지 않습니다.
+    @Setter(AccessLevel.NONE)
+    private volatile Throwable failure;
+    @Getter(AccessLevel.NONE)
+    private volatile FailureListener failureListener;
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
     private final Pipe in;
@@ -126,6 +136,7 @@ public abstract class BaseNode implements Runnable {
 
     @Override
     public void run() {
+        Throwable error = null;
         try {
             // start() 직후 stop()이 호출돼도 종료 요청을 다시 덮어쓰지 않습니다.
             if (!isRunning || Thread.currentThread().isInterrupted()) return;
@@ -140,15 +151,24 @@ public abstract class BaseNode implements Runnable {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("노드 처리 중 오류가 발생했습니다. id={}", id, e);
+            if (isRunning) error = e; // 종료 요청 중에 난 예외는 정상 종료의 일부로 봅니다.
         } finally {
             try {
                 postprocess();
             } catch (Exception e) {
                 log.error("노드 종료 정리 중 오류가 발생했습니다. id={}", id, e);
+                if (error == null) error = e;
             } finally {
                 isRunning = false;
             }
+            if (error != null) reportFailure(error);
         }
+    }
+
+    private void reportFailure(Throwable error) {
+        failure = error;
+        FailureListener listener = failureListener;
+        if (listener != null) listener.nodeFailed(this, error);
     }
 
     public synchronized void start() {
@@ -158,6 +178,7 @@ public abstract class BaseNode implements Runnable {
         // 여기에서 다시 비우면 먼저 실행된 송신 노드의 새 메시지가 사라질 수 있습니다.
         Thread next = new Thread(this, "node-" + id);
         thread = next;
+        failure = null;
         isRunning = true;
         try {
             next.start();

@@ -3,6 +3,8 @@ package node;
 import org.junit.jupiter.api.Test;
 import support.TestNodes;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -86,6 +88,43 @@ class BaseNodeTest {
 
         assertNull(failure.get(), "송신 중 연결 추가가 예외를 일으키면 안 됨");
         assertEquals(3_001, source.getOut().size());
+    }
+
+    @Test
+    void failureInProcessIsRecordedAndReportedOnce() throws Exception {
+        TestNodes.Failing failing = new TestNodes.Failing("f1");
+        List<Throwable> reported = new CopyOnWriteArrayList<>();
+        failing.setFailureListener((node, error) -> { assertSame(failing, node); reported.add(error); });
+        failing.receive(new Message("trigger"));
+
+        failing.start();
+        failing.getThread().join(2_000);
+
+        assertFalse(failing.isExecutionActive());
+        assertInstanceOf(IllegalStateException.class, failing.getFailure());
+        assertEquals(1, reported.size(), "실패는 한 번만 알림");
+        assertSame(failing.getFailure(), reported.get(0));
+
+        failing.setFailureListener(null);
+        failing.start();
+        assertNull(failing.getFailure(), "다시 시작하면 이전 실패 기록이 지워짐");
+        failing.stop();
+        failing.getThread().join(2_000);
+    }
+
+    @Test
+    void normalStopIsNotAFailure() throws Exception {
+        TestNodes.Sink sink = new TestNodes.Sink("d1");
+        List<Throwable> reported = new CopyOnWriteArrayList<>();
+        sink.setFailureListener((node, error) -> reported.add(error));
+
+        sink.start();
+        Thread.sleep(50);
+        sink.stop();
+        sink.getThread().join(2_000);
+
+        assertNull(sink.getFailure());
+        assertTrue(reported.isEmpty());
     }
 
     private static void waitUntil(java.util.function.BooleanSupplier condition, long timeoutMillis) throws InterruptedException {
