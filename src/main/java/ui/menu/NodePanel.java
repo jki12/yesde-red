@@ -54,11 +54,11 @@ public class NodePanel extends JPanel {
         setLayout(new BorderLayout(6, 0)); // 입력, 출력 포트 사이 간격 설정.
         setOpaque(false);
 
-        inputPort = port(node instanceof Inputable);
-        outputPort = port(node instanceof Outputable);
+        inputPort = createPort(node instanceof Inputable);
+        outputPort = createPort(node instanceof Outputable);
 
-        add(portContainer(inputPort), BorderLayout.WEST);
-        add(portContainer(outputPort), BorderLayout.EAST);
+        add(createPortContainer(inputPort), BorderLayout.WEST);
+        add(createPortContainer(outputPort), BorderLayout.EAST);
 
         JPanel body = new JPanel(new BorderLayout());
         body.setOpaque(false);
@@ -131,7 +131,7 @@ public class NodePanel extends JPanel {
         }
     }
 
-    private JPanel portContainer(JButton button) {
+    private JPanel createPortContainer(JButton button) {
         JPanel container = new JPanel(new GridBagLayout());
 
         container.setOpaque(false);
@@ -141,7 +141,7 @@ public class NodePanel extends JPanel {
         return container;
     }
 
-    private JButton port(boolean visible) {
+    private JButton createPort(boolean visible) {
         JButton port = new JButton();
 
         port.setVisible(visible);

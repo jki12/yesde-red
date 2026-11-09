@@ -9,7 +9,7 @@ import java.util.function.BooleanSupplier;
 
 public class NodeInfoPanel extends JPanel {
     private final JLabel title = UiTheme.label("노드를 선택하세요", false);
-    private final JTextField id = field("nodeId");
+    private final JTextField id = createReadOnlyField("nodeId");
     private final JTextArea description = new JTextArea();
     private final JPanel editorContainer = new JPanel(new BorderLayout());
 
@@ -68,7 +68,7 @@ public class NodeInfoPanel extends JPanel {
     }
 
     // TODO, nodeId만 받고 있음. 사용 안하면 지워야 함
-    private static JTextField field(String name) {
+    private static JTextField createReadOnlyField(String name) {
         JTextField field = new JTextField();
         field.setName(name);
         field.setEditable(false);
