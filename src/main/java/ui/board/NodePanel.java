@@ -69,10 +69,7 @@ public class NodePanel extends JPanel {
         text.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
         text.setPreferredSize(new Dimension(0, 28));
 
-        String title = node.getDisplayName();
-        if (node.getType() == NodeType.DEBUG) title += " " + node.getId().substring(0, Math.min(6, node.getId().length()));
-
-        JLabel name = UiTheme.label(title, false);
+        JLabel name = UiTheme.label(node.getDisplayName() + " " + node.getId(), false);
         name.setFont(UiTheme.getFont());
         JLabel type = UiTheme.label(node.getType().name(), true);
 
