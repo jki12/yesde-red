@@ -1,6 +1,6 @@
 package ui.menu;
 
-import action.RunAction;
+import ui.action.RunAction;
 
 import javax.swing.*;
 

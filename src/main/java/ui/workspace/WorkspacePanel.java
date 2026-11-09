@@ -6,8 +6,8 @@ import ui.board.BoardPanel;
 import lombok.Getter;
 import ui.theme.Codicons;
 
-import action.RunAction;
-import action.StopAction;
+import ui.action.RunAction;
+import ui.action.StopAction;
 import ui.theme.UiTheme;
 import ui.board.NodePanel;
 import workflow.RunState;

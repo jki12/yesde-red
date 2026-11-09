@@ -1,4 +1,4 @@
-package action;
+package ui.action;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;

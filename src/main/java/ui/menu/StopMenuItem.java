@@ -1,6 +1,6 @@
 package ui.menu;
 
-import action.StopAction;
+import ui.action.StopAction;
 
 import javax.swing.*;
 

@@ -1,4 +1,4 @@
-package action;
+package ui.action;
 
 import lombok.extern.slf4j.Slf4j;
 import ui.board.BoardPanel;
