@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import support.Edt;
 import support.Swing;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 
 import javax.swing.*;
 import java.awt.*;

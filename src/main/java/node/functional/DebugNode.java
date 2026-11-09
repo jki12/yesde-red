@@ -1,6 +1,6 @@
 package node.functional;
 
-import ui.Codicons;
+import ui.theme.Codicons;
 import javax.swing.Icon;
 import content.ConsolePanel;
 import ui.YesdeRedFrame;

@@ -1,11 +1,11 @@
 package content;
 
 import lombok.Getter;
-import ui.Codicons;
+import ui.theme.Codicons;
 
 import action.RunAction;
 import action.StopAction;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import ui.menu.NodePanel;
 import workflow.RunState;
 import javax.swing.*;

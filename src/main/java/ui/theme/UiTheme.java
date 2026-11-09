@@ -1,4 +1,4 @@
-package ui;
+package ui.theme;
 
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;

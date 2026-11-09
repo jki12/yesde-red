@@ -1,10 +1,10 @@
 package content;
 
-import ui.Codicons;
+import ui.theme.Codicons;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
-import ui.Listeners;
-import ui.UiTheme;
+import ui.theme.Listeners;
+import ui.theme.UiTheme;
 import ui.menu.NodePanel;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;

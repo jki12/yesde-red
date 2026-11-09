@@ -1,5 +1,5 @@
 import ui.YesdeRedFrame;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import javax.swing.SwingUtilities;
 
 public class Main {

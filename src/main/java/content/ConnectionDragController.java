@@ -1,6 +1,6 @@
 package content;
 
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import ui.menu.NodePanel;
 
 import javax.swing.*;

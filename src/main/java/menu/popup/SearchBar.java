@@ -1,10 +1,10 @@
 package menu.popup;
 
-import ui.Codicons;
+import ui.theme.Codicons;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import ui.Listeners;
-import ui.UiTheme;
+import ui.theme.Listeners;
+import ui.theme.UiTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

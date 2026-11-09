@@ -1,4 +1,4 @@
-package ui;
+package ui.theme;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;

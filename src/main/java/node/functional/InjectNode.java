@@ -1,6 +1,6 @@
 package node.functional;
 
-import ui.Codicons;
+import ui.theme.Codicons;
 import javax.swing.Icon;
 import annotation.OptionField;
 import annotation.OptionInputType;

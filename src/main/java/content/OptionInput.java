@@ -1,7 +1,7 @@
 package content;
 
 import annotation.OptionField;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;

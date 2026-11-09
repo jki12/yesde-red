@@ -1,8 +1,8 @@
 package content;
 
-import ui.Codicons;
+import ui.theme.Codicons;
 
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;

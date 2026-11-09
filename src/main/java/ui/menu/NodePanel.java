@@ -3,7 +3,7 @@ package ui.menu;
 import lombok.Getter;
 import content.BoardPanel;
 import node.*;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;

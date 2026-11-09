@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import support.Edt;
 import support.Swing;
 import support.TestNodes;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import ui.menu.NodePanel;
 
 import javax.swing.*;

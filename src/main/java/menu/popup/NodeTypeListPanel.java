@@ -4,7 +4,7 @@ import content.BoardPanel;
 import lombok.extern.slf4j.Slf4j;
 import node.NodeType;
 import node.NodeFactory;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 
 import javax.swing.*;
 import java.awt.*;

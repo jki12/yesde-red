@@ -2,7 +2,7 @@ package content;
 
 import annotation.OptionField;
 import node.BaseNode;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 
 import javax.swing.*;
 import java.lang.reflect.Field;

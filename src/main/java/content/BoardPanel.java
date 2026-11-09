@@ -7,7 +7,7 @@ import node.BaseNode;
 import node.MessageReceiver;
 import node.MessageSender;
 import node.NodeType;
-import ui.UiTheme;
+import ui.theme.UiTheme;
 import ui.menu.NodePanel;
 import workflow.RunState;
 import workflow.WorkflowRunner;

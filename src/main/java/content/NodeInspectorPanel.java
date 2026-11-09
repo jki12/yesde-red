@@ -1,8 +1,8 @@
 package content;
 
 import node.BaseNode;
-import ui.Codicons;
-import ui.UiTheme;
+import ui.theme.Codicons;
+import ui.theme.UiTheme;
 import javax.swing.*;
 import java.awt.*;
 import java.util.function.BooleanSupplier;
