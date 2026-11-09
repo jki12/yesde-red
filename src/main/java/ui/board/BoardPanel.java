@@ -1,5 +1,7 @@
 package ui.board;
 
+import json.WorkflowCodec;
+import json.WorkflowDocument;
 import lombok.AccessLevel;
 import lombok.Getter;
 import node.BaseNode;
@@ -244,6 +246,27 @@ public class BoardPanel extends JPanel implements Scrollable {
         delete.addActionListener(e -> removeConnection(connection));
         menu.add(delete);
         return menu;
+    }
+
+    /** 현재 보드의 노드·위치·옵션·연결을 저장 문서로 만듭니다. */
+    public WorkflowDocument toDocument() {
+        return WorkflowCodec.toDocument(getName(), List.of(getNodes()));
+    }
+
+    /** 문서의 노드들을 카드로 올립니다. 비어 있고 IDLE인 보드에만 가능하며, 문서가 잘못됐으면 아무것도 올리지 않습니다. */
+    public void load(WorkflowDocument document) {
+        if (getRunState() != RunState.IDLE) throw new IllegalStateException("실행 중인 보드에는 불러올 수 없습니다.");
+        if (getComponentCount() > 0) throw new IllegalStateException("비어 있는 보드에만 불러올 수 있습니다.");
+
+        for (BaseNode node : WorkflowCodec.toNodes(document)) { // 여기서 실패하면 카드는 하나도 추가되지 않습니다.
+            NodePanel view = new NodePanel(node);
+            view.setBounds(Math.max(0, node.getX()), Math.max(0, node.getY()), NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
+            node.setLocation(view.getLocation());
+            add(view);
+        }
+        fireConnectionsChanged();
+        revalidate();
+        repaint();
     }
 
     /** 선택된 연결 또는 카드를 지웁니다. 선택이 없거나 실행 중이면 아무 일도 하지 않고 false입니다. */

@@ -66,6 +66,40 @@ class TabPanelTest {
     }
 
     @Test
+    void opensASavedWorkflowAsANewTab() throws Exception {
+        Edt.run(() -> {
+            TabPanel tabs = new TabPanel();
+            json.WorkflowDocument document = new json.WorkflowDocument(json.WorkflowDocument.CURRENT_VERSION, "불러온 흐름",
+                    java.util.List.of(new json.WorkflowDocument.Node("in0001", "INJECT", 30, 40, java.util.Map.of("message", "hi", "intervalMillis", 500.0)),
+                            new json.WorkflowDocument.Node("out001", "DEBUG", 400, 40, java.util.Map.of())),
+                    java.util.List.of(new json.WorkflowDocument.Connection("in0001", "out001")));
+
+            BoardPanel board = tabs.addBoardTab(document);
+
+            assertEquals(2, tabs.getTabCount());
+            assertEquals("불러온 흐름", tabs.getTitleAt(1));
+            assertSame(board, tabs.getSelectedBoard());
+            assertEquals(2, board.getNodePanels().size());
+            assertEquals(new Point(30, 40), board.getNodePanels().get(0).getLocation());
+            assertEquals(1, board.getConnectionCount());
+            assertEquals("hi", ((node.functional.InjectNode) board.getNodePanels().get(0).getNode()).getMessage());
+
+            BoardPanel again = tabs.addBoardTab(document);
+            assertEquals("워크플로 02", again.getName(), "같은 이름이 열려 있으면 기본 이름을 씀");
+
+            json.WorkflowDocument broken = new json.WorkflowDocument(1, "x",
+                    java.util.List.of(new json.WorkflowDocument.Node("a", "TELEPORT", 0, 0, java.util.Map.of())), java.util.List.of());
+            assertThrows(IllegalArgumentException.class, () -> tabs.addBoardTab(broken));
+            assertEquals(3, tabs.getTabCount(), "잘못된 문서는 탭을 만들지 않음");
+
+            json.WorkflowDocument exported = board.toDocument();
+            assertEquals(2, exported.nodes().size());
+            assertEquals(1, exported.connections().size());
+            assertEquals("불러온 흐름", exported.name());
+        });
+    }
+
+    @Test
     void runningOrStoppingBoardCannotBeClosed() throws Exception {
         CountDownLatch idle = new CountDownLatch(1);
         TabPanel[] tabs = new TabPanel[1];

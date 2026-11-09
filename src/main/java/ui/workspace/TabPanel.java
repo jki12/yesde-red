@@ -1,6 +1,7 @@
 package ui.workspace;
 import ui.board.BoardPanel;
 
+import json.WorkflowDocument;
 import lombok.extern.slf4j.Slf4j;
 import workflow.RunState;
 
@@ -74,9 +75,24 @@ public class TabPanel extends JTabbedPane {
     }
 
     public void addBoardTab() {
+        addTab(new BoardPanel(nextTabTitle()));
+    }
+
+    /**
+     * 저장된 워크플로를 새 탭으로 엽니다. 문서 이름이 비어 있거나 이미 열린 탭과 같으면 기본 이름을 씁니다.
+     * 문서가 잘못됐으면 탭을 만들지 않고 IllegalArgumentException을 던집니다.
+     */
+    public BoardPanel addBoardTab(WorkflowDocument document) {
+        String name = document.name();
+        String title = name == null || name.isBlank() || hasTab(name) ? nextTabTitle() : name;
+        BoardPanel board = new BoardPanel(title);
+        board.load(document);
+        return addTab(board);
+    }
+
+    private BoardPanel addTab(BoardPanel board) {
         int idx = getSelectedIndex() + 1; // 시작시에도 + 1을 해주기 때문에 -1을 반환해도 문제 없음.
 
-        BoardPanel board = new BoardPanel(nextTabTitle());
         JScrollPane scroll = new JScrollPane(board);
         scroll.setBorder(null);
         scroll.setName(board.getName()); // JTabbedPane.add(Component)는 컴포넌트 이름을 탭 제목으로 씁니다.
@@ -84,6 +100,14 @@ public class TabPanel extends JTabbedPane {
         add(scroll, idx);
         setSelectedIndex(idx);
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
+        return board;
+    }
+
+    private boolean hasTab(String title) {
+        for (int i = 0; i < getTabCount(); i++) {
+            if (title.equals(getTitleAt(i))) return true;
+        }
+        return false;
     }
 
     /** index번째 탭의 보드입니다. 탭에는 보드를 감싼 스크롤 패널이 들어 있습니다. */
