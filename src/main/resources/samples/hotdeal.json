@@ -2,44 +2,222 @@
   "version": 1,
   "name": "샘플 - 커뮤니티 핫딜 수집 (클리앙 + 루리웹 RSS + 뽐뿌 RSS)",
   "nodes": [
-    { "id": "hd0001", "type": "INJECT", "x": 40, "y": 40,
-      "options": { "message": "clien", "intervalMillis": 600000 } },
-    { "id": "hd0002", "type": "HTTP_REQUEST", "x": 340, "y": 40,
-      "options": { "url": "https://www.clien.net/service/board/jirum", "userAgent": "yesde-red/1.0",
-                   "timeoutMillis": 15000, "minIntervalMillis": 5000 } },
-    { "id": "hd0003", "type": "HTML_EXTRACT", "x": 640, "y": 40,
-      "options": { "selector": "div.list_item.symph_row", "xml": false,
-                   "fields": "category = span.icon_keyword\ntitle = span.list_subject > a:not(.list_reply)\nlink = span.list_subject > a:not(.list_reply) @href\ncomments = span.rSymph05\nhits = span.hit\ntime = span.timestamp" } },
-
-    { "id": "hd0011", "type": "INJECT", "x": 40, "y": 180,
-      "options": { "message": "ruliweb", "intervalMillis": 600000 } },
-    { "id": "hd0012", "type": "HTTP_REQUEST", "x": 340, "y": 180,
-      "options": { "url": "https://bbs.ruliweb.com/market/board/1020/rss", "userAgent": "yesde-red/1.0",
-                   "timeoutMillis": 15000, "minIntervalMillis": 5000 } },
-    { "id": "hd0013", "type": "HTML_EXTRACT", "x": 640, "y": 180,
-      "options": { "selector": "item", "xml": true,
-                   "fields": "category = category\ntitle = title\nlink = link\nauthor = author\ntime = pubDate" } },
-
-    { "id": "hd0031", "type": "INJECT", "x": 40, "y": 320,
-      "options": { "message": "ppomppu", "intervalMillis": 600000 } },
-    { "id": "hd0032", "type": "HTTP_REQUEST", "x": 340, "y": 320,
-      "options": { "url": "https://www.ppomppu.co.kr/rss.php?id=ppomppu", "userAgent": "yesde-red/1.0",
-                   "timeoutMillis": 15000, "minIntervalMillis": 5000 } },
-    { "id": "hd0033", "type": "HTML_EXTRACT", "x": 640, "y": 320,
-      "options": { "selector": "item", "xml": true,
-                   "fields": "title = title\nlink = link\nauthor = author\ntime = pubDate\nhits = hits\ndescription = description" } },
-
-    { "id": "hd0020", "type": "DEDUPE", "x": 940, "y": 180,
-      "options": { "key": "link", "maxEntries": 100000, "storePath": "output/hotdeal-seen.txt" } },
-    { "id": "hd0021", "type": "FILE_WRITE", "x": 1240, "y": 100,
-      "options": { "path": "output/hotdeal.csv", "format": "CSV",
-                   "fields": "url\ncategory\ntitle\nlink\nauthor\ncomments\nhits\ntime", "append": true } },
-    { "id": "hd0022", "type": "DEBUG", "x": 1240, "y": 260, "options": {} }
+    {
+      "id": "hd0001",
+      "type": "INJECT",
+      "x": 40,
+      "y": 40,
+      "options": {
+        "message": "clien",
+        "intervalMillis": 600000
+      }
+    },
+    {
+      "id": "hd0002",
+      "type": "HTTP_REQUEST",
+      "x": 340,
+      "y": 40,
+      "options": {
+        "url": "https://www.clien.net/service/board/jirum",
+        "userAgent": "yesde-red/1.0",
+        "timeoutMillis": 15000,
+        "minIntervalMillis": 5000
+      }
+    },
+    {
+      "id": "hd0003",
+      "type": "HTML_EXTRACT",
+      "x": 640,
+      "y": 40,
+      "options": {
+        "selector": "div.list_item.symph_row",
+        "xml": false,
+        "fields": "category = span.icon_keyword\ntitle = span.list_subject > a:not(.list_reply)\nlink = span.list_subject > a:not(.list_reply) @href\ncomments = span.rSymph05\nhits = span.hit\ntime = span.timestamp"
+      }
+    },
+    {
+      "id": "hd0004",
+      "type": "TRANSFORM",
+      "x": 940,
+      "y": 40,
+      "options": {
+        "rules": "source = \"clien\"\nsource_post_id = regex(link, \"/jirum/(\\\\d+)\")\nid = format(\"{source}:{source_post_id}\")\npost_url = replace(link, \"\\\\?.*$\", \"\")\nshop = regex(title, \"^\\\\[(.+?)\\\\]\")\nproduct = trim(replace(replace(title, \"^\\\\[.+?\\\\]\", \"\"), \"\\\\([^()]*\\\\)\\\\s*$\", \"\"))\nprice = number(regex(title, \"([\\\\d,]{2,})\\\\s*원\"))\ncomments = number(comments)\nhits = number(hits)\nposted_at = datetime(time, \"yyyy-MM-dd HH:mm:ss\")\ncollected_at = now()",
+        "keep": "id\nsource\nsource_post_id\npost_url\ntitle\nshop\nproduct\nprice\ncategory\nauthor\ncomments\nhits\nposted_at\ncollected_at"
+      }
+    },
+    {
+      "id": "hd0011",
+      "type": "INJECT",
+      "x": 40,
+      "y": 180,
+      "options": {
+        "message": "ruliweb",
+        "intervalMillis": 600000
+      }
+    },
+    {
+      "id": "hd0012",
+      "type": "HTTP_REQUEST",
+      "x": 340,
+      "y": 180,
+      "options": {
+        "url": "https://bbs.ruliweb.com/market/board/1020/rss",
+        "userAgent": "yesde-red/1.0",
+        "timeoutMillis": 15000,
+        "minIntervalMillis": 5000
+      }
+    },
+    {
+      "id": "hd0013",
+      "type": "HTML_EXTRACT",
+      "x": 640,
+      "y": 180,
+      "options": {
+        "selector": "item",
+        "xml": true,
+        "fields": "category = category\ntitle = title\nlink = link\nauthor = author\ntime = pubDate"
+      }
+    },
+    {
+      "id": "hd0014",
+      "type": "TRANSFORM",
+      "x": 940,
+      "y": 180,
+      "options": {
+        "rules": "source = \"ruliweb\"\nsource_post_id = regex(link, \"/read/(\\\\d+)\")\nid = format(\"{source}:{source_post_id}\")\npost_url = replace(link, \"\\\\?.*$\", \"\")\nshop = regex(title, \"^\\\\[(.+?)\\\\]\")\nproduct = trim(replace(replace(title, \"^\\\\[.+?\\\\]\", \"\"), \"\\\\([^()]*\\\\)\\\\s*$\", \"\"))\nprice = number(regex(title, \"([\\\\d,]{2,})\\\\s*원\"))\nposted_at = datetime(time, \"rfc1123\")\ncollected_at = now()",
+        "keep": "id\nsource\nsource_post_id\npost_url\ntitle\nshop\nproduct\nprice\ncategory\nauthor\ncomments\nhits\nposted_at\ncollected_at"
+      }
+    },
+    {
+      "id": "hd0031",
+      "type": "INJECT",
+      "x": 40,
+      "y": 320,
+      "options": {
+        "message": "ppomppu",
+        "intervalMillis": 600000
+      }
+    },
+    {
+      "id": "hd0032",
+      "type": "HTTP_REQUEST",
+      "x": 340,
+      "y": 320,
+      "options": {
+        "url": "https://www.ppomppu.co.kr/rss.php?id=ppomppu",
+        "userAgent": "yesde-red/1.0",
+        "timeoutMillis": 15000,
+        "minIntervalMillis": 5000
+      }
+    },
+    {
+      "id": "hd0033",
+      "type": "HTML_EXTRACT",
+      "x": 640,
+      "y": 320,
+      "options": {
+        "selector": "item",
+        "xml": true,
+        "fields": "title = title\nlink = link\nauthor = author\ntime = pubDate\nhits = hits\ndescription = description"
+      }
+    },
+    {
+      "id": "hd0034",
+      "type": "TRANSFORM",
+      "x": 940,
+      "y": 320,
+      "options": {
+        "rules": "source = \"ppomppu\"\nsource_post_id = regex(link, \"no=(\\\\d+)\")\nid = format(\"{source}:{source_post_id}\")\npost_url = replace(link, \"\\\\?.*$\", \"\")\nshop = regex(title, \"^\\\\[(.+?)\\\\]\")\nproduct = trim(replace(replace(title, \"^\\\\[.+?\\\\]\", \"\"), \"\\\\([^()]*\\\\)\\\\s*$\", \"\"))\nprice = number(regex(title, \"([\\\\d,]{2,})\\\\s*원\"))\nhits = number(regex(hits, \"\\\\|(\\\\d+)\\\\|\"))\nposted_at = datetime(time, \"rfc1123\")\npost_url = link\ncollected_at = now()",
+        "keep": "id\nsource\nsource_post_id\npost_url\ntitle\nshop\nproduct\nprice\ncategory\nauthor\ncomments\nhits\nposted_at\ncollected_at"
+      }
+    },
+    {
+      "id": "hd0020",
+      "type": "DEDUPE",
+      "x": 1240,
+      "y": 180,
+      "options": {
+        "key": "id",
+        "maxEntries": 100000,
+        "storePath": "output/hotdeal-seen.txt"
+      }
+    },
+    {
+      "id": "hd0021",
+      "type": "FILE_WRITE",
+      "x": 1540,
+      "y": 100,
+      "options": {
+        "path": "output/hotdeal.csv",
+        "format": "CSV",
+        "fields": "id\nsource\nsource_post_id\npost_url\ntitle\nshop\nproduct\nprice\ncategory\nauthor\ncomments\nhits\nposted_at\ncollected_at",
+        "append": true
+      }
+    },
+    {
+      "id": "hd0022",
+      "type": "DEBUG",
+      "x": 1540,
+      "y": 260,
+      "options": {}
+    }
   ],
   "connections": [
-    { "from": "hd0001", "to": "hd0002" }, { "from": "hd0002", "to": "hd0003" }, { "from": "hd0003", "to": "hd0020" },
-    { "from": "hd0011", "to": "hd0012" }, { "from": "hd0012", "to": "hd0013" }, { "from": "hd0013", "to": "hd0020" },
-    { "from": "hd0031", "to": "hd0032" }, { "from": "hd0032", "to": "hd0033" }, { "from": "hd0033", "to": "hd0020" },
-    { "from": "hd0020", "to": "hd0021" }, { "from": "hd0020", "to": "hd0022" }
+    {
+      "from": "hd0001",
+      "to": "hd0002"
+    },
+    {
+      "from": "hd0002",
+      "to": "hd0003"
+    },
+    {
+      "from": "hd0003",
+      "to": "hd0004"
+    },
+    {
+      "from": "hd0004",
+      "to": "hd0020"
+    },
+    {
+      "from": "hd0011",
+      "to": "hd0012"
+    },
+    {
+      "from": "hd0012",
+      "to": "hd0013"
+    },
+    {
+      "from": "hd0013",
+      "to": "hd0014"
+    },
+    {
+      "from": "hd0014",
+      "to": "hd0020"
+    },
+    {
+      "from": "hd0031",
+      "to": "hd0032"
+    },
+    {
+      "from": "hd0032",
+      "to": "hd0033"
+    },
+    {
+      "from": "hd0033",
+      "to": "hd0034"
+    },
+    {
+      "from": "hd0034",
+      "to": "hd0020"
+    },
+    {
+      "from": "hd0020",
+      "to": "hd0021"
+    },
+    {
+      "from": "hd0020",
+      "to": "hd0022"
+    }
   ]
 }

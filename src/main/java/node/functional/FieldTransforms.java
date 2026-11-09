@@ -152,7 +152,7 @@ final class FieldTransforms {
             case "trim" -> unary(name, args, s -> s.strip());
             case "lower" -> unary(name, args, s -> s.toLowerCase(Locale.ROOT));
             case "upper" -> unary(name, args, s -> s.toUpperCase(Locale.ROOT));
-            case "now" -> { require(name, args, 0); yield payload -> ZonedDateTime.now(DEFAULT_ZONE).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME); }
+            case "now" -> { require(name, args, 0); yield payload -> ZonedDateTime.now(DEFAULT_ZONE).truncatedTo(java.time.temporal.ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME); }
             case "number" -> { require(name, args, 1); yield payload -> number(text(args.get(0).evaluate(payload))); }
             case "regex" -> {
                 require(name, args, 2);
