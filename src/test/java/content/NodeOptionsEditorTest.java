@@ -1,7 +1,7 @@
 package content;
 
 import annotation.OptionField;
-import common.enums.FieldType;
+import annotation.OptionInputType;
 import node.Outputable;
 import node.PollingNode;
 import node.Type;
@@ -26,10 +26,10 @@ class OptionSettingsEditorTest {
 
     /** 지원하는 모든 입력 종류와 편집 불가·static 필드를 가진 스텁입니다. */
     static final class Stub extends PollingNode implements Outputable {
-        @OptionField(type = FieldType.TEXT_AREA) String message = "hello";
-        @OptionField(type = FieldType.SENSITIVE_TEXT) String secret;
-        @OptionField(type = FieldType.CHECK_BOX) boolean flag = true;
-        @OptionField(type = FieldType.RADIO_BUTTON) Mode mode = Mode.SLOW;
+        @OptionField(type = OptionInputType.TEXT_AREA) String message = "hello";
+        @OptionField(type = OptionInputType.SENSITIVE_TEXT) String secret;
+        @OptionField(type = OptionInputType.CHECK_BOX) boolean flag = true;
+        @OptionField(type = OptionInputType.RADIO_BUTTON) Mode mode = Mode.SLOW;
         @OptionField(editable = false) int fixed = 7;
         @OptionField static int ignoredStatic = 1;
 

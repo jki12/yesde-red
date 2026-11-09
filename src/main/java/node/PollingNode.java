@@ -1,8 +1,8 @@
 package node;
 
 import annotation.OptionField;
+import annotation.OptionInputType;
 import com.google.gson.annotations.Expose;
-import common.enums.FieldType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +13,7 @@ public abstract class PollingNode extends BaseNode {
     private static final long DEFAULT_INTERVAL_MILLI = 1_000;
 
     @Expose
-    @OptionField(type = FieldType.TEXT, min = 0)
+    @OptionField(type = OptionInputType.TEXT, min = 0)
     private long intervalMilli = DEFAULT_INTERVAL_MILLI;
 
     protected PollingNode(Type type) {
