@@ -107,13 +107,13 @@ public abstract class BaseNode implements Runnable {
         in.put(message);
     }
 
-    public void setPoint(Point p) {
+    public void setLocation(Point p) {
         x = p.x;
         y = p.y;
     }
 
-    protected void preprocess() {
-        log.info("pre-process 함수가 정상적으로 실행되었습니다.");
+    protected void onStart() {
+        log.info("onStart 훅이 실행되었습니다.");
     }
 
     protected abstract void process() throws Exception;
@@ -131,8 +131,8 @@ public abstract class BaseNode implements Runnable {
 
     public abstract String getDescription();
 
-    protected void postprocess() {
-        log.info("post-process 함수가 정상적으로 실행되었습니다.");
+    protected void onStop() {
+        log.info("onStop 훅이 실행되었습니다.");
     }
 
     @Override
@@ -141,7 +141,7 @@ public abstract class BaseNode implements Runnable {
         try {
             // start() 직후 stop()이 호출돼도 종료 요청을 다시 덮어쓰지 않습니다.
             if (!keepRunning || Thread.currentThread().isInterrupted()) return;
-            preprocess();
+            onStart();
             while (keepRunning && !Thread.currentThread().isInterrupted()) {
                 process();
                 if (!keepRunning) break;
@@ -155,7 +155,7 @@ public abstract class BaseNode implements Runnable {
             if (keepRunning) error = e; // 종료 요청 중에 난 예외는 정상 종료의 일부로 봅니다.
         } finally {
             try {
-                postprocess();
+                onStop();
             } catch (Exception e) {
                 log.error("노드 종료 정리 중 오류가 발생했습니다. id={}", id, e);
                 if (error == null) error = e;
@@ -194,7 +194,7 @@ public abstract class BaseNode implements Runnable {
         if (thread != null) thread.interrupt();
     }
 
-    // 종료 플래그가 내려가도 postprocess() 중일 수 있으므로 실제 스레드 생존 여부를 확인합니다.
+    // 종료 플래그가 내려가도 onStop() 중일 수 있으므로 실제 스레드 생존 여부를 확인합니다.
     public synchronized boolean isAlive() {
         return thread != null && thread.isAlive();
     }

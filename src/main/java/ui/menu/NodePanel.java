@@ -112,7 +112,7 @@ public class NodePanel extends JPanel {
                 int y = Math.max(6, getY() + current.y - dragOrigin.y);
 
                 setLocation(x, y);
-                node.setPoint(new Point(x, y));
+                node.setLocation(new Point(x, y));
 
                 board().repaint();
             }

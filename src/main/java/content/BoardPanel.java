@@ -156,7 +156,7 @@ public class BoardPanel extends JPanel {
         NodePanel view = new NodePanel(type.name());
 
         view.setBounds(Math.max(6, location.x), Math.max(6, location.y), NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
-        view.getNode().setPoint(view.getLocation());
+        view.getNode().setLocation(view.getLocation());
 
         add(view, 0);
         setSelectedNode(view);
