@@ -240,6 +240,37 @@ class BoardPanelTest {
     }
 
     @Test
+    void clickingAWireSelectsItAndClearsNodeSelection() throws Exception {
+        Edt.run(() -> {
+            TestNodes.Source src = (TestNodes.Source) source.getNode();
+            src.connect((TestNodes.Sink) sink.getNode());
+            board.setSelectedNode(source);
+            Point start = Swing.center(source.getOutputPort(), board);
+            Point onWire = new Point(start.x + 15, start.y); // 출력 포트 바로 오른쪽은 곡선이 거의 수평입니다.
+
+            assertNull(board.connectionAt(new Point(430, 400)), "빈 곳은 연결이 아님");
+            click(onWire);
+
+            assertEquals(new BoardPanel.Connection(source, sink), board.getSelectedConnection());
+            assertNull(board.getSelectedNode(), "연결을 고르면 카드 선택은 해제");
+            int accent = Swing.pixelsNear(Swing.render(board), new Rectangle(start.x + 10, start.y - 6, 40, 12), UiTheme.getAccentColor());
+            assertTrue(accent > 10, "선택한 연결은 강조색으로 그려짐, 픽셀 " + accent);
+
+            board.setSelectedNode(second);
+            assertNull(board.getSelectedConnection(), "카드를 고르면 연결 선택은 해제");
+
+            click(new Point(430, 400));
+            assertNull(board.getSelectedNode());
+            assertNull(board.getSelectedConnection());
+        });
+    }
+
+    private void click(Point point) {
+        board.dispatchEvent(new java.awt.event.MouseEvent(board, java.awt.event.MouseEvent.MOUSE_CLICKED, 0, 0,
+                point.x, point.y, 1, false, java.awt.event.MouseEvent.BUTTON1));
+    }
+
+    @Test
     void nodeFailureIsRememberedUntilNextRun() throws Exception {
         java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
         java.util.List<Object> failedEvents = new java.util.concurrent.CopyOnWriteArrayList<>();

@@ -15,7 +15,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ContainerAdapter;
 import java.awt.event.ContainerEvent;
-import java.awt.geom.CubicCurve2D;
+import java.awt.geom.Path2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -35,6 +36,9 @@ public class BoardPanel extends JPanel {
     /** 실행 중 노드가 예외로 멈춤. new: NodeFailure. 직후 보드 전체가 종료됩니다. */
     public static final String PROP_NODE_FAILED = "nodeFailed";
 
+    /** 화면에 그려지는 연결 하나입니다. 출력 카드의 노드가 입력 카드의 노드로 메시지를 보냅니다. */
+    public record Connection(NodePanel source, NodePanel target) { }
+
     /** 실패한 노드와 예외입니다. 다음 실행을 시작할 때까지 보드가 기억합니다. */
     public record NodeFailure(BaseNode node, Throwable error) {
         public String describe() {
@@ -51,7 +55,9 @@ public class BoardPanel extends JPanel {
     @Getter(AccessLevel.NONE)
     private final WorkflowRunner runner;
     private NodeFailure lastFailure;
+    // 카드 선택과 연결 선택은 동시에 존재하지 않습니다. 한쪽을 고르면 다른 쪽은 해제됩니다.
     private NodePanel selectedNode;
+    private Connection selectedConnection;
 
     // 이 보드에 추가된 카드만 ID로 찾습니다. 외부에서 맵을 수정하지 못하도록 getter는 생성하지 않습니다.
     @Getter(AccessLevel.NONE)
@@ -108,7 +114,13 @@ public class BoardPanel extends JPanel {
                 if (e.isPopupTrigger()) showPopup(e);
             }
             @Override public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e)) setSelectedNode(null);
+                if (!SwingUtilities.isLeftMouseButton(e)) return;
+                Connection hit = connectionAt(e.getPoint());
+                if (hit != null) setSelectedConnection(hit);
+                else {
+                    setSelectedNode(null);
+                    setSelectedConnection(null);
+                }
             }
 
             private void showPopup(MouseEvent e) {
@@ -202,12 +214,45 @@ public class BoardPanel extends JPanel {
         if (previous != null) previous.setSelected(false);
 
         selectedNode = node;
-        if (node != null) node.setSelected(true);
+        if (node != null) {
+            node.setSelected(true);
+            selectedConnection = null;
+        }
         firePropertyChange(PROP_SELECTED_NODE, previous, node);
         repaint();
     }
 
+    public void setSelectedConnection(Connection connection) {
+        if (connection != null && selectedNode != null) setSelectedNode(null);
+        selectedConnection = connection;
+        repaint();
+    }
+
+    /** point(보드 좌표) 아래의 연결선입니다. 선 중심에서 5px 안쪽이면 맞은 것으로 봅니다. 없으면 null입니다. */
+    public Connection connectionAt(Point point) {
+        BasicStroke hitArea = new BasicStroke(10f);
+        for (Connection connection : connections()) {
+            if (hitArea.createStrokedShape(connectionPath(connection)).contains(point)) return connection;
+        }
+        return null;
+    }
+
+    /** 화면에 그려지는 연결 목록입니다. 대상 카드가 이 보드에 없는 모델 연결은 제외합니다. */
+    List<Connection> connections() {
+        List<Connection> result = new ArrayList<>();
+        for (Component c : getComponents()) {
+            if (!(c instanceof NodePanel source) || !(source.getNode() instanceof Outputable)) continue;
+            for (BaseNode target : source.getNode().getTargets()) {
+                NodePanel destination = nodePanelsById.get(target.getId());
+                if (destination != null && destination.getParent() == this) result.add(new Connection(source, destination));
+            }
+        }
+        return result;
+    }
+
     private void fireConnectionsChanged() {
+        // 선택했던 연결이 끊겼으면 선택도 해제합니다.
+        if (selectedConnection != null && !connections().contains(selectedConnection)) selectedConnection = null;
         // 변경 사실만 알리고, 수신 측에서 현재 연결 정보를 다시 조회합니다.
         firePropertyChange(PROP_CONNECTIONS_CHANGED, null, null);
         repaint();
@@ -272,33 +317,30 @@ public class BoardPanel extends JPanel {
     }
 
     private void drawConnections(Graphics2D graphics) {
-        graphics.setStroke(new BasicStroke(1.6f));
-        for (Component c : getComponents()) {
-            if (!(c instanceof NodePanel)) continue;
+        for (Connection connection : connections()) {
+            boolean selected = connection.equals(selectedConnection);
+            graphics.setColor(selected ? UiTheme.getAccentColor() : UiTheme.getConnectionColor());
+            graphics.setStroke(new BasicStroke(selected ? 2.4f : 1.6f));
+            graphics.draw(connectionPath(connection));
 
-            NodePanel source = (NodePanel) c;
-
-            // 연결 선 그리는 부분.
-            if (!(source.getNode() instanceof Outputable)) continue;
-
-            for (BaseNode target : source.getNode().getTargets()) {
-                NodePanel destination = nodePanelsById.get(target.getId());
-                if (destination == null || destination.getParent() != this) continue;
-
-                Point from = center(source.getOutputPort());
-                Point to = center(destination.getInputPort());
-                graphics.setColor(UiTheme.getConnectionColor());
-                double bend = Math.max(42, Math.abs(to.x - from.x) * .45);
-
-                graphics.draw(new CubicCurve2D.Double(from.x, from.y, from.x + bend, from.y,
-                        to.x - bend, to.y, to.x - 12, to.y));
-                graphics.drawLine(to.x - 12, to.y, to.x - 5, to.y);
-
-                // 화살촉
-                graphics.fillPolygon(new int[] {to.x - 12, to.x - 5, to.x - 12},
-                        new int[] {to.y - 3, to.y, to.y + 3}, 3);
-            }
+            // 화살촉
+            Point to = center(connection.target().getInputPort());
+            graphics.fillPolygon(new int[] {to.x - 12, to.x - 5, to.x - 12},
+                    new int[] {to.y - 3, to.y, to.y + 3}, 3);
         }
+    }
+
+    // 출력 포트에서 입력 포트 앞까지의 곡선과 화살촉 직전의 짧은 직선입니다. 그리기와 클릭 판정이 같은 모양을 씁니다.
+    private Path2D connectionPath(Connection connection) {
+        Point from = center(connection.source().getOutputPort());
+        Point to = center(connection.target().getInputPort());
+        double bend = Math.max(42, Math.abs(to.x - from.x) * .45);
+
+        Path2D path = new Path2D.Double();
+        path.moveTo(from.x, from.y);
+        path.curveTo(from.x + bend, from.y, to.x - bend, to.y, to.x - 12, to.y);
+        path.lineTo(to.x - 5, to.y);
+        return path;
     }
 
     private void drawEmptyMessage(Graphics2D graphics) {
