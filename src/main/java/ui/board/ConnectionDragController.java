@@ -1,7 +1,6 @@
-package content;
+package ui.board;
 
 import ui.theme.UiTheme;
-import ui.board.NodePanel;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,5 @@
 package content;
+import ui.board.BoardPanel;
 
 import ui.theme.Codicons;
 import com.formdev.flatlaf.extras.FlatSVGIcon;

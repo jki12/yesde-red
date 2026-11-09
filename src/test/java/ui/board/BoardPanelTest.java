@@ -1,4 +1,4 @@
-package content;
+package ui.board;
 
 import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
@@ -8,7 +8,6 @@ import support.Edt;
 import support.Swing;
 import support.TestNodes;
 import ui.theme.UiTheme;
-import ui.board.NodePanel;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,5 @@
 package content;
+import ui.board.BoardPanel;
 
 import lombok.extern.slf4j.Slf4j;
 import workflow.RunState;

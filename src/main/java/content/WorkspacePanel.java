@@ -1,4 +1,5 @@
 package content;
+import ui.board.BoardPanel;
 
 import lombok.Getter;
 import ui.theme.Codicons;

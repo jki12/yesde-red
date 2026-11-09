@@ -1,7 +1,7 @@
 package action;
 
 import lombok.extern.slf4j.Slf4j;
-import content.BoardPanel;
+import ui.board.BoardPanel;
 import json.Json;
 import ui.YesdeRedFrame;
 

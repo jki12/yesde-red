@@ -2,7 +2,7 @@ package ui;
 
 import content.WorkspacePanel;
 import content.TabPanel;
-import content.BoardPanel;
+import ui.board.BoardPanel;
 import content.ConsolePanel;
 import menubar.AppMenuBar;
 

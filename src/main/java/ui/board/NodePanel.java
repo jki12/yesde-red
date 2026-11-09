@@ -1,7 +1,6 @@
 package ui.board;
 
 import lombok.Getter;
-import content.BoardPanel;
 import node.*;
 import ui.theme.UiTheme;
 import javax.swing.*;

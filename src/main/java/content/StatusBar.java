@@ -1,4 +1,5 @@
 package content;
+import ui.board.BoardPanel;
 
 import ui.theme.UiTheme;
 import workflow.RunState;

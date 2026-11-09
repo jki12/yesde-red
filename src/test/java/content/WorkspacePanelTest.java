@@ -1,4 +1,5 @@
 package content;
+import ui.board.BoardPanel;
 
 import node.NodeType;
 import org.junit.jupiter.api.BeforeAll;
