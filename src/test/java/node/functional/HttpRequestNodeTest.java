@@ -25,6 +25,7 @@ class HttpRequestNodeTest {
     @BeforeEach
     void startServer() throws Exception {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool()); // 기본 실행기는 순차 처리라 /slow가 다른 요청을 막음
         server.createContext("/page", exchange -> respond(exchange, 200, "text/html; charset=utf-8", "<html><body><h1>안녕</h1></body></html>"));
         server.createContext("/missing", exchange -> respond(exchange, 404, "text/plain", "not here"));
         server.createContext("/echo-agent", exchange -> respond(exchange, 200, "text/plain",
@@ -46,6 +47,7 @@ class HttpRequestNodeTest {
         if (node.getThread() != null) node.getThread().join(2_000);
         if (sink.getThread() != null) sink.getThread().join(2_000);
         server.stop(0);
+        ((java.util.concurrent.ExecutorService) server.getExecutor()).shutdownNow();
     }
 
     private boolean awaitWarnings(int count, long timeoutMillis) throws InterruptedException {
