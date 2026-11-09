@@ -81,7 +81,7 @@ public class ConsolePanel extends JPanel {
     }
 
     private JPanel createHeader() {
-        JPanel header = UiTheme.header("디버깅", Codicons.icon("terminal"));
+        JPanel header = UiTheme.header("콘솔", Codicons.icon("terminal"));
         // 체크박스·버튼이 들어가므로 기본 머리글보다 2px 높게 잡고 세로 여백을 줄입니다.
         header.setPreferredSize(new Dimension(0, 38));
         header.setBorder(UiTheme.headerBorder(5, 12));
@@ -231,7 +231,7 @@ public class ConsolePanel extends JPanel {
         countLabel.setText(getLogCountText());
     }
 
-    public String getLogText(int index) {
+    private String getLogText(int index) {
         return (String) model.getValueAt(index, 2);
     }
 

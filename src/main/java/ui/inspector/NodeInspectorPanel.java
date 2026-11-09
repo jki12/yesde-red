@@ -67,7 +67,6 @@ public class NodeInspectorPanel extends JPanel {
         showNode(null, () -> false);
     }
 
-    // TODO, nodeId만 받고 있음. 사용 안하면 지워야 함
     private static JTextField createReadOnlyField(String name) {
         JTextField field = new JTextField();
         field.setName(name);
