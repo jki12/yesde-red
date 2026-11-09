@@ -47,11 +47,13 @@ public abstract class BaseNode implements Runnable {
     private final Set<BaseNode> targets;
 
     public BaseNode(NodeType type) {
-        this(type, ID_GENERATOR.get());
+        this(type, null);
     }
 
+    /** id가 null이면 새 ID를 발급하고, 아니면 그 ID를 쓰며 생성기에 예약해 이후 새 노드와 겹치지 않게 합니다. */
     protected BaseNode(NodeType type, String id) {
-        ID_GENERATOR.reserve(id); // 불러온 ID가 이후 새 노드의 ID와 겹치지 않게 합니다.
+        if (id == null) id = ID_GENERATOR.get();
+        else ID_GENERATOR.reserve(id);
         this.createdAt = LocalDateTime.now();
         this.id = id;
         this.type = type;
@@ -132,11 +134,12 @@ public abstract class BaseNode implements Runnable {
      */
     protected void awaitNextCycle() throws InterruptedException { }
 
-    public abstract Icon getIcon();
+    // 표시 정보는 타입이 가집니다. 특별한 표시가 필요한 노드만 재정의합니다.
+    public Icon getIcon() { return NodeFactory.getIcon(type); }
 
-    public abstract String getDisplayName();
+    public String getDisplayName() { return type.getDisplayName(); }
 
-    public abstract String getDescription();
+    public String getDescription() { return type.getDescription(); }
 
     protected void onStop() {
         log.info("onStop 훅이 실행되었습니다.");
