@@ -150,6 +150,18 @@ public class BoardPanel extends JPanel implements Scrollable {
         });
     }
 
+    /** 같은 ID의 카드가 이미 있으면 추가를 거부합니다. ID로 연결선을 찾기 때문에 중복이 있으면 선이 엉킵니다. */
+    @Override
+    protected void addImpl(Component component, Object constraints, int index) {
+        if (component instanceof NodePanel panel) {
+            NodePanel existing = nodePanelsById.get(panel.getNode().getId());
+            if (existing != null && existing != panel && existing.getParent() == this) {
+                throw new IllegalArgumentException("이미 같은 ID의 노드가 보드에 있습니다: " + panel.getNode().getId());
+            }
+        }
+        super.addImpl(component, constraints, index);
+    }
+
     public JButton getConnectionStartPort() {
         return connectionDrag.getStartPort();
     }

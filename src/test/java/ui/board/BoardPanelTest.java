@@ -329,6 +329,18 @@ class BoardPanelTest {
         });
     }
 
+    @Test
+    void rejectsASecondCardWithTheSameId() throws Exception {
+        Edt.run(() -> {
+            NodePanel duplicate = new NodePanel(new TestNodes.Sink("d1")); // sink와 같은 ID
+            assertThrows(IllegalArgumentException.class, () -> board.add(duplicate));
+            assertEquals(3, board.getNodePanels().size(), "보드는 그대로");
+
+            board.removeNode(sink);
+            assertDoesNotThrow(() -> board.add(duplicate), "원래 카드를 지운 뒤에는 같은 ID를 다시 쓸 수 있음");
+        });
+    }
+
     private void click(Point point) {
         board.dispatchEvent(new java.awt.event.MouseEvent(board, java.awt.event.MouseEvent.MOUSE_CLICKED, 0, 0,
                 point.x, point.y, 1, false, java.awt.event.MouseEvent.BUTTON1));
