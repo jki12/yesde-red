@@ -54,6 +54,7 @@
 
 - `json-api.json`: GitHub API에서 저장소 정보를 1분마다 받아 `output/github-jsoup.csv`에 기록
 - `html-list.json`: Hacker News 첫 페이지 제목·링크를 5분마다 `output/hackernews.csv`에 기록
+- `hotdeal.json`: 클리앙 알뜰구매와 루리웹 핫딜 게시판 목록을 10분마다 `output/hotdeal.csv`에 기록(제목·링크·댓글 수·조회수·시각). 두 게시판이 같은 파일 저장 노드로 모입니다
 
 수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
 

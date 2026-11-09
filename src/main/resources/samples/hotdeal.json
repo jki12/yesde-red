@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "name": "샘플 - 커뮤니티 핫딜 수집 (클리앙 알뜰구매 + 루리웹 핫딜)",
+  "nodes": [
+    { "id": "hd0001", "type": "INJECT", "x": 40, "y": 60,
+      "options": { "message": "clien", "intervalMillis": 600000 } },
+    { "id": "hd0002", "type": "HTTP_REQUEST", "x": 340, "y": 60,
+      "options": { "url": "https://www.clien.net/service/board/jirum",
+                   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) yesde-red/1.0",
+                   "timeoutMillis": 15000, "minIntervalMillis": 5000 } },
+    { "id": "hd0003", "type": "HTML_EXTRACT", "x": 640, "y": 60,
+      "options": { "selector": "div.list_item.symph_row",
+                   "fields": "category = span.icon_keyword\ntitle = span.list_subject > a:not(.list_reply)\nlink = span.list_subject > a:not(.list_reply) @href\ncomments = span.rSymph05\nhits = span.hit\ntime = span.timestamp" } },
+
+    { "id": "hd0011", "type": "INJECT", "x": 40, "y": 220,
+      "options": { "message": "ruliweb", "intervalMillis": 600000 } },
+    { "id": "hd0012", "type": "HTTP_REQUEST", "x": 340, "y": 220,
+      "options": { "url": "https://bbs.ruliweb.com/market/board/1020",
+                   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) yesde-red/1.0",
+                   "timeoutMillis": 15000, "minIntervalMillis": 5000 } },
+    { "id": "hd0013", "type": "HTML_EXTRACT", "x": 640, "y": 220,
+      "options": { "selector": "tr.table_body:not(.notice)",
+                   "fields": "category = td.divsn strong\ntitle = td.subject a.subject_link > strong\nlink = td.subject a.subject_link @href\ncomments = a.num_reply\nrecommend = td.recomd\nhits = td.hit\ntime = td.time" } },
+
+    { "id": "hd0021", "type": "FILE_WRITE", "x": 960, "y": 100,
+      "options": { "path": "output/hotdeal.csv", "format": "CSV",
+                   "fields": "url\ncategory\ntitle\nlink\ncomments\nrecommend\nhits\ntime", "append": true } },
+    { "id": "hd0022", "type": "DEBUG", "x": 960, "y": 220, "options": {} }
+  ],
+  "connections": [
+    { "from": "hd0001", "to": "hd0002" }, { "from": "hd0002", "to": "hd0003" },
+    { "from": "hd0003", "to": "hd0021" }, { "from": "hd0003", "to": "hd0022" },
+    { "from": "hd0011", "to": "hd0012" }, { "from": "hd0012", "to": "hd0013" },
+    { "from": "hd0013", "to": "hd0021" }, { "from": "hd0013", "to": "hd0022" }
+  ]
+}

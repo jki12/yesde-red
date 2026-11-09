@@ -74,14 +74,16 @@ class WorkflowCodecTest {
 
     @Test
     void bundledSampleWorkflowsLoad() throws Exception {
-        for (String sample : List.of("/samples/json-api.json", "/samples/html-list.json")) {
-            try (var in = getClass().getResourceAsStream(sample)) {
-                assertNotNull(in, sample + " 리소스가 없음");
+        Map<String, int[]> expected = Map.of("/samples/json-api.json", new int[] {5, 4}, "/samples/html-list.json", new int[] {5, 4},
+                "/samples/hotdeal.json", new int[] {8, 8});
+        for (Map.Entry<String, int[]> sample : expected.entrySet()) {
+            try (var in = getClass().getResourceAsStream(sample.getKey())) {
+                assertNotNull(in, sample.getKey() + " 리소스가 없음");
                 WorkflowDocument document = WorkflowCodec.fromJson(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
                 List<BaseNode> nodes = WorkflowCodec.toNodes(document);
-                assertEquals(5, nodes.size(), sample);
-                assertEquals(4, document.connections().size(), sample);
-                assertEquals(4, nodes.stream().filter(n -> n.getTargets() != null).mapToLong(n -> n.getTargets().size()).sum(), sample + " 연결 복원");
+                assertEquals(sample.getValue()[0], nodes.size(), sample.getKey());
+                assertEquals(sample.getValue()[1], document.connections().size(), sample.getKey());
+                assertEquals(sample.getValue()[1], nodes.stream().filter(n -> n.getTargets() != null).mapToLong(n -> n.getTargets().size()).sum(), sample.getKey() + " 연결 복원");
             }
         }
     }

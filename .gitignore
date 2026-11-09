@@ -38,3 +38,6 @@ target/
 
 ### Claude Code / MCP 로컬 설정 ###
 .mcp.json
+
+### 수집 결과 ###
+output/
