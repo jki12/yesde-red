@@ -67,7 +67,7 @@ class ContentPanelTest {
             }
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
             assertEquals(0, consoleRows(content[0]));
-            board.run();
+            board.startWorkflow();
         });
         assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
         Edt.run(() -> { }); // 콘솔 기록은 invokeLater로 들어오므로 EDT 큐를 한 번 비웁니다.

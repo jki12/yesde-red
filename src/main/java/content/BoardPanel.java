@@ -203,12 +203,12 @@ public class BoardPanel extends JPanel {
         return runner.getState();
     }
 
-    public void run() {
+    public void startWorkflow() {
         lastFailure = null;
         runner.start(List.of(getNodes()));
     }
 
-    public void stop() {
+    public void stopWorkflow() {
         runner.stop();
     }
 

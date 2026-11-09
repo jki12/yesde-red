@@ -39,7 +39,7 @@ public class RunAction extends AbstractAction {
         if (board.getNodePanels().isEmpty()) return;
 
         try {
-            board.run();
+            board.startWorkflow();
             log.info("{} 보드가 실행되었습니다.", board.getName());
         } catch (RuntimeException ex) {
             log.error("워크플로를 시작하지 못했습니다. board={}", board.getName(), ex);

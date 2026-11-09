@@ -176,7 +176,7 @@ class BoardPanelTest {
             board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> failedEvents.add(e.getNewValue()));
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
             assertNull(board.getLastFailure());
-            board.run();
+            board.startWorkflow();
         });
         assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
         Edt.run(() -> {
@@ -187,9 +187,9 @@ class BoardPanelTest {
 
             board.removeAll();
             add(new TestNodes.Source("s2"), 75, 95);
-            board.run();
+            board.startWorkflow();
             assertNull(board.getLastFailure(), "다음 실행을 시작하면 지워짐");
-            board.stop();
+            board.stopWorkflow();
         });
     }
 

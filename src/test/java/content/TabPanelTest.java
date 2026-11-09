@@ -47,11 +47,11 @@ class TabPanelTest {
             board.addNode(Type.INJECT, new Point(40, 40));
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == RunState.IDLE) idle.countDown(); });
 
-            board.run();
+            board.startWorkflow();
             assertEquals(RunState.RUNNING, board.getRunState());
             assertFalse(tabs[0].closeBoardTab(1), "실행 중인 보드는 닫히지 않음");
 
-            board.stop();
+            board.stopWorkflow();
             assertEquals(RunState.STOPPING, board.getRunState());
             assertFalse(tabs[0].closeBoardTab(1), "종료 중인 보드도 닫히지 않음");
         });

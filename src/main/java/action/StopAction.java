@@ -30,7 +30,7 @@ public class StopAction extends AbstractAction {
         BoardPanel board = selectedBoard.get();
         if (board == null || board.getRunState() != RunState.RUNNING) return;
 
-        board.stop();
+        board.stopWorkflow();
         log.info("{} 보드에 종료를 요청했습니다.", board.getName());
     }
 }
