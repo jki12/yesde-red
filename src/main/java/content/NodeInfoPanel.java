@@ -20,7 +20,7 @@ public class NodeInfoPanel extends JPanel {
 
     public NodeInfoPanel() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, UiTheme.getBorderColor()));
+        setBorder(UiTheme.separator(0, 1, 0, 0));
         add(UiTheme.header("노드 속성", Codicons.icon("settings-gear")), BorderLayout.NORTH);
         JPanel body = new InspectorBody();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));

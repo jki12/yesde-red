@@ -113,9 +113,7 @@ public class ContentPanel extends JPanel {
     private JPanel createToolbar() {
         JPanel toolbar = new JPanel(new BorderLayout(16, 0)); // 실행, 새 워크플로 생성.
         toolbar.setBackground(UiTheme.getToolbarBackgroundColor());
-        toolbar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.getBorderColor()),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+        toolbar.setBorder(UiTheme.headerBorder(8, 12));
 
         JPanel leftActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         leftActions.setOpaque(false);

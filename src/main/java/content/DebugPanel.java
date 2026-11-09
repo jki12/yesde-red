@@ -52,7 +52,7 @@ public class DebugPanel extends JPanel {
      */
     public DebugPanel() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UiTheme.getBorderColor()));
+        setBorder(UiTheme.separator(1, 0, 0, 0));
 
         add(createHeader(), BorderLayout.NORTH);
 
@@ -83,9 +83,7 @@ public class DebugPanel extends JPanel {
     private JPanel createHeader() {
         JPanel header = new JPanel(new GridBagLayout()); // UiTheme.header("콘솔", Codicons.icon("terminal"));
         header.setPreferredSize(new Dimension(0, 38)); // 42 -> 38로 크기 조정.
-        header.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTheme.getBorderColor()),
-                BorderFactory.createEmptyBorder(5, 12, 5, 12)));
+        header.setBorder(UiTheme.headerBorder(5, 12));
         JLabel title = UiTheme.label("디버깅", false);
 
         title.setFont(UiTheme.getFont().deriveFont(Font.BOLD));

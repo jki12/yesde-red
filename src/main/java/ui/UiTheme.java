@@ -90,10 +90,7 @@ public final class UiTheme {
 
         header.setBackground(getHeaderBackgroundColor());
         header.setPreferredSize(new Dimension(0, 36));
-        // padding 설정
-        header.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, getBorderColor()),
-                BorderFactory.createEmptyBorder(6, 12, 6, 12)));
+        header.setBorder(headerBorder(6, 12));
 
         JLabel label = label(title, false);
 
@@ -107,5 +104,29 @@ public final class UiTheme {
 
     public static Border padding(int amount) {
         return BorderFactory.createEmptyBorder(amount, amount, amount, amount);
+    }
+
+    /** 지정한 변에만 1px 구분선을 그리는 테두리입니다. 인접한 패널끼리 경계를 나눌 때 사용합니다. */
+    public static Border separator(int top, int left, int bottom, int right) {
+        return BorderFactory.createMatteBorder(top, left, bottom, right, getBorderColor());
+    }
+
+    /** 아래쪽 구분선과 안쪽 여백을 합친 테두리입니다. 툴바와 패널 머리글에 사용합니다. */
+    public static Border headerBorder(int vertical, int horizontal) {
+        return BorderFactory.createCompoundBorder(separator(0, 0, 1, 0),
+                BorderFactory.createEmptyBorder(vertical, horizontal, vertical, horizontal));
+    }
+
+    /** 위쪽 구분선과 안쪽 여백을 합친 테두리입니다. 상태 표시줄 같은 하단 영역에 사용합니다. */
+    public static Border footerBorder(int vertical, int horizontal) {
+        return BorderFactory.createCompoundBorder(separator(1, 0, 0, 0),
+                BorderFactory.createEmptyBorder(vertical, horizontal, vertical, horizontal));
+    }
+
+    /** 세로로 쌓이는 패널(BoxLayout Y축)에서 높이를 고정하고 가로로는 늘어나게 합니다. */
+    public static void fixHeight(JComponent component, int preferredWidth, int height) {
+        component.setPreferredSize(new Dimension(preferredWidth, height));
+        component.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
+        component.setAlignmentX(JComponent.LEFT_ALIGNMENT);
     }
 }

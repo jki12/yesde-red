@@ -14,9 +14,7 @@ final class StatusBar extends JPanel {
     StatusBar() {
         super(new BorderLayout(12, 0));
         setBackground(UiTheme.getPanelBackgroundColor());
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, UiTheme.getBorderColor()),
-                BorderFactory.createEmptyBorder(6, 14, 6, 14)));
+        setBorder(UiTheme.footerBorder(6, 14));
 
         status.setFont(UiTheme.getFont().deriveFont(11f));
         summary.setFont(UiTheme.getFont().deriveFont(11f));
