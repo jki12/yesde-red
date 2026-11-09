@@ -37,7 +37,7 @@ public class DebugNode extends BaseNode implements MessageReceiver {
 
     @Override
     protected void process() throws Exception {
-        Message message = getIn().take();
+        Message message = getInbox().take();
 
         console.append("DEBUG " + getId(), message.toString());
 

@@ -48,7 +48,7 @@ class BoardPanelTest {
             Swing.press(output);
             Swing.drag(output, board, new Point(430, 165));
 
-            assertTrue(source.getNode().getOut().isEmpty(), "드래그 중에는 모델이 바뀌면 안 됨");
+            assertTrue(source.getNode().getTargets().isEmpty(), "드래그 중에는 모델이 바뀌면 안 됨");
             assertSame(output, board.getConnectionStartPort());
             int accent = Swing.pixelsNear(Swing.render(board), new Rectangle(330, 70, 100, 170), UiTheme.getAccentColor());
             assertTrue(accent > 20, "미리보기 선이 실제로 그려져야 함, 강조색 픽셀 " + accent);
@@ -64,7 +64,7 @@ class BoardPanelTest {
             Swing.drag(output, board, body);
             Swing.release(output, board, body);
 
-            assertTrue(source.getNode().getOut().isEmpty());
+            assertTrue(source.getNode().getTargets().isEmpty());
             assertNull(board.getConnectionStartPort(), "잘못된 놓기는 미리보기를 지움");
         });
     }
@@ -81,10 +81,10 @@ class BoardPanelTest {
             Swing.press(output);
             Swing.drag(output, board, target);
             assertEquals(Boolean.TRUE, input.getClientProperty("connectionActive"), "대상 포트 강조");
-            assertTrue(source.getNode().getOut().isEmpty(), "놓기 전에는 연결되지 않음");
+            assertTrue(source.getNode().getTargets().isEmpty(), "놓기 전에는 연결되지 않음");
 
             Swing.release(output, board, target);
-            assertTrue(source.getNode().getOut().contains(sink.getNode()));
+            assertTrue(source.getNode().getTargets().contains(sink.getNode()));
             assertEquals(1, notifications.get());
             assertNull(input.getClientProperty("connectionActive"), "성공한 놓기는 강조를 지움");
 
@@ -105,7 +105,7 @@ class BoardPanelTest {
             board.getActionMap().get("cancelConnection").actionPerformed(new ActionEvent(board, 0, "test"));
             Swing.release(output, board, target);
 
-            assertFalse(source.getNode().getOut().contains(second.getNode()));
+            assertFalse(source.getNode().getTargets().contains(second.getNode()));
         });
     }
 
@@ -119,7 +119,7 @@ class BoardPanelTest {
             assertEquals(Boolean.TRUE, source.getOutputPort().getClientProperty("connectionActive"));
             Swing.release(input, board, target);
 
-            assertTrue(source.getNode().getOut().contains(second.getNode()));
+            assertTrue(source.getNode().getTargets().contains(second.getNode()));
         });
     }
 

@@ -47,10 +47,10 @@ public abstract class BaseNode implements Runnable {
     private volatile FailureListener failureListener;
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
-    private final Pipe in;
+    private final Pipe inbox;
     // 연결 변경은 드물고(EDT에서 사용자 조작) 순회는 메시지마다 워커 스레드에서 일어나므로,
     // 순회 중 추가돼도 예외가 나지 않는 복사-쓰기 집합을 씁니다. 연결 순서도 유지됩니다.
-    private final Set<BaseNode> out;
+    private final Set<BaseNode> targets;
 
     public BaseNode(Type type) {
         this(type, ID_GENERATOR.get().substring(0, 6));
@@ -61,19 +61,19 @@ public abstract class BaseNode implements Runnable {
         this.id = id;
         this.type = type;
 
-        this.in = this instanceof MessageReceiver ? new Pipe() : null;
-        this.out = this instanceof MessageSender ? new CopyOnWriteArraySet<>() : null;
+        this.inbox = this instanceof MessageReceiver ? new Pipe() : null;
+        this.targets = this instanceof MessageSender ? new CopyOnWriteArraySet<>() : null;
     }
 
-    public Set<BaseNode> getOut() {
+    public Set<BaseNode> getTargets() {
         // 외부에서는 연결 목록을 조회만 허용합니다. 복사본이 아니므로 이후 연결 변경도 반영됩니다.
         // 출력 기능이 없는 노드는 null을 반환합니다.
-        return out == null ? null : Collections.unmodifiableSet(out);
+        return targets == null ? null : Collections.unmodifiableSet(targets);
     }
 
     public boolean connect(MessageReceiver input) {
         if (!(input instanceof BaseNode other)) return false;
-        if (!canConnect(other) || !out.add(other)) return false; // 이미 연결돼 있으면 add가 false
+        if (!canConnect(other) || !targets.add(other)) return false; // 이미 연결돼 있으면 add가 false
 
         log.info("{}노드와 {}노드가 연결되었습니다.", this, other);
 
@@ -93,7 +93,7 @@ public abstract class BaseNode implements Runnable {
             throw new IllegalStateException("출력 기능이 없는 노드입니다.");
         }
 
-        for (BaseNode target : out) {
+        for (BaseNode target : targets) {
             target.receive(message);
         }
     }
@@ -104,7 +104,7 @@ public abstract class BaseNode implements Runnable {
             throw new IllegalStateException("입력 기능이 없는 노드입니다.");
         }
 
-        in.put(message);
+        inbox.put(message);
     }
 
     public void setLocation(Point p) {
@@ -201,6 +201,6 @@ public abstract class BaseNode implements Runnable {
 
     public synchronized void clearPendingMessages() {
         if (isAlive()) throw new IllegalStateException("실행 중인 노드의 큐는 비울 수 없습니다.");
-        if (in != null) in.clear();
+        if (inbox != null) inbox.clear();
     }
 }

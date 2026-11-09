@@ -195,8 +195,8 @@ public class BoardPanel extends JPanel {
     /** 이 보드의 출력 노드들이 가진 연결 수 합계입니다. 처리된 메시지 수가 아닙니다. */
     public long getConnectionCount() {
         return getNodePanels().stream().map(NodePanel::getNode)
-                .filter(node -> node.getOut() != null)
-                .mapToLong(node -> node.getOut().size()).sum();
+                .filter(node -> node.getTargets() != null)
+                .mapToLong(node -> node.getTargets().size()).sum();
     }
 
     public RunState getRunState() {
@@ -249,7 +249,7 @@ public class BoardPanel extends JPanel {
             // 연결 선 그리는 부분.
             if (!(source.getNode() instanceof MessageSender)) continue;
 
-            for (BaseNode target : source.getNode().getOut()) {
+            for (BaseNode target : source.getNode().getTargets()) {
                 NodePanel destination = nodePanelsById.get(target.getId());
                 if (destination == null || destination.getParent() != this) continue;
 
