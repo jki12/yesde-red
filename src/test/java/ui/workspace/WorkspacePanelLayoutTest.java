@@ -1,4 +1,4 @@
-package content;
+package ui.workspace;
 import ui.inspector.NodeInspectorPanel;
 
 import org.junit.jupiter.api.BeforeAll;

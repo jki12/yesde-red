@@ -1,4 +1,4 @@
-package content;
+package ui.workspace;
 import ui.board.BoardPanel;
 
 import ui.theme.UiTheme;

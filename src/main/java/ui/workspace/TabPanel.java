@@ -1,4 +1,4 @@
-package content;
+package ui.workspace;
 import ui.board.BoardPanel;
 
 import lombok.extern.slf4j.Slf4j;

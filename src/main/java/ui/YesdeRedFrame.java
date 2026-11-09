@@ -1,7 +1,7 @@
 package ui;
 
-import content.WorkspacePanel;
-import content.TabPanel;
+import ui.workspace.WorkspacePanel;
+import ui.workspace.TabPanel;
 import ui.board.BoardPanel;
 import ui.console.ConsolePanel;
 import menubar.AppMenuBar;
