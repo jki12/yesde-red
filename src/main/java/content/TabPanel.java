@@ -1,7 +1,6 @@
 package content;
 
 import lombok.extern.slf4j.Slf4j;
-import util.Utils;
 import workflow.RunState;
 
 import javax.swing.*;
@@ -9,10 +8,12 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class TabPanel extends JTabbedPane {
     private static final String TAB_TITLE_PREFIX = "워크플로 ";
+    private static final Pattern NUMERIC = Pattern.compile("[0-9]+");
 
     public TabPanel() {
         registerShortcuts();
@@ -57,7 +58,7 @@ public class TabPanel extends JTabbedPane {
             if (!title.startsWith(TAB_TITLE_PREFIX)) continue;
 
             String temp = title.substring(TAB_TITLE_PREFIX.length());
-            if (Utils.isNumeric(temp)) {
+            if (NUMERIC.matcher(temp).matches()) {
                 titles.add(Integer.parseInt(temp));
             }
         }
