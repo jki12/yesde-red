@@ -5,7 +5,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import ui.theme.Listeners;
 import ui.theme.UiTheme;
-import ui.menu.NodePanel;
+import ui.board.NodePanel;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;

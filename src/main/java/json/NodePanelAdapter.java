@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import ui.menu.NodePanel;
+import ui.board.NodePanel;
 import json.Json;
 
 import java.lang.reflect.Type;

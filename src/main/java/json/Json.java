@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import node.BaseNode;
-import ui.menu.NodePanel;
+import ui.board.NodePanel;
 
 import java.util.Set;
 

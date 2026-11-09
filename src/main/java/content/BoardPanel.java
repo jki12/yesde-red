@@ -8,7 +8,7 @@ import node.MessageReceiver;
 import node.MessageSender;
 import node.NodeType;
 import ui.theme.UiTheme;
-import ui.menu.NodePanel;
+import ui.board.NodePanel;
 import workflow.RunState;
 import workflow.WorkflowRunner;
 import javax.swing.*;

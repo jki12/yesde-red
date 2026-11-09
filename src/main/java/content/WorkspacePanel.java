@@ -6,7 +6,7 @@ import ui.theme.Codicons;
 import action.RunAction;
 import action.StopAction;
 import ui.theme.UiTheme;
-import ui.menu.NodePanel;
+import ui.board.NodePanel;
 import workflow.RunState;
 import javax.swing.*;
 import java.awt.*;

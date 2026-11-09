@@ -8,7 +8,7 @@ import support.Edt;
 import support.Swing;
 import support.TestNodes;
 import ui.theme.UiTheme;
-import ui.menu.NodePanel;
+import ui.board.NodePanel;
 
 import javax.swing.*;
 import java.awt.*;

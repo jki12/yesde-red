@@ -61,8 +61,8 @@ class WorkspacePanelTest {
             source.setIntervalMillis(10);
             source.connect(failing);
             for (node.BaseNode model : new node.BaseNode[] {source, failing}) {
-                ui.menu.NodePanel view = new ui.menu.NodePanel(model);
-                view.setBounds(40, 40, ui.menu.NodePanel.DEFAULT_WIDTH, ui.menu.NodePanel.DEFAULT_HEIGHT);
+                ui.board.NodePanel view = new ui.board.NodePanel(model);
+                view.setBounds(40, 40, ui.board.NodePanel.DEFAULT_WIDTH, ui.board.NodePanel.DEFAULT_HEIGHT);
                 board.add(view);
             }
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });

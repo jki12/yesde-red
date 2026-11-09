@@ -1,4 +1,4 @@
-package ui.menu;
+package ui.board;
 
 import lombok.Getter;
 import content.BoardPanel;
