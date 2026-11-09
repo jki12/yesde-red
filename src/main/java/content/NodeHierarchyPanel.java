@@ -3,11 +3,10 @@ package content;
 import ui.Codicons;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 
+import ui.Listeners;
 import ui.UiTheme;
 import ui.menu.NodePanel;
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -82,12 +81,8 @@ public class NodeHierarchyPanel extends JPanel {
                     ? ((DefaultMutableTreeNode) selected).getUserObject() : null;
             board.setSelectedNode(value instanceof NodePanel ? (NodePanel) value : null);
         });
-        search.getDocument().addDocumentListener(new DocumentListener() {
-            // 검색은 트리에 보일 행만 다시 만듭니다. 캔버스의 카드나 연결 모델은 제거하지 않습니다.
-            public void insertUpdate(DocumentEvent e) { rebuildTree(); }
-            public void removeUpdate(DocumentEvent e) { rebuildTree(); }
-            public void changedUpdate(DocumentEvent e) { rebuildTree(); }
-        });
+        // 검색은 트리에 보일 행만 다시 만듭니다. 캔버스의 카드나 연결 모델은 제거하지 않습니다.
+        Listeners.onTextChange(search, this::rebuildTree);
     }
 
     public void showBoard(BoardPanel board) {

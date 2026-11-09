@@ -5,7 +5,6 @@ import node.BaseNode;
 import ui.UiTheme;
 
 import javax.swing.*;
-import java.awt.Dimension;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -68,10 +67,7 @@ public final class OptionSettingsEditor {
         label.setLabelFor(editor);
 
         JComponent view = input.getView();
-        int height = input.getPreferredHeight();
-        view.setPreferredSize(new Dimension(INPUT_WIDTH, height));
-        view.setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
-        view.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+        UiTheme.fixHeight(view, INPUT_WIDTH, input.getPreferredHeight());
 
         panel.add(label);
         panel.add(Box.createVerticalStrut(4));

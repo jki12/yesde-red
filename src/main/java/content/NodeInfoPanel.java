@@ -75,11 +75,8 @@ public class NodeInfoPanel extends JPanel {
         field.setEditable(false);
 
         field.setFont(UiTheme.getNodeTypeFont().deriveFont(12f));
-        field.setAlignmentX(LEFT_ALIGNMENT);
-
-        field.setPreferredSize(new Dimension(180, 32));
+        UiTheme.fixHeight(field, 180, 32);
         field.setMinimumSize(new Dimension(0, 32));
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
 
         return field;
     }

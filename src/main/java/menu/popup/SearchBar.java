@@ -3,10 +3,9 @@ package menu.popup;
 import ui.Codicons;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import ui.Listeners;
 import ui.UiTheme;
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
@@ -24,21 +23,7 @@ public class SearchBar extends JPanel {
         textField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "이름 또는 타입 검색");
 
         add(textField, BorderLayout.CENTER);
-        textField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                update();
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                update();
-            }
-
-            public void changedUpdate(DocumentEvent e) { }
-
-            private void update() {
-                results.updateSuggestions(textField.getText());
-            }
-        });
+        Listeners.onTextChange(textField, () -> results.updateSuggestions(textField.getText()));
 
         bind("DOWN", "focusSearchResults", results::focusSearchResults);
         bind("ENTER", "addSelectedNode", results::addSelectedNode);
