@@ -38,9 +38,9 @@ public class BoardPanel extends JPanel {
     @Getter(AccessLevel.NONE)
     private final Map<String, NodePanel> nodePanelsById = new HashMap<>();
 
-    private JButton connectionStartPort;
-    private JButton connectionTargetPort;
-    private Point connectionMousePoint; // 연결선을 드래그하는 동안 마우스 위치 좌표 저장하고 있음
+    // 포트 드래그로 연결을 만드는 동안의 상태와 미리보기는 컨트롤러가 맡습니다.
+    @Getter(AccessLevel.NONE)
+    private final ConnectionDragController drag = new ConnectionDragController(this);
 
     public BoardPanel(String name) {
         setName(name);
@@ -64,11 +64,7 @@ public class BoardPanel extends JPanel {
                 if (e.getChild() == selectedNode) setSelectedNode(null);
 
                 // 삭제된 노드에 연결 시작 포트나 대상 포트가 포함되어 있으면 연결을 취소
-                if (connectionStartPort != null && (SwingUtilities.isDescendingFrom(connectionStartPort, e.getChild())
-                        || connectionTargetPort != null && SwingUtilities.isDescendingFrom(connectionTargetPort, e.getChild()))) {
-
-                    cancelConnection();
-                }
+                if (drag.involves(e.getChild())) cancelConnection();
 
                 nodesChanged();
             }
@@ -99,87 +95,31 @@ public class BoardPanel extends JPanel {
         });
     }
 
-    public void beginConnection(JButton port) {
-        cancelConnection();
-        connectionStartPort = port;
-        connectionMousePoint = center(port);
-        activePort(port, true);
+    public JButton getConnectionStartPort() {
+        return drag.getStartPort();
+    }
 
-        repaint();
+    public void beginConnection(JButton port) {
+        drag.begin(port);
     }
 
     public void updateConnection(Point point) {
-        if (connectionStartPort == null) return;
-        connectionMousePoint = new Point(point);
-
-        JButton next = connectionTargetAt(point);
-        if (next != connectionTargetPort) {
-            activePort(connectionTargetPort, false);
-            connectionTargetPort = next;
-            activePort(connectionTargetPort, true);
-        }
-
-        repaint();
+        drag.update(point);
     }
 
-    // 보드 기준 마우스 위치에서 연결을 확정하고 임시 표시를 정리합니다.
     public void finishConnection(Point point) {
-        if (connectionStartPort == null) return;
-
-        try {
-            JButton targetPort = connectionTargetAt(point);
-            if (targetPort == null) return;
-
-            NodePanel origin = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, connectionStartPort);
-            NodePanel other = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, targetPort);
-            boolean output = connectionStartPort == origin.getOutputPort();
-
-            boolean connected;
-            if (output) {
-                connected = ((Outputable) origin.getNode()).connect((Inputable) other.getNode());
-            }
-            else {
-                connected = ((Outputable) other.getNode()).connect((Inputable) origin.getNode());
-            }
-
-            // 중복 등으로 연결이 거부된 경우에는 변경 알림을 보내지 않습니다.
-            if (connected) notifyConnectionsChanged();
-        }
-        finally {
-            cancelConnection();
-        }
+        drag.finish(point);
     }
 
-    private JButton connectionTargetAt(Point point) {
-        Component at = getComponentAt(point);
-        NodePanel origin = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, connectionStartPort);
-
-        if (!(at instanceof NodePanel) || at == origin) return null;
-        NodePanel target = (NodePanel) at;
-
-        Point local = SwingUtilities.convertPoint(this, point, target);
-        Component hit = SwingUtilities.getDeepestComponentAt(target, local.x, local.y);
-        JButton port = connectionStartPort == origin.getOutputPort() ? target.getInputPort() : target.getOutputPort();
-
-        return hit == port ? port : null;
-    }
-
-    private void activePort(JButton port, boolean active) {
-        if (port == null) return;
-
-        port.putClientProperty("connectionActive", active ? Boolean.TRUE : null);
-        port.repaint();
-    }
-
-    // ui .
     public void cancelConnection() {
-        activePort(connectionStartPort, false);
-        activePort(connectionTargetPort, false);
+        drag.cancel();
+    }
 
-        connectionStartPort = null;
-        connectionTargetPort = null;
-        connectionMousePoint = null;
-        repaint();
+    /** 출력 카드의 노드를 입력 카드의 노드에 연결합니다. 중복 등으로 거부되면 false이며 변경 알림을 보내지 않습니다. */
+    boolean connect(NodePanel source, NodePanel target) {
+        boolean connected = ((Outputable) source.getNode()).connect((Inputable) target.getNode());
+        if (connected) notifyConnectionsChanged();
+        return connected;
     }
 
     public void setSelectedNode(NodePanel node) {
@@ -288,36 +228,13 @@ public class BoardPanel extends JPanel {
         }
     }
 
-    private Point center(JButton port) {
+    Point center(JButton port) {
         return SwingUtilities.convertPoint(port, port.getWidth() / 2, port.getHeight() / 2, this);
     }
 
-    // paintComponent 그린 후 paintChildren를 호출해서 그림.
     @Override
     protected void paintChildren(Graphics g) {
-        super.paintChildren(g); // 보드 배경, 노드 그림.
-        if (connectionStartPort == null || connectionMousePoint == null) return;
-
-        NodePanel origin = (NodePanel) SwingUtilities.getAncestorOfClass(NodePanel.class, connectionStartPort);
-        Point fixed = center(connectionStartPort);
-        Point moving = connectionTargetPort == null ? connectionMousePoint : center(connectionTargetPort);
-
-        // 곡선의 논리 방향은 출력 → 입력으로 맞춤.
-        boolean output = connectionStartPort == origin.getOutputPort();
-        Point from = output ? fixed : moving;
-        Point to = output ? moving : fixed;
-        double bend = Math.max(42, Math.abs(to.x - from.x) * .45);
-
-        Graphics2D copy = (Graphics2D) g.create();
-        copy.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        copy.setColor(UiTheme.getAccentColor());
-
-        copy.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f,
-                connectionTargetPort == null ? new float[] {5, 4} : null, 0));
-        copy.draw(new CubicCurve2D.Double(from.x, from.y, from.x + bend, from.y,
-                to.x - bend, to.y, to.x, to.y));
-
-        if (connectionTargetPort == null) copy.drawOval(moving.x - 4, moving.y - 4, 8, 8);
-        copy.dispose();
+        super.paintChildren(g); // 노드 카드
+        drag.paintPreview(g);   // 드래그 중인 연결선은 카드 위에 보여야 합니다.
     }
 }
