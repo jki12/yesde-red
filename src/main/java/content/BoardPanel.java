@@ -6,6 +6,7 @@ import menu.popup.NodePopupMenu;
 import node.BaseNode;
 import node.Inputable;
 import node.Outputable;
+import node.Type;
 import ui.UiTheme;
 import ui.menu.NodePanel;
 import workflow.RunState;
@@ -120,6 +121,20 @@ public class BoardPanel extends JPanel {
         boolean connected = ((Outputable) source.getNode()).connect((Inputable) target.getNode());
         if (connected) notifyConnectionsChanged();
         return connected;
+    }
+
+    /** 타입의 노드를 새로 만들어 보드 좌표 location에 카드를 놓고 선택합니다. 노드 생성 실패 예외는 호출 측에서 처리합니다. */
+    public NodePanel addNode(Type type, Point location) {
+        NodePanel view = new NodePanel(type.name());
+
+        view.setBounds(Math.max(6, location.x), Math.max(6, location.y), NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
+        view.getNode().setPoint(view.getLocation());
+
+        add(view, 0);
+        setSelectedNode(view);
+        revalidate();
+        repaint();
+        return view;
     }
 
     public void setSelectedNode(NodePanel node) {

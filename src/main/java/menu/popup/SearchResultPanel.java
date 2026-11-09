@@ -1,7 +1,7 @@
 package menu.popup;
 
+import content.BoardPanel;
 import lombok.extern.slf4j.Slf4j;
-import ui.menu.NodePanel;
 import node.Type;
 import node.NodeFactory;
 import ui.UiTheme;
@@ -131,34 +131,18 @@ public class SearchResultPanel extends JScrollPane {
         if (suggestions.getSelectedValue() == null) return;
 
         JPopupMenu popup = (JPopupMenu) getParent();
-        createAndAddNode(suggestions.getSelectedValue(), popup, (JPanel) popup.getInvoker());
+        if (popup.getInvoker() instanceof BoardPanel board) {
+            Point location = popup.getLocationOnScreen();
+            SwingUtilities.convertPointFromScreen(location, board);
+
+            try {
+                board.addNode(Type.valueOf(suggestions.getSelectedValue()), location);
+            }
+            catch (RuntimeException error) { // 포트 사용 중이거나 이상한 값이 들어왔을 경우
+                JOptionPane.showMessageDialog(board, error.getMessage(), "노드를 만들 수 없습니다",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
         popup.setVisible(false);
-    }
-
-    private void createAndAddNode (String type, JPopupMenu popupMenu, JPanel invoker) {
-        if (type == null) return;
-
-        NodePanel node;
-        try {
-            node = new NodePanel(type);
-        }
-        catch (RuntimeException error) { // 포트 사용 중이거나 이상한 값이 들어왔을 경우
-            JOptionPane.showMessageDialog(invoker, error.getMessage(), "노드를 만들 수 없습니다",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        Point pos = popupMenu.getLocationOnScreen();
-        SwingUtilities.convertPointFromScreen(pos, invoker);
-
-        node.setBounds(Math.max(6, pos.x), Math.max(6, pos.y),
-                NodePanel.DEFAULT_WIDTH, NodePanel.DEFAULT_HEIGHT);
-        node.getNode().setPoint(node.getLocation());
-
-        invoker.add(node, 0);
-        if (invoker instanceof content.BoardPanel)
-            ((content.BoardPanel) invoker).setSelectedNode(node);
-        invoker.revalidate();
-        invoker.repaint();
     }
 }
