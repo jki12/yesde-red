@@ -42,7 +42,7 @@ class OptionSettingsEditorTest {
 
     private boolean boardEditable = true;
     private Stub node;
-    private OptionSettingsEditor editor;
+    private NodeOptionsEditor editor;
     private JComponent panel;
 
     @BeforeAll
@@ -54,7 +54,7 @@ class OptionSettingsEditorTest {
     void setUp() throws Exception {
         Edt.run(() -> {
             node = new Stub();
-            editor = new OptionSettingsEditor(node, () -> boardEditable);
+            editor = new NodeOptionsEditor(node, () -> boardEditable);
             panel = editor.getComponent();
         });
     }
@@ -165,7 +165,7 @@ class OptionSettingsEditorTest {
 
     @Test
     void nodeWithoutOptionFieldsHasNoEditor() throws Exception {
-        Edt.run(() -> assertFalse(new OptionSettingsEditor(new TestNodes.Sink("d1"), () -> true).hasOptions()));
+        Edt.run(() -> assertFalse(new NodeOptionsEditor(new TestNodes.Sink("d1"), () -> true).hasOptions()));
     }
 
     private Component find(String name) {
@@ -175,8 +175,8 @@ class OptionSettingsEditorTest {
     }
 
     private JTextComponent text(String field) { return (JTextComponent) find("option." + field); }
-    private JButton apply() { return (JButton) find("applyNodeSettings"); }
-    private JLabel feedback() { return (JLabel) find("nodeSettingsFeedback"); }
+    private JButton apply() { return (JButton) find("applyNodeOptions"); }
+    private JLabel feedback() { return (JLabel) find("nodeOptionsFeedback"); }
 
     private JRadioButton radio(String label) {
         for (Component child : ((JPanel) find("option.mode")).getComponents()) {

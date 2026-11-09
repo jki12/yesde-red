@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 /** @OptionField가 붙은 필드를 찾아 입력란을 만들고, 적용할 때 해당 필드에 값을 저장합니다. */
-public final class OptionSettingsEditor {
+public final class NodeOptionsEditor {
     private static final int INPUT_WIDTH = 180;
 
     private final BaseNode node;
@@ -25,7 +25,7 @@ public final class OptionSettingsEditor {
     private final JButton apply = UiTheme.button("적용");
     private final JLabel feedback = UiTheme.label("실행 전에 설정을 적용하세요.", false);
 
-    public OptionSettingsEditor(BaseNode node, BooleanSupplier boardEditable) {
+    public NodeOptionsEditor(BaseNode node, BooleanSupplier boardEditable) {
         this.node = node;
         this.boardEditable = boardEditable;
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -37,11 +37,11 @@ public final class OptionSettingsEditor {
             addRow(field.getName(), input);
         }
 
-        apply.setName("applyNodeSettings");
-        apply.addActionListener(e -> applySettings());
+        apply.setName("applyNodeOptions");
+        apply.addActionListener(e -> applyOptions());
         panel.add(apply);
         panel.add(Box.createVerticalStrut(8));
-        feedback.setName("nodeSettingsFeedback");
+        feedback.setName("nodeOptionsFeedback");
         panel.add(feedback);
         refreshState();
     }
@@ -80,15 +80,15 @@ public final class OptionSettingsEditor {
     public boolean hasOptions() { return !inputs.isEmpty(); }
 
     public void refreshState() {
-        boolean canEdit = canEditSettings();
+        boolean canEdit = canEditOptions();
         inputs.forEach((field, input) -> input.setEditable(canEdit && isEditable(field)));
-        apply.setEnabled(canEdit && inputs.keySet().stream().anyMatch(OptionSettingsEditor::isEditable));
+        apply.setEnabled(canEdit && inputs.keySet().stream().anyMatch(NodeOptionsEditor::isEditable));
         if (!canEdit) {
-            loadSettings();
+            loadOptions();
             feedback.setText("실행 중이거나 종료 중에는 수정할 수 없습니다.");
         } else if (!editingEnabled) {
             // 최초 표시·종료 완료 때만 다시 읽고, 일반 화면 갱신에서는 작성 중인 입력을 유지합니다.
-            loadSettings();
+            loadOptions();
             feedback.setText("실행 전에 설정을 적용하세요.");
         }
         editingEnabled = canEdit;
@@ -98,11 +98,11 @@ public final class OptionSettingsEditor {
         return field.getAnnotation(OptionField.class).editable();
     }
 
-    private boolean canEditSettings() {
+    private boolean canEditOptions() {
         return boardEditable.getAsBoolean() && !node.isAlive();
     }
 
-    private void loadSettings() {
+    private void loadOptions() {
         try {
             for (var entry : inputs.entrySet()) entry.getValue().setValue(entry.getKey().get(node));
         } catch (IllegalAccessException e) {
@@ -111,8 +111,8 @@ public final class OptionSettingsEditor {
     }
 
     // 입력값을 필드 타입으로 변환한 뒤 저장합니다. 노드별 동작 검증은 해당 노드가 담당합니다.
-    private void applySettings() {
-        if (!canEditSettings()) { refreshState(); return; }
+    private void applyOptions() {
+        if (!canEditOptions()) { refreshState(); return; }
         try {
             // 숫자 변환에 실패했을 때 일부 필드만 바뀌지 않도록 변환을 모두 마친 뒤 저장합니다.
             Map<Field, Object> values = new LinkedHashMap<>();
@@ -121,7 +121,7 @@ public final class OptionSettingsEditor {
             }
             // start()와 같은 잠금을 사용해 최종 확인과 저장 사이에 노드가 시작되지 않게 합니다.
             synchronized (node) {
-                if (!canEditSettings()) { refreshState(); return; }
+                if (!canEditOptions()) { refreshState(); return; }
                 for (var entry : values.entrySet()) entry.getKey().set(node, entry.getValue());
             }
             feedback.setText("적용했습니다.");

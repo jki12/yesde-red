@@ -15,7 +15,7 @@ public class NodeInfoPanel extends JPanel {
 
     private BooleanSupplier boardEditable = () -> false;
     private BaseNode selectedNode;
-    private OptionSettingsEditor settingsEditor;
+    private NodeOptionsEditor optionsEditor;
 
     public NodeInfoPanel() {
         setLayout(new BorderLayout());
@@ -100,7 +100,7 @@ public class NodeInfoPanel extends JPanel {
     public void showNode(BaseNode node, BooleanSupplier boardEditable) {
         // 적용 순간에도 현재 보드 상태를 읽도록 값 대신 조회 함수를 전달받습니다.
         this.boardEditable = boardEditable;
-        showSettingsEditor(node);
+        showOptionsEditor(node);
 
         if (node == null) {
             title.setText("노드를 선택하세요");
@@ -117,29 +117,29 @@ public class NodeInfoPanel extends JPanel {
         description.setText(node.getDescription());
     }
 
-    private void showSettingsEditor(BaseNode node) {
+    private void showOptionsEditor(BaseNode node) {
         if (selectedNode != node) {
             selectedNode = node;
-            settingsEditor = createSettingsEditor(node);
+            optionsEditor = createOptionsEditor(node);
             editorContainer.removeAll();
 
-            if (settingsEditor != null) {
-                editorContainer.add(settingsEditor.getComponent(), BorderLayout.CENTER);
+            if (optionsEditor != null) {
+                editorContainer.add(optionsEditor.getComponent(), BorderLayout.CENTER);
             }
-            editorContainer.setVisible(settingsEditor != null);
+            editorContainer.setVisible(optionsEditor != null);
             editorContainer.revalidate();
             editorContainer.repaint();
         }
 
-        if (settingsEditor != null) {
-            settingsEditor.refreshState();
+        if (optionsEditor != null) {
+            optionsEditor.refreshState();
         }
     }
 
-    private OptionSettingsEditor createSettingsEditor(BaseNode node) {
+    private NodeOptionsEditor createOptionsEditor(BaseNode node) {
         if (node == null) return null;
 
-        OptionSettingsEditor editor = new OptionSettingsEditor(node, () -> boardEditable.getAsBoolean());
+        NodeOptionsEditor editor = new NodeOptionsEditor(node, () -> boardEditable.getAsBoolean());
 
         return editor.hasOptions() ? editor : null;
     }
