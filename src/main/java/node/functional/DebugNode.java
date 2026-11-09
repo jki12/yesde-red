@@ -14,7 +14,8 @@ public class DebugNode extends BaseNode implements Inputable {
     public static final String DESCRIPTION = "수신한 메시지를 하단 콘솔에 표시합니다.";
     public static final Icon ICON = Codicons.icon("bug", 18);
 
-    private final ConsolePanel console = YesdeRedFrame.getInstance().getConsole();
+    // 생성 시점이 아니라 실행 시작 때 조회합니다. 프레임 없이(불러오기·테스트) 노드를 만들 수 있어야 합니다.
+    private ConsolePanel console;
 
     public DebugNode() {
         super(NodeType.DEBUG);
@@ -38,6 +39,12 @@ public class DebugNode extends BaseNode implements Inputable {
     @Override
     public String getDescription() {
         return DESCRIPTION;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        console = YesdeRedFrame.getInstance().getConsole();
     }
 
     @Override
