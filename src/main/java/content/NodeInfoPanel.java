@@ -1,7 +1,6 @@
 package content;
 
 import node.BaseNode;
-import node.functional.DebugNode;
 import ui.Codicons;
 import ui.UiTheme;
 import javax.swing.*;
@@ -138,7 +137,7 @@ public class NodeInfoPanel extends JPanel {
     }
 
     private OptionSettingsEditor createSettingsEditor(BaseNode node) {
-        if (node == null || node instanceof DebugNode) return null;
+        if (node == null) return null;
 
         OptionSettingsEditor editor = new OptionSettingsEditor(node, () -> boardEditable.getAsBoolean());
 
