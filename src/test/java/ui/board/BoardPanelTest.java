@@ -296,6 +296,22 @@ class BoardPanelTest {
         });
     }
 
+    @Test
+    void wireContextMenuDeletesTheConnection() throws Exception {
+        Edt.run(() -> {
+            TestNodes.Source src = (TestNodes.Source) source.getNode();
+            src.connect((TestNodes.Sink) sink.getNode());
+            BoardPanel.Connection wire = new BoardPanel.Connection(source, sink);
+
+            JMenuItem delete = (JMenuItem) Swing.find(board.createConnectionMenu(wire), "deleteConnection");
+            assertTrue(delete.isEnabled());
+            delete.doClick();
+
+            assertTrue(src.getTargets().isEmpty());
+            assertEquals(3, board.getNodePanels().size());
+        });
+    }
+
     private void click(Point point) {
         board.dispatchEvent(new java.awt.event.MouseEvent(board, java.awt.event.MouseEvent.MOUSE_CLICKED, 0, 0,
                 point.x, point.y, 1, false, java.awt.event.MouseEvent.BUTTON1));

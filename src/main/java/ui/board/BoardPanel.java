@@ -124,7 +124,13 @@ public class BoardPanel extends JPanel {
             }
 
             private void showPopup(MouseEvent e) {
-                popupMenu.show(BoardPanel.this, e.getX(), e.getY());
+                Connection hit = connectionAt(e.getPoint());
+                if (hit != null) {
+                    setSelectedConnection(hit);
+                    createConnectionMenu(hit).show(BoardPanel.this, e.getX(), e.getY());
+                } else {
+                    popupMenu.show(BoardPanel.this, e.getX(), e.getY());
+                }
             }
         });
 
@@ -211,6 +217,17 @@ public class BoardPanel extends JPanel {
 
         fireConnectionsChanged();
         return true;
+    }
+
+    /** 연결선 우클릭 메뉴입니다. 실행 중이거나 종료 중이면 삭제가 비활성화됩니다. */
+    JPopupMenu createConnectionMenu(Connection connection) {
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem delete = new JMenuItem("연결 삭제");
+        delete.setName("deleteConnection");
+        delete.setEnabled(getRunState() == RunState.IDLE);
+        delete.addActionListener(e -> removeConnection(connection));
+        menu.add(delete);
+        return menu;
     }
 
     /** 선택된 연결 또는 카드를 지웁니다. 선택이 없거나 실행 중이면 아무 일도 하지 않고 false입니다. */
