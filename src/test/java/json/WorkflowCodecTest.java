@@ -81,7 +81,7 @@ class WorkflowCodecTest {
                 List<BaseNode> nodes = WorkflowCodec.toNodes(document);
                 assertEquals(5, nodes.size(), sample);
                 assertEquals(4, document.connections().size(), sample);
-                assertEquals(3, nodes.stream().filter(n -> n.getTargets() != null).mapToLong(n -> n.getTargets().size()).sum(), sample + " 연결 복원");
+                assertEquals(4, nodes.stream().filter(n -> n.getTargets() != null).mapToLong(n -> n.getTargets().size()).sum(), sample + " 연결 복원");
             }
         }
     }
