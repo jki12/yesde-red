@@ -43,7 +43,7 @@ public final class TestNodes {
         @Override public String getDisplayName() { return "테스트 실패"; }
         @Override public String getDescription() { return "메시지를 받으면 예외를 던지는 테스트 노드"; }
         @Override protected void process() throws Exception {
-            getIn().poll();
+            getIn().take();
             throw new IllegalStateException("boom");
         }
     }
@@ -59,6 +59,6 @@ public final class TestNodes {
         @Override public Icon getIcon() { return NodeFactory.getIcon(getType()); }
         @Override public String getDisplayName() { return "테스트 입력"; }
         @Override public String getDescription() { return "테스트용 입력 노드"; }
-        @Override protected void process() throws Exception { getIn().poll(); seen.incrementAndGet(); }
+        @Override protected void process() throws Exception { getIn().take(); seen.incrementAndGet(); }
     }
 }

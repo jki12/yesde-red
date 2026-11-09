@@ -103,7 +103,7 @@ public abstract class BaseNode implements Runnable {
             throw new IllegalStateException("입력 기능이 없는 노드입니다.");
         }
 
-        in.push(message);
+        in.put(message);
     }
 
     public void setPoint(Point p) {

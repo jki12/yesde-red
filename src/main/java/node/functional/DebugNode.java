@@ -37,7 +37,7 @@ public class DebugNode extends BaseNode implements Inputable {
 
     @Override
     protected void process() throws Exception {
-        Message message = getIn().poll();
+        Message message = getIn().take();
 
         instance.add("DEBUG " + getId(), message.toString());
 

@@ -16,7 +16,7 @@ public class Pipe {
         return priorityQueue.isEmpty();
     }
 
-    public Message poll() throws InterruptedException {
+    public Message take() throws InterruptedException {
         return priorityQueue.take();
     }
 
@@ -24,7 +24,7 @@ public class Pipe {
         priorityQueue.clear();
     }
 
-    public void push(Message message) {
+    public void put(Message message) {
         priorityQueue.add(message);
     }
 }
