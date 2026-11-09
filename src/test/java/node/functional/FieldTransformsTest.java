@@ -46,7 +46,8 @@ class FieldTransformsTest {
         assertEquals(3L, FieldTransforms.number("(3)"));
         assertEquals(12000L, FieldTransforms.number("1.2만"));
         assertEquals(4.5, FieldTransforms.number("4.5"));
-        assertEquals(352L, FieldTransforms.number("[0|352|0|0]"), "첫 번째 숫자");
+        assertEquals(0L, FieldTransforms.number("[0|352|0|0]"), "첫 번째 숫자만 — 묶음 값은 regex로 먼저 골라야 함");
+        assertEquals(352L, eval("number(regex(h, \"\\\\|(\\\\d+)\\\\|\"))", Map.of("h", "[0|352|0|0]")), "뽐뿌 hits의 두 번째 값(조회수)");
         assertNull(FieldTransforms.number("가격 미정"));
         assertNull(FieldTransforms.number(null));
     }
