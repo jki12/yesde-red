@@ -8,6 +8,7 @@ import support.Edt;
 import ui.theme.UiTheme;
 import workflow.RunState;
 
+import javax.swing.*;
 import java.awt.Point;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +32,8 @@ class TabPanelTest {
 
             tabs.addBoardTab();
             assertEquals("워크플로 02", tabs.getTitleAt(1));
+            assertInstanceOf(JScrollPane.class, tabs.getComponentAt(1), "보드는 스크롤 패널 안에 있음");
+            assertEquals("워크플로 02", tabs.getBoardAt(1).getName());
             assertEquals(1, tabs.getSelectedIndex(), "새 탭이 선택됨");
             assertTrue(tabs.closeBoardTab(1));
             assertEquals(1, tabs.getTabCount());
@@ -44,7 +47,7 @@ class TabPanelTest {
         Edt.run(() -> {
             tabs[0] = new TabPanel();
             tabs[0].addBoardTab();
-            BoardPanel board = (BoardPanel) tabs[0].getSelectedComponent();
+            BoardPanel board = tabs[0].getSelectedBoard();
             board.addNode(NodeType.INJECT, new Point(40, 40));
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == RunState.IDLE) idle.countDown(); });
 

@@ -25,14 +25,14 @@ class WorkspacePanelTest {
         Edt.run(() -> {
             WorkspacePanel content = new WorkspacePanel();
             TabPanel tabs = content.getTabPanel();
-            BoardPanel first = (BoardPanel) tabs.getComponentAt(0);
+            BoardPanel first = tabs.getBoardAt(0);
             assertTrue(summary(content).contains("노드 0개"), summary(content));
 
             first.addNode(NodeType.INJECT, new Point(50, 50));
             assertTrue(summary(content).contains("노드 1개"), "선택 보드 이벤트는 요약을 갱신: " + summary(content));
 
             tabs.addBoardTab();
-            BoardPanel second = (BoardPanel) tabs.getSelectedComponent();
+            BoardPanel second = tabs.getSelectedBoard();
             assertNotSame(first, second);
             assertTrue(summary(content).contains("노드 0개"), "탭 전환은 새 보드를 표시: " + summary(content));
 

@@ -184,6 +184,6 @@ public class WorkspacePanel extends JPanel {
     }
 
     public BoardPanel getSelectedBoard() {
-        return (BoardPanel) tabPanel.getSelectedComponent(); // 항상 탭은 하나 이상 존재.
+        return tabPanel.getSelectedBoard(); // 항상 탭은 하나 이상 존재.
     }
 }

@@ -76,16 +76,32 @@ public class TabPanel extends JTabbedPane {
     public void addBoardTab() {
         int idx = getSelectedIndex() + 1; // 시작시에도 + 1을 해주기 때문에 -1을 반환해도 문제 없음.
 
-        add(new BoardPanel(nextTabTitle()), idx);
+        BoardPanel board = new BoardPanel(nextTabTitle());
+        JScrollPane scroll = new JScrollPane(board);
+        scroll.setBorder(null);
+        scroll.setName(board.getName()); // JTabbedPane.add(Component)는 컴포넌트 이름을 탭 제목으로 씁니다.
+
+        add(scroll, idx);
         setSelectedIndex(idx);
         log.info("새 탭이 생성되었습니다.(현재 탭 수 {})", getTabCount());
+    }
+
+    /** index번째 탭의 보드입니다. 탭에는 보드를 감싼 스크롤 패널이 들어 있습니다. */
+    public BoardPanel getBoardAt(int index) {
+        return (BoardPanel) ((JScrollPane) getComponentAt(index)).getViewport().getView();
+    }
+
+    /** 선택된 탭의 보드입니다. 탭이 없으면 null입니다. */
+    public BoardPanel getSelectedBoard() {
+        int index = getSelectedIndex();
+        return index < 0 ? null : getBoardAt(index);
     }
 
     /** 탭을 닫습니다. 마지막 남은 탭이거나 보드가 실행 중(또는 종료 중)이면 닫지 않고 false를 돌려줍니다. */
     public boolean closeBoardTab(int index) {
         if (getTabCount() <= 1) return false;
         // 닫힌 보드의 워커·감시 스레드가 고아가 되지 않도록 IDLE일 때만 닫습니다.
-        if (getComponentAt(index) instanceof BoardPanel board && board.getRunState() != RunState.IDLE) return false;
+        if (getBoardAt(index).getRunState() != RunState.IDLE) return false;
 
         removeTabAt(index);
         log.info("탭이 삭제되었습니다.(현재 탭 수 {})", getTabCount());
