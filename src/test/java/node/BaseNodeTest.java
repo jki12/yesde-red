@@ -36,7 +36,7 @@ class BaseNodeTest {
     void pollingSourcePacesByIntervalAndConsumerKeepsUp() throws Exception {
         TestNodes.Source source = new TestNodes.Source("s1");
         TestNodes.Sink sink = new TestNodes.Sink("d1");
-        source.setIntervalMilli(50);
+        source.setIntervalMillis(50);
         source.connect(sink);
 
         source.start();

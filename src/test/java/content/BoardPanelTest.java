@@ -171,7 +171,7 @@ class BoardPanelTest {
             board.removeAll();
             NodePanel src = add(new TestNodes.Source("s1"), 75, 95);
             NodePanel failing = add(new TestNodes.Failing("f1"), 540, 230);
-            ((TestNodes.Source) src.getNode()).setIntervalMilli(10);
+            ((TestNodes.Source) src.getNode()).setIntervalMillis(10);
             ((TestNodes.Source) src.getNode()).connect((TestNodes.Failing) failing.getNode());
             board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> failedEvents.add(e.getNewValue()));
             board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });

@@ -58,7 +58,7 @@ class ContentPanelTest {
             BoardPanel board = content[0].getSelectedBoard();
             support.TestNodes.Source source = new support.TestNodes.Source("s1");
             support.TestNodes.Failing failing = new support.TestNodes.Failing("f1");
-            source.setIntervalMilli(10);
+            source.setIntervalMillis(10);
             source.connect(failing);
             for (node.BaseNode model : new node.BaseNode[] {source, failing}) {
                 ui.menu.NodePanel view = new ui.menu.NodePanel(model);

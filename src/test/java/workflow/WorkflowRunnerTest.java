@@ -17,7 +17,7 @@ class WorkflowRunnerTest {
     void runsThroughIdleRunningStoppingAndBackToIdle() throws Exception {
         TestNodes.Source source = new TestNodes.Source("s1");
         TestNodes.Sink sink = new TestNodes.Sink("d1");
-        source.setIntervalMilli(10);
+        source.setIntervalMillis(10);
         source.connect(sink);
 
         List<RunState> states = new CopyOnWriteArrayList<>();
@@ -65,7 +65,7 @@ class WorkflowRunnerTest {
     void nodeFailureStopsTheWholeWorkflowAndIsReportedOnce() throws Exception {
         TestNodes.Source source = new TestNodes.Source("s1");
         TestNodes.Failing failing = new TestNodes.Failing("f1");
-        source.setIntervalMilli(10);
+        source.setIntervalMillis(10);
         source.connect(failing);
 
         List<RunState> states = new CopyOnWriteArrayList<>();

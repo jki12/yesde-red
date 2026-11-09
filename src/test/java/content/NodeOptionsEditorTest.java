@@ -65,11 +65,11 @@ class NodeOptionsEditorTest {
             assertTrue(editor.hasOptions());
             List<String> names = new ArrayList<>();
             collectOptionNames(panel, names);
-            assertEquals(List.of("option.message", "option.secret", "option.flag", "option.mode", "option.fixed", "option.intervalMilli"), names);
+            assertEquals(List.of("option.message", "option.secret", "option.flag", "option.mode", "option.fixed", "option.intervalMillis"), names);
 
             assertInstanceOf(JScrollPane.class, text("message").getParent().getParent(), "여러 줄 입력은 스크롤 패널로 감쌈");
             assertEquals(130, text("message").getParent().getParent().getPreferredSize().height);
-            assertEquals(32, text("intervalMilli").getPreferredSize().height);
+            assertEquals(32, text("intervalMillis").getPreferredSize().height);
             assertEquals(60, find("option.mode").getPreferredSize().height, "라디오는 상수 수 × 30");
         });
     }
@@ -83,7 +83,7 @@ class NodeOptionsEditorTest {
             assertTrue(radio("SLOW").isSelected());
             assertFalse(radio("FAST").isSelected());
             assertEquals("7", text("fixed").getText());
-            assertEquals("1000", text("intervalMilli").getText());
+            assertEquals("1000", text("intervalMillis").getText());
 
             assertTrue(text("message").isEditable());
             assertFalse(text("fixed").isEditable(), "editable=false 필드는 읽기 전용");
@@ -98,7 +98,7 @@ class NodeOptionsEditorTest {
             text("secret").setText("tok");
             ((JCheckBox) find("option.flag")).setSelected(false);
             radio("FAST").setSelected(true);
-            text("intervalMilli").setText(" 250 ");
+            text("intervalMillis").setText(" 250 ");
             text("fixed").setText("99");
             apply().doClick();
 
@@ -107,7 +107,7 @@ class NodeOptionsEditorTest {
             assertEquals("tok", node.secret);
             assertFalse(node.flag);
             assertEquals(Mode.FAST, node.mode);
-            assertEquals(250, node.getIntervalMilli());
+            assertEquals(250, node.getIntervalMillis());
             assertEquals(7, node.fixed, "편집 불가 필드는 그대로");
         });
     }
@@ -115,7 +115,7 @@ class NodeOptionsEditorTest {
     @Test
     void conversionFailureAppliesNothing() throws Exception {
         Edt.run(() -> {
-            text("intervalMilli").setText("abc");
+            text("intervalMillis").setText("abc");
             text("message").setText("partial");
             apply().doClick();
 
@@ -127,17 +127,17 @@ class NodeOptionsEditorTest {
     @Test
     void valueBelowMinimumIsRejectedWithSpecificMessage() throws Exception {
         Edt.run(() -> {
-            text("intervalMilli").setText("-5");
+            text("intervalMillis").setText("-5");
             text("message").setText("should-not-apply");
             apply().doClick();
 
-            assertEquals("intervalMilli은(는) 0 이상이어야 합니다.", feedback().getText());
-            assertEquals(1000, node.getIntervalMilli());
+            assertEquals("intervalMillis은(는) 0 이상이어야 합니다.", feedback().getText());
+            assertEquals(1000, node.getIntervalMillis());
             assertEquals("hello", node.message);
 
-            text("intervalMilli").setText("0");
+            text("intervalMillis").setText("0");
             apply().doClick();
-            assertEquals(0, node.getIntervalMilli(), "0은 허용");
+            assertEquals(0, node.getIntervalMillis(), "0은 허용");
         });
     }
 
