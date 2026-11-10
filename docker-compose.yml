@@ -1,0 +1,17 @@
+# 핫딜모음 수집 DB. `docker compose up -d`로 띄우면 db/schema.sql이 처음 한 번 실행됩니다.
+# 접속: jdbc:postgresql://localhost:5432/hotdeal (사용자·비밀번호 hotdeal)
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: hotdeal
+      POSTGRES_USER: hotdeal
+      POSTGRES_PASSWORD: hotdeal
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

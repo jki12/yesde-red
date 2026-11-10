@@ -83,6 +83,20 @@
 
 수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
 
+## DB
+
+수집 결과를 사이트 백엔드가 읽을 PostgreSQL에 넣습니다. 스키마는 `db/schema.sql`입니다.
+
+- `deals`: 글 하나에 한 행. 키는 `id`(`출처:글번호`)이고, 같은 글이 다시 수집되면 가격·댓글·조회수와 `last_seen_at`만 갱신됩니다.
+- `deal_snapshots`: 수집할 때마다 한 행. 가격 추이의 재료입니다.
+
+로컬에서는 Docker로 띄웁니다. 처음 기동할 때 스키마가 자동으로 만들어집니다.
+
+```
+docker compose up -d
+# jdbc:postgresql://localhost:5432/hotdeal  (사용자·비밀번호 hotdeal)
+```
+
 ## 저장 형식
 
 ```json
