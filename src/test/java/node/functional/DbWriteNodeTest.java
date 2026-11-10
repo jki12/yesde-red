@@ -19,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Docker 없이 임시 디렉터리에 띄운 진짜 PostgreSQL에 db/schema.sql을 적용하고 노드를 검사합니다. */
+/** Docker 없이 임시 디렉터리에 띄운 진짜 PostgreSQL에 samples/hotdeal/schema.sql을 적용하고 노드를 검사합니다. */
 class DbWriteNodeTest {
     private static EmbeddedPostgres postgres;
     private static String url;

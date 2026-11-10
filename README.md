@@ -1,12 +1,81 @@
 # yesde-red
 
-노드를 연결해 데이터를 수집하는 데스크톱 도구입니다. 보드에 노드 카드를 놓고 포트를 끌어 연결한 뒤 실행하면,
-각 노드가 자기 스레드에서 메시지를 받아 처리하고 다음 노드로 넘깁니다. Java 17 + Swing(FlatLaf)으로 만들었습니다.
+노드를 끌어 연결해 **데이터를 수집·가공·적재·제공하는 파이프라인**을 만드는 데스크톱 도구입니다. Node-RED와 같은 방식으로, 보드에 노드 카드를 놓고 포트를 연결한 뒤 실행하면 각 노드가 자기 스레드에서 메시지를 받아 처리하고 다음 노드로 넘깁니다.
+HTTP 요청·HTML/JSON 추출·필드 변환·조건 필터·중복 제거·DB upsert·REST API·웹훅 알림·cron 스케줄 같은 노드 14종을 조합해, 웹 페이지·RSS·JSON API 어느 출처든 같은 노드로 다룹니다.
+Java 17 + Swing(FlatLaf)이며 프레임워크 없이 JDK 표준 API와 jsoup·Gson·JDBC만 씁니다.
+
+> 스크린샷 자리: 샘플 `mock-hotdeal-db.json`을 불러와 실행한 보드 화면 (노드 카드·연결선·콘솔의 요청 이벤트)
 
 ```
-[메시지 주입] → [HTTP 요청] → [HTML 추출 | JSON 추출] → [파일 저장]
-                                                   ↘ [디버그] (콘솔에서 확인)
+ 입력                 수집·가공                                     출력
+ [스케줄 cron]  →  [HTTP 요청] → [HTML/JSON 추출] → [필드 변환] ─┬→ [DB 저장] ──→ (PostgreSQL) ←── [API 서버] ← 프론트/다른 서비스
+ [메시지 주입]       재시도·백오프   선택자·경로        규칙식      ├→ [파일 저장] CSV / JSON Lines
+ [Mock 서버]                                                     └→ [중복 제거] → [조건 필터] → [웹훅 알림] Discord/Slack
+   가상 응답·장애 주입                                                                   조건식
 ```
+
+| 항목 | 값 |
+|---|---|
+| 언어·런타임 | Java 17, Swing(FlatLaf), JDBC(PostgreSQL), jsoup, Gson |
+| 규모 | 본문 5.8천 줄(60파일), 테스트 3.7천 줄(31클래스, 145개), 커밋 300개 |
+| 노드 | 입력 3(스케줄, 메시지 주입, Mock 서버) · 가공 5(HTTP 요청, HTML 추출, JSON 추출, 필드 변환, 조건 필터, 중복 제거) · 출력 5(파일 저장, DB 저장, 웹훅 알림, API 서버, 디버그) |
+| 포함된 예제 | 핫딜 수집 파이프라인(커뮤니티 3곳 → 공통 스키마 → PostgreSQL → REST API·웹훅), GitHub API, Hacker News |
+
+## 5분 데모
+
+인터넷 없이 돌아갑니다. 핫딜 예제를 Mock 서버가 가상 게시판으로 대신합니다.
+
+1. 앱 실행(IntelliJ `Main`) → **File → 불러오기…** → `src/main/resources/samples/mock-hotdeal.json` → **실행**.
+2. 콘솔을 봅니다. Mock 서버의 요청 이벤트(`GET /clien.html 200`), 변환된 글, `output/mock-hotdeal.csv`에 9건.
+   Mock 서버가 4번째 요청마다 500을 내도록 돼 있어 `500` 뒤에 같은 경로의 `200`이 따라옵니다(HTTP 요청 노드의 재시도). 2만원 미만 글은 조건 필터를 지나 `POST /webhook 204`로 알림이 갑니다.
+3. 노드를 선택하면 속성 패널 **처리** 줄에 받음·보냄·경고 수가 1초마다 갱신됩니다.
+4. DB와 API까지 보려면 Docker Desktop을 켜고:
+   ```
+   cd samples/hotdeal && docker compose up -d        # PostgreSQL 17 + 스키마
+   ```
+   `mock-hotdeal-db.json`을 불러와 실행한 뒤
+   ```
+   curl 'http://127.0.0.1:8080/deals?source=clien&limit=5'
+   curl 'http://127.0.0.1:8080/deals/clien:900001/snapshots'
+   ```
+   15초마다 재수집돼도 `deals`는 9행에 머물고 `last_seen_at`과 `deal_snapshots`만 쌓입니다.
+
+## 설계 결정
+
+**경고와 실패를 나눴다.** 404·선택자 불일치·제약 위반처럼 메시지 하나의 문제는 `warn()`으로 콘솔에 남기고 다음 메시지로 넘어갑니다. 연결 실패·옵션 오류처럼 노드가 계속할 수 없는 문제만 예외로 던지고, 그러면 워크플로 전체가 멈춥니다. 노드 하나만 죽으면 상류 메시지가 큐에 쌓이기만 하기 때문입니다.
+
+**재시도는 서버 쪽 일시 장애에만.** 연결 실패·타임아웃·429·5xx는 1초 → 2초 → 4초로 기다리며 다시 보내고, 404 같은 4xx는 다시 보내도 같은 답이 오므로 바로 건너뜁니다. 횟수를 다 쓰면 시도 횟수를 담은 경고 하나만 남깁니다. Mock 서버의 장애 주입이 이 동작을 테스트로 증명합니다.
+
+**노드는 도메인을 모른다.** 추출·변환·필터·저장·API 노드는 모두 필드 이름·선택자·규칙·SQL을 옵션으로 받습니다. 핫딜 예제의 스키마·라우트·알림 문구는 전부 샘플 JSON의 옵션에 있고, 코드에는 없습니다. 출처마다 다른 모양은 변환 노드의 규칙(`price = number(regex(title, "([\\d,]{2,})\\s*원"))`)이 흡수합니다.
+
+**중복 제거와 upsert의 역할이 다르다.** 중복 제거 노드는 "처음 보는 값"만 통과시키는 메모리·파일 집합이라 알림에 맞습니다. DB 저장 노드는 `INSERT … ON CONFLICT DO UPDATE`로 같은 키의 행을 갱신하고, 스냅샷 테이블에 수집마다 한 줄을 남겨 시계열을 만들 수 있게 합니다.
+
+**SQL 조립에 사용자 입력이 섞이지 않는다.** 테이블·컬럼 이름은 영문·숫자·밑줄만 허용하는 정규식으로 거르고, 값과 API 파라미터는 전부 PreparedStatement 파라미터입니다. API 서버의 라우트 SQL은 사용자가 쓰지만 `:이름` 파라미터는 바인딩으로만 들어가며, 연결은 읽기 전용입니다.
+
+**서버 노드는 요청을 메시지로 내보낸다.** Mock 서버와 API 서버는 요청마다 `method·path·query·status`를 다음 노드로 보냅니다. 디버그 노드에 연결하면 접근 로그가 되고, 조건 필터에 연결하면 "500이 나면 알림" 같은 흐름을 노드 조합만으로 만들 수 있습니다.
+
+**노드는 각자 스레드, 화면은 폴링.** 노드마다 워커 스레드와 입력 큐가 있고 실행기는 IDLE/RUNNING/STOPPING 상태 기계입니다. 서버·파일을 여는 노드가 준비된 뒤 다음 노드가 시작되도록 `start()`가 `onStart()` 완료를 기다립니다. 처리 수는 메시지마다 화면 이벤트를 쏘지 않고 1초마다 읽습니다. 초당 수천 건에서 EDT가 밀리기 때문입니다.
+
+**옵션은 어노테이션 하나로.** 노드 필드에 `@OptionField`를 붙이면 속성 편집기·JSON 저장·불러오기가 리플렉션으로 자동 연동됩니다. 새 노드는 `process()`와 옵션 필드, `NodeType` 한 줄이면 됩니다.
+
+## 검증
+
+- 테스트 145개, `mvn clean test` 약 20초. 외부 네트워크를 쓰는 테스트는 없습니다.
+- **HTTP 수준**: JDK `HttpServer`로 404·지연·간헐 503을 흉내 내 요청·재시도·알림 노드를 실제 소켓으로 검사합니다.
+- **DB 수준**: `embedded-postgres`가 Docker 없이 임시 디렉터리에 PostgreSQL 17을 띄워 스키마를 적용하고, DB 저장·API 서버 노드를 진짜 SQL과 진짜 HTTP로 검사합니다.
+- **UI 수준**: headless Swing에서 실제 마우스 이벤트로 포트 드래그 연결, 삭제, 실행 버튼 상태, 처리 수 표시를 검사합니다.
+- **파서**: 변환 규칙·조건식·cron 식의 문법과 오류 메시지를 각각 검사합니다.
+
+## 한계
+
+- API 서버는 JDBC 연결 하나를 직렬화해 씁니다. 수집 도구의 조회 API라 충분하지만, 트래픽이 생기면 커넥션 풀로 바꿀 자리입니다.
+- 워크플로 JSON에 DB 비밀번호가 평문으로 저장됩니다. 실제 비밀번호가 든 파일은 공유하지 마세요.
+- 서버 노드는 `127.0.0.1`에만 바인딩됩니다. 다른 기기에서 접근하려면 바인딩 옵션이 필요합니다.
+- JavaScript로 그려지는 페이지는 수집하지 못합니다. 아카라이브(Cloudflare 챌린지)·펨코(robots.txt 전체 차단)는 우회하지 않고 수집 대상에서 뺐습니다.
+
+---
+
+# 사용 설명서
 
 ## 실행
 
@@ -25,32 +94,33 @@
 | 실행/종료 | 툴바 **실행**·**종료**, 또는 Run 메뉴 |
 | 저장/열기 | File 메뉴 **내보내기…** / **불러오기…** (JSON). 불러온 워크플로는 새 탭으로 열립니다 |
 | 탭 | ⌘T 새 워크플로, ⌘W 닫기(실행 중이면 닫히지 않음) |
+| 처리 수 | 실행 중 노드를 선택하면 속성 패널 **처리** 줄에 이번 실행의 받음·보냄·경고 수와 마지막 처리 시각이 1초마다 갱신됩니다 |
 
 노드가 메시지 하나를 처리하지 못하면(404, 선택자 불일치 등) 콘솔에 **경고**를 남기고 계속 실행합니다.
 노드가 예외로 멈추면 **오류**로 기록되고 워크플로 전체가 종료됩니다.
 
 ## 노드
 
+메시지는 이름 → 값 payload입니다. 각 노드는 받은 payload에 자기 필드를 더해 넘기므로 상류의 `url` 같은 값이 저장 단계까지 남습니다.
+
 | 노드 | 역할 | 주요 옵션 |
 |---|---|---|
-| 메시지 주입 | 간격마다 메시지를 보냅니다. 흐름의 시작점 | `message`, `intervalMillis` |
+| 스케줄 | cron 식(`분 시 일 월 요일`)에 맞는 시각마다 메시지를 보냅니다. `*/10 * * * *`(10분마다), `0 9 * * 1-5`(평일 9시). 이 컴퓨터의 시간대 기준 | cron 식, 메시지, 시작할 때 한 번 바로 실행 |
+| 메시지 주입 | 간격마다 메시지를 보냅니다 | `message`, `intervalMillis` |
+| Mock 서버 | 실행 중 `127.0.0.1`에 HTTP 서버를 띄워 폴더의 파일을 응답으로 내줍니다. 경로 규칙으로 404·503을(POST에도 응답해 웹훅 수신처 흉내), 장애 주입으로 N번째 요청 500을 흉내 내고, 요청마다 메시지를 내보냅니다 | 포트, 응답 파일 폴더, 지연, 경로 규칙, 장애 주입 |
 | HTTP 요청 | payload의 `url`(없으면 옵션 URL)을 GET으로 호출해 `url`·`status`·`contentType`·`body`를 더합니다. 연결 실패·타임아웃·429·5xx는 대기를 두 배씩 늘리며 재시도하고(기본 2회, 첫 대기 1초), 4xx는 바로 건너뜁니다 | URL, 헤더, User-Agent, 타임아웃, 요청 사이 최소 간격, 재시도 횟수, 첫 재시도 대기 |
 | HTML 추출 | `body`(HTML 또는 XML/RSS)에서 CSS 선택자로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 선택자, 필드(`이름 = 선택자 [@속성]`), XML/RSS로 파싱 |
 | JSON 추출 | `body`(JSON)에서 경로로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 경로(`data.items[*]`), 필드(`이름 = 경로`) |
-| 파일 저장 | 메시지를 CSV 또는 JSON Lines로 한 줄씩 기록합니다 | 파일 경로, 형식, 기록할 필드, 이어 쓰기 |
-| 조건 필터 | 조건식에 맞는 메시지만 통과시킵니다. 아래 조건식 문법 참고 | 조건식 |
-| 웹훅 알림 | 메시지를 받을 때마다 웹훅 URL로 JSON을 POST합니다. Discord(`content`)·Slack(`text`) 형식은 `{필드}` 템플릿으로 글을 만들고, JSON 형식은 payload 전체를 보냅니다. 실패는 경고 | 웹훅 URL, 형식, 글 템플릿, 타임아웃, 전송 사이 최소 간격 |
-| 중복 제거 | 기준 필드 값이 처음 보이는 메시지만 통과시킵니다. 기억 파일을 지정하면 다시 실행해도 유지됩니다 | 기준 필드, 최대 개수, 기억 파일 |
 | 필드 변환 | 규칙(`대상 = 식`)으로 필드를 뽑고 바꾸고 만들어 출처마다 다른 데이터를 공통 스키마로 맞춥니다 | 변환 규칙, 남길 필드 |
-| DB 저장 | 받은 메시지를 PostgreSQL 테이블에 upsert합니다. 키 컬럼 값이 같은 행이 있으면 나머지 컬럼을 갱신하고 없으면 넣습니다. `컬럼 = 필드` 줄로 payload 필드를 컬럼에 대응시킵니다. 한 행의 제약 위반은 경고, 연결 실패는 노드 실패입니다 | JDBC URL, 사용자, 비밀번호, 테이블, 키 컬럼, 컬럼 |
-| API 서버 | 실행 중 `127.0.0.1`에 읽기 전용 REST API를 띄웁니다. 경로마다 SQL을 적으면 결과 행을 JSON으로 내줍니다. 아래 API 절 참고. 요청마다 메시지를 내보냅니다 | 포트, JDBC URL, 사용자, 비밀번호, 라우트 |
-| Mock 서버 | 실행 중 `127.0.0.1`에 HTTP 서버를 띄워 폴더의 파일을 응답으로 내줍니다. 경로 규칙으로 404·503을, 장애 주입으로 N번째 요청 500을 흉내 내고, 요청마다 메시지를 내보냅니다 | 포트, 응답 파일 폴더, 지연, 경로 규칙, 장애 주입 |
-| 스케줄 | cron 식(`분 시 일 월 요일`)에 맞는 시각마다 메시지를 보냅니다. `*/10 * * * *`(10분마다), `0 9 * * 1-5`(평일 9시). 이 컴퓨터의 시간대 기준 | cron 식, 메시지, 시작할 때 한 번 바로 실행 |
+| 조건 필터 | 조건식에 맞는 메시지만 통과시킵니다 | 조건식 |
+| 중복 제거 | 기준 필드 값이 처음 보이는 메시지만 통과시킵니다. 기억 파일을 지정하면 다시 실행해도 유지됩니다 | 기준 필드, 최대 개수, 기억 파일 |
+| 파일 저장 | 메시지를 CSV 또는 JSON Lines로 한 줄씩 기록합니다 | 파일 경로, 형식, 기록할 필드, 이어 쓰기 |
+| DB 저장 | 받은 메시지를 PostgreSQL 테이블에 upsert합니다. 키 컬럼 값이 같은 행이 있으면 나머지 컬럼을 갱신하고 없으면 넣습니다. `컬럼 = 필드` 줄로 payload 필드를 컬럼에 대응시키고, 스냅샷 테이블을 주면 메시지마다 한 행을 더 넣습니다. 한 행의 제약 위반은 경고, 연결 실패는 노드 실패 | JDBC URL, 사용자, 비밀번호, 테이블, 키 컬럼, 컬럼, 스냅샷 테이블, 스냅샷 컬럼 |
+| 웹훅 알림 | 메시지를 받을 때마다 웹훅 URL로 JSON을 POST합니다. Discord(`content`)·Slack(`text`) 형식은 `{필드}` 템플릿으로 글을 만들고(비우면 메시지 그대로), JSON 형식은 payload 전체를 보냅니다. 실패는 경고 | 웹훅 URL, 형식, 글 템플릿, 타임아웃, 전송 사이 최소 간격 |
+| API 서버 | 실행 중 `127.0.0.1`에 읽기 전용 REST API를 띄웁니다. 경로마다 SQL을 적으면 결과 행을 JSON으로 내줍니다. 요청마다 메시지를 내보냅니다 | 포트, JDBC URL, 사용자, 비밀번호, 라우트 |
 | 디버그 | 받은 메시지를 콘솔에 표시합니다 | 없음 |
 
-메시지는 이름 → 값 payload입니다. 각 노드는 받은 payload에 자기 필드를 더해 넘기므로 상류의 `url` 같은 값이 저장 단계까지 남습니다.
-
-### 필드 문법
+### 필드 문법 (추출 노드)
 
 - HTML: `title = h2 a`(텍스트), `link = h2 a @href`(속성, 상대 주소는 절대 주소로), `price = .price`
 - JSON: `name = title`, `price = price.amount`, `first = tags[0]`. 항목 경로 끝의 `[*]`만 배열 전개를 뜻합니다.
@@ -76,10 +146,6 @@
 규칙 문법 오류는 실행 시작 때 노드 실패로, 값 변환 실패(읽을 수 없는 시각 등)는 경고와 함께 그 메시지만 건너뜁니다.
 문자열 안의 백슬래시는 `\\`로 씁니다.
 
-### 처리 수 보기
-
-실행 중 노드를 선택하면 속성 패널의 **처리** 줄에 이번 실행의 받음·보냄·경고 수와 마지막 처리 시각이 1초마다 갱신됩니다. 어느 노드에서 메시지가 멈추는지, 경고가 어디서 쌓이는지 볼 때 씁니다.
-
 ### 조건식 문법 (조건 필터 노드)
 
 ```
@@ -91,53 +157,32 @@ price != null and price < 20000 and title contains "키보드"
 - 논리: `and` `or` `not`, 괄호. `and`가 `or`보다 먼저 묶입니다.
 - 값: 필드 이름, `"문자열"`, 숫자, `null`. 없는 필드는 `null`입니다.
 
-### 샘플
+### 라우트 문법 (API 서버 노드)
 
-`src/main/resources/samples/`의 파일을 **File → 불러오기…**로 열어 바로 실행해 볼 수 있습니다.
-
-- `json-api.json`: GitHub API에서 저장소 정보를 1분마다 받아 `output/github-jsoup.csv`에 기록
-- `html-list.json`: Hacker News 첫 페이지 제목·링크를 5분마다 `output/hackernews.csv`에 기록
-- `hotdeal.json`(스케줄 노드가 10분마다 수집, 실행 즉시 한 번): 클리앙 알뜰구매(HTML), 루리웹 핫딜(RSS), 뽐뿌(RSS)를 10분마다 받아, 출처별 필드 변환 노드가 공통 스키마(`id`, `source`, `source_post_id`, `post_url`, `title`, `shop`, `product`, `price`, `category`, `author`, `comments`, `hits`, `posted_at`, `collected_at`)로 맞춘 뒤 중복 제거 노드가 `id` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 글은 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다. 사이트가 RSS를 제공하면 HTML 목록보다 RSS가 안정적이고 예의 바른 경로입니다
-
-- `mock-hotdeal-db.json`: 같은 Mock 파이프라인의 결과를 CSV 대신 **PostgreSQL**에 넣고, API 서버 노드가 `http://127.0.0.1:8080/deals`로 내줍니다. `samples/hotdeal`에서 `docker compose up -d`로 DB를 띄운 뒤 실행하면 `deals`에 9행이 들어가고, 15초마다 다시 수집될 때 행은 늘지 않고 `last_seen_at`과 `deal_snapshots`만 쌓입니다. 중복 제거 노드는 두지 않습니다. 갱신까지 DB가 맡기 때문입니다
-- `mock-hotdeal.json`: 위 핫딜 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버가 4번째 요청마다 500을 내도록 돼 있어, HTTP 요청 노드의 재시도가 메우는 것을 콘솔(요청 이벤트의 `status`)에서 볼 수 있습니다. 2만원 미만 딜은 조건 필터를 지나 웹훅 알림 노드가 Mock 서버의 `/webhook`으로 POST하므로, 콘솔에 `POST /webhook 204` 이벤트가 알림 수만큼 찍힙니다. Mock 서버 노드가 `samples/hotdeal/mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 같은 추출·변환·중복 제거 흐름이 `output/mock-hotdeal.csv`에 9건을 씁니다. 새 노드를 만들 때 입력을 고정하는 용도로도 씁니다
-
-수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
-
-## DB
-
-수집 결과를 사이트 백엔드가 읽을 PostgreSQL에 넣습니다. 스키마는 `samples/hotdeal/schema.sql`입니다.
-
-- `deals`: 글 하나에 한 행. 키는 `id`(`출처:글번호`)이고, 같은 글이 다시 수집되면 가격·댓글·조회수와 `last_seen_at`만 갱신됩니다.
-- `deal_snapshots`: 수집할 때마다 한 행. 가격 추이의 재료입니다.
-
-로컬에서는 Docker로 띄웁니다. 처음 기동할 때 스키마가 자동으로 만들어집니다.
-
-```
-cd samples/hotdeal && docker compose up -d
-# jdbc:postgresql://localhost:5432/hotdeal  (사용자·비밀번호 hotdeal)
-```
-
-DB 저장·API 서버 노드의 비밀번호는 워크플로 JSON에 그대로 저장됩니다. 실제 비밀번호가 든 파일은 공유하지 마세요.
-
-### API
-
-API 서버 노드는 라우트 옵션의 줄마다 `GET` 엔드포인트 하나를 만듭니다. `/경로 = SQL` 형식이고, SQL의 `:이름`은 쿼리스트링(`?이름=값`)이나 경로 변수(`{이름}`)에서 채우며 없으면 NULL입니다.
+줄마다 `/경로 = SQL`이 `GET` 엔드포인트 하나가 됩니다. SQL의 `:이름`은 쿼리스트링(`?이름=값`)이나 경로 변수(`{이름}`)에서 채우며 없으면 NULL입니다.
 값은 전부 파라미터로 바인딩되고, 타입이 애매하면 `:since::timestamptz`처럼 캐스트합니다. 응답은 `{"items":[…],"count":n}`이며 CORS 허용 헤더가 붙습니다.
 
 ```
 /health          = SELECT 'ok' AS status
-/deals           = SELECT * FROM deals WHERE (:source::text IS NULL OR source = :source) ORDER BY posted_at DESC LIMIT COALESCE(:limit::int, 50)
-/deals/{id}      = SELECT * FROM deals WHERE id = :id
-/deals/{id}/snapshots = SELECT collected_at, price FROM deal_snapshots WHERE deal_id = :id ORDER BY collected_at
+/items           = SELECT * FROM items WHERE (:kind::text IS NULL OR kind = :kind) ORDER BY created_at DESC LIMIT COALESCE(:limit::int, 50)
+/items/{id}      = SELECT * FROM items WHERE id = :id
 ```
 
 경로 변수가 있는 라우트는 결과가 없으면 404, 잘못된 값(날짜·숫자 형식)은 400, 그 밖의 DB 오류는 500이며 콘솔에 경고로도 남습니다. SQL 문법 오류는 실행 시작 때 노드 실패로 드러납니다.
 
-```
-curl 'http://127.0.0.1:8080/deals?source=clien&limit=5'
-curl 'http://127.0.0.1:8080/deals/clien:900001/snapshots'
-```
+## 예제: 핫딜 수집 파이프라인
+
+`src/main/resources/samples/`의 파일을 **File → 불러오기…**로 열어 바로 실행해 볼 수 있습니다.
+
+- `hotdeal.json`: 스케줄 노드가 10분마다(실행 즉시 한 번) 클리앙 알뜰구매(HTML), 루리웹 핫딜(RSS), 뽐뿌(RSS)를 받아, 출처별 필드 변환 노드가 공통 스키마(`id`, `source`, `source_post_id`, `post_url`, `title`, `shop`, `product`, `price`, `category`, `author`, `comments`, `hits`, `posted_at`, `collected_at`)로 맞춘 뒤 중복 제거 노드가 `id` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 글은 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다. 사이트가 RSS를 제공하면 HTML 목록보다 RSS가 안정적이고 예의 바른 경로입니다.
+- `mock-hotdeal.json`: 같은 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버 노드가 `samples/hotdeal/mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 4번째 요청마다 500을 내 재시도를 보여주며, 2만원 미만 글은 조건 필터 → 웹훅 알림 → Mock 서버 `/webhook`(204)으로 갑니다. 결과는 `output/mock-hotdeal.csv` 9건.
+- `mock-hotdeal-db.json`: 결과를 CSV 대신 **PostgreSQL**에 upsert하고(`deals` + `deal_snapshots`), API 서버 노드가 `/deals`, `/deals/{id}`, `/deals/{id}/snapshots`로 내줍니다. 중복 제거 노드는 두지 않습니다. 갱신까지 DB가 맡기 때문입니다.
+- `json-api.json`: GitHub API에서 저장소 정보를 1분마다 받아 `output/github-jsoup.csv`에 기록.
+- `html-list.json`: Hacker News 첫 페이지 제목·링크를 5분마다 `output/hackernews.csv`에 기록.
+
+핫딜 예제의 DB는 `samples/hotdeal/`에 있습니다. `schema.sql`은 `deals`(글 하나에 한 행, 키 `출처:글번호`, 재수집 시 가격·댓글·조회수와 `last_seen_at`만 갱신)와 `deal_snapshots`(수집마다 한 행, 가격 추이의 재료) 두 테이블이고, `docker compose up -d`로 PostgreSQL 17을 띄우면 처음 기동 때 자동 적용됩니다. 접속은 `jdbc:postgresql://localhost:5432/hotdeal`(사용자·비밀번호 `hotdeal`)입니다.
+
+수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
 
 ## 저장 형식
 
@@ -153,6 +198,7 @@ curl 'http://127.0.0.1:8080/deals/clien:900001/snapshots'
 
 1. `node/functional/`에 `BaseNode`(큐 소비) 또는 `PollingNode`(주기 실행)를 상속한 클래스를 만들고 `process()`를 구현합니다.
    입력을 받으면 `Inputable`, 보내면 `Outputable`을 붙입니다. 옵션은 필드에 `@OptionField`를 붙이면 편집기·저장에 자동 반영됩니다.
+   로컬 HTTP 서버를 띄우는 노드는 `LocalHttpServerNode`를 상속해 `serve()`만 구현합니다.
 2. `node/NodeType.java`에 표시명·설명·아이콘(codicons 파일명)·생성자 한 줄을 추가합니다. 팝업·팩토리·저장이 모두 이 목록을 봅니다.
 3. 메시지 하나를 건너뛸 문제는 `warn(...)`, 노드가 계속할 수 없는 문제는 예외로 던집니다.
 
