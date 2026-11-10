@@ -43,7 +43,7 @@
 | 중복 제거 | 기준 필드 값이 처음 보이는 메시지만 통과시킵니다. 기억 파일을 지정하면 다시 실행해도 유지됩니다 | 기준 필드, 최대 개수, 기억 파일 |
 | 필드 변환 | 규칙(`대상 = 식`)으로 필드를 뽑고 바꾸고 만들어 출처마다 다른 데이터를 공통 스키마로 맞춥니다 | 변환 규칙, 남길 필드 |
 | DB 저장 | 받은 메시지를 PostgreSQL 테이블에 upsert합니다. 키 컬럼 값이 같은 행이 있으면 나머지 컬럼을 갱신하고 없으면 넣습니다. `컬럼 = 필드` 줄로 payload 필드를 컬럼에 대응시킵니다. 한 행의 제약 위반은 경고, 연결 실패는 노드 실패입니다 | JDBC URL, 사용자, 비밀번호, 테이블, 키 컬럼, 컬럼 |
-| API 서버 | 실행 중 `127.0.0.1`에 REST API를 띄워 DB의 핫딜을 JSON으로 내줍니다. 아래 API 절 참고. 요청마다 메시지를 내보냅니다 | 포트, JDBC URL, 사용자, 비밀번호, 최대 건수 |
+| API 서버 | 실행 중 `127.0.0.1`에 읽기 전용 REST API를 띄웁니다. 경로마다 SQL을 적으면 결과 행을 JSON으로 내줍니다. 아래 API 절 참고. 요청마다 메시지를 내보냅니다 | 포트, JDBC URL, 사용자, 비밀번호, 라우트 |
 | Mock 서버 | 실행 중 `127.0.0.1`에 HTTP 서버를 띄워 폴더의 파일을 응답으로 내줍니다. 경로 규칙으로 404·503을, 장애 주입으로 N번째 요청 500을 흉내 내고, 요청마다 메시지를 내보냅니다 | 포트, 응답 파일 폴더, 지연, 경로 규칙, 장애 주입 |
 | 스케줄 | cron 식(`분 시 일 월 요일`)에 맞는 시각마다 메시지를 보냅니다. `*/10 * * * *`(10분마다), `0 9 * * 1-5`(평일 9시). 이 컴퓨터의 시간대 기준 | cron 식, 메시지, 시작할 때 한 번 바로 실행 |
 | 디버그 | 받은 메시지를 콘솔에 표시합니다 | 없음 |
@@ -122,19 +122,21 @@ DB 저장·API 서버 노드의 비밀번호는 워크플로 JSON에 그대로 �
 
 ### API
 
-API 서버 노드가 워크플로 실행 중에 내주는 엔드포인트입니다. 응답은 JSON이고 CORS 허용 헤더가 붙어 브라우저의 프론트가 바로 호출할 수 있습니다.
+API 서버 노드는 라우트 옵션의 줄마다 `GET` 엔드포인트 하나를 만듭니다. `/경로 = SQL` 형식이고, SQL의 `:이름`은 쿼리스트링(`?이름=값`)이나 경로 변수(`{이름}`)에서 채우며 없으면 NULL입니다.
+값은 전부 파라미터로 바인딩되고, 타입이 애매하면 `:since::timestamptz`처럼 캐스트합니다. 응답은 `{"items":[…],"count":n}`이며 CORS 허용 헤더가 붙습니다.
 
-| 요청 | 설명 |
-|---|---|
-| `GET /health` | `{"status":"ok"}` |
-| `GET /deals?source=&since=&q=&limit=&offset=` | 최신 글부터. `source` 출처, `since` 작성 시각 하한(ISO 8601), `q` 제목 검색, `limit` 기본 50. 응답: `items`, `total`, `limit`, `offset` |
-| `GET /deals/{id}` | 글 하나와 `snapshots`(수집 시각순 가격·댓글·조회수) |
+```
+/health          = SELECT 'ok' AS status
+/deals           = SELECT * FROM deals WHERE (:source::text IS NULL OR source = :source) ORDER BY posted_at DESC LIMIT COALESCE(:limit::int, 50)
+/deals/{id}      = SELECT * FROM deals WHERE id = :id
+/deals/{id}/snapshots = SELECT collected_at, price FROM deal_snapshots WHERE deal_id = :id ORDER BY collected_at
+```
 
-잘못된 파라미터는 400, 없는 글·경로는 404, DB 오류는 500이며 콘솔에 경고로도 남습니다.
+경로 변수가 있는 라우트는 결과가 없으면 404, 잘못된 값(날짜·숫자 형식)은 400, 그 밖의 DB 오류는 500이며 콘솔에 경고로도 남습니다. SQL 문법 오류는 실행 시작 때 노드 실패로 드러납니다.
 
 ```
 curl 'http://127.0.0.1:8080/deals?source=clien&limit=5'
-curl 'http://127.0.0.1:8080/deals/clien:900001'
+curl 'http://127.0.0.1:8080/deals/clien:900001/snapshots'
 ```
 
 ## 저장 형식

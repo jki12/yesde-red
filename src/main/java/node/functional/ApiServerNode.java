@@ -18,57 +18,68 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * 워크플로가 실행되는 동안 127.0.0.1에 REST API를 띄워 DB의 핫딜을 JSON으로 내줍니다. 사이트 프론트가 바로 호출할 수 있습니다.
+ * 워크플로가 실행되는 동안 127.0.0.1에 읽기 전용 REST API를 띄웁니다. 경로마다 SQL 한 줄을 적으면 결과 행들을 JSON으로 내줍니다.
  * <pre>
- *   GET /health                       {"status":"ok"}
- *   GET /deals?source=&since=&q=&limit=&offset=   최신 글부터. source는 출처, since는 posted_at 하한(ISO 8601), q는 제목 검색
- *   GET /deals/{id}                   글 하나와 수집 이력(snapshots: 시각순 가격·댓글·조회수)
+ *   /health          = SELECT 'ok' AS status
+ *   /items           = SELECT * FROM items WHERE (:kind::text IS NULL OR kind = :kind) LIMIT COALESCE(:limit::int, 50)
+ *   /items/{id}      = SELECT * FROM items WHERE id = :id
  * </pre>
- * 잘못된 파라미터는 400, 없는 경로는 404, DB 오류는 500이며 경고로도 남깁니다. 응답에는 CORS 허용 헤더가 붙습니다.
+ * {@code :이름}은 쿼리스트링(?kind=a)이나 경로 변수({id})에서 채우고, 없으면 NULL입니다. 값은 전부 파라미터로 바인딩되며
+ * 타입이 애매하면 {@code :since::timestamptz}처럼 SQL에서 캐스트합니다. 응답은 {@code {"items":[…],"count":n}}이고,
+ * 경로 변수가 있는 라우트는 결과가 없으면 404입니다. 잘못된 값(22xxx)은 400, 그 밖의 DB 오류는 500과 경고입니다.
  */
 @Getter
 @Setter
 public class ApiServerNode extends LocalHttpServerNode {
-    private static final Gson GSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().create(); // null도 키를 내보내고, URL의 =·&를 \u003d로 바꾸지 않습니다
-    private static final int DEFAULT_LIMIT = 50;
-    static final String DEAL_COLUMNS = "id, source, source_post_id, post_url, title, shop, product, price, category, author, comments, hits, posted_at, first_seen_at, last_seen_at";
+    private static final Gson GSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().create(); // null도 키를 내보내고, URL의 =·&를 =로 바꾸지 않습니다
+    private static final Pattern PARAMETER = Pattern.compile("(?<![:\\w]):([A-Za-z_]\\w*)"); // "::timestamptz" 같은 캐스트는 제외
+    private static final Pattern PATH_VARIABLE = Pattern.compile("\\{([A-Za-z_]\\w*)}");
 
-    @OptionField(label = "JDBC URL (예: jdbc:postgresql://localhost:5432/hotdeal)")
+    @OptionField(label = "JDBC URL (예: jdbc:postgresql://localhost:5432/mydb)")
     private String url;
     @OptionField(label = "사용자")
     private String user;
     @OptionField(type = OptionInputType.SENSITIVE_TEXT, label = "비밀번호")
     private String password;
-    @OptionField(min = 1, label = "한 번에 내주는 최대 건수")
-    private int maxLimit = 200;
+    @OptionField(type = OptionInputType.TEXT_AREA, label = "라우트 (줄마다 /경로 = SQL, :이름은 ?이름=값 또는 {이름}에서)")
+    private String routes;
 
     // JDBC 연결은 스레드 안전하지 않아 요청을 하나씩 처리합니다. 수집 도구의 조회 API라 이 정도로 충분합니다.
     private Connection connection;
+    private List<Route> routeTable = List.of();
+
+    /** 경로 패턴과, :이름을 ?로 바꾼 SQL, 그리고 ?마다 채울 파라미터 이름입니다. */
+    record Route(Pattern path, List<String> variables, String sql, List<String> parameters) {
+        boolean hasVariables() { return !variables.isEmpty(); }
+    }
 
     public ApiServerNode(String id) {
         super(NodeType.API_SERVER, id, 8080);
     }
 
-    /** 클라이언트가 400을 받을 요청 오류입니다. */
-    static final class BadRequest extends Exception {
-        BadRequest(String message) { super(message); }
-    }
-
     @Override
     protected void onStart() {
         if (url == null || url.isBlank()) throw new IllegalStateException("JDBC URL이 비어 있습니다.");
+        routeTable = parseRoutes(routes);
+        if (routeTable.isEmpty()) throw new IllegalStateException("라우트가 비어 있습니다. 줄마다 \"/경로 = SQL\"을 적으세요.");
         try {
             connection = DriverManager.getConnection(url, user, password);
             connection.setReadOnly(true);
+            for (Route route : routeTable) { // SQL 오류는 시작 때 드러냅니다. 드라이버는 실행 전까지 서버에 보내지 않으므로 메타데이터를 요청해 파싱시킵니다.
+                try (PreparedStatement statement = connection.prepareStatement(route.sql())) { statement.getMetaData(); }
+            }
         } catch (SQLException e) {
-            throw new IllegalStateException("DB에 연결할 수 없습니다: " + e.getMessage(), e);
+            throw new IllegalStateException("DB 연결 또는 라우트 SQL 오류: " + e.getMessage().strip(), e);
         }
         super.onStart();
     }
@@ -85,90 +96,71 @@ public class ApiServerNode extends LocalHttpServerNode {
     protected int serve(HttpExchange exchange) throws IOException {
         if (!"GET".equals(exchange.getRequestMethod())) return json(exchange, 405, Map.of("error", "GET only"));
         String path = exchange.getRequestURI().getPath();
-        try {
-            if (path.equals("/health")) return json(exchange, 200, Map.of("status", "ok"));
-            if (path.equals("/deals")) return json(exchange, 200, listDeals(queryParameters(exchange.getRequestURI().getRawQuery())));
-            if (path.startsWith("/deals/")) {
-                Map<String, Object> deal = findDeal(URLDecoder.decode(path.substring("/deals/".length()), StandardCharsets.UTF_8));
-                return deal == null ? json(exchange, 404, Map.of("error", "not found: " + path)) : json(exchange, 200, deal);
+        for (Route route : routeTable) {
+            Matcher matcher = route.path().matcher(path);
+            if (!matcher.matches()) continue;
+            Map<String, String> params = queryParameters(exchange.getRequestURI().getRawQuery());
+            for (int i = 0; i < route.variables().size(); i++) {
+                params.put(route.variables().get(i), URLDecoder.decode(matcher.group(i + 1), StandardCharsets.UTF_8));
             }
-            return json(exchange, 404, Map.of("error", "not found: " + path));
-        } catch (BadRequest e) {
-            return json(exchange, 400, Map.of("error", e.getMessage()));
-        } catch (SQLException e) {
-            warn("조회 실패 (" + path + "): " + e.getMessage().strip());
-            return json(exchange, 500, Map.of("error", "database error"));
-        }
-    }
-
-    // 필터는 모두 선택이며, 조건과 바인딩 값을 같은 순서로 모아 SQL을 조립합니다. 값은 전부 파라미터입니다.
-    private Map<String, Object> listDeals(Map<String, String> params) throws BadRequest, SQLException {
-        List<String> conditions = new ArrayList<>();
-        List<Object> binds = new ArrayList<>();
-        if (params.containsKey("source")) { conditions.add("source = ?"); binds.add(params.get("source")); }
-        if (params.containsKey("since")) { conditions.add("posted_at >= ?::timestamptz"); binds.add(params.get("since")); }
-        if (params.containsKey("q")) { conditions.add("title ILIKE ?"); binds.add("%" + params.get("q") + "%"); }
-        int limit = integer(params, "limit", DEFAULT_LIMIT, 1, maxLimit);
-        int offset = integer(params, "offset", 0, 0, Integer.MAX_VALUE);
-        String where = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
-
-        Map<String, Object> result = new LinkedHashMap<>();
-        synchronized (connection) {
-            try (PreparedStatement count = connection.prepareStatement("SELECT count(*) FROM deals" + where)) {
-                bindAll(count, binds);
-                try (ResultSet rows = count.executeQuery()) { rows.next(); result.put("total", rows.getLong(1)); }
+            try {
+                List<Map<String, Object>> items = query(route, params);
+                if (items.isEmpty() && route.hasVariables()) return json(exchange, 404, Map.of("error", "not found: " + path));
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("items", items);
+                body.put("count", items.size());
+                return json(exchange, 200, body);
             } catch (SQLException e) {
-                if (!conditions.contains("posted_at >= ?::timestamptz")) throw e;
-                throw new BadRequest("since는 ISO 8601 시각이어야 합니다: " + params.get("since"));
-            }
-            try (PreparedStatement select = connection.prepareStatement("SELECT " + DEAL_COLUMNS + " FROM deals" + where
-                    + " ORDER BY posted_at DESC NULLS LAST, id LIMIT ? OFFSET ?")) {
-                bindAll(select, binds);
-                select.setInt(binds.size() + 1, limit);
-                select.setInt(binds.size() + 2, offset);
-                try (ResultSet rows = select.executeQuery()) { result.put("items", rows(rows)); }
+                String message = e.getMessage() == null ? e.getSQLState() : e.getMessage().strip();
+                if (e.getSQLState() != null && e.getSQLState().startsWith("22")) return json(exchange, 400, Map.of("error", message)); // 데이터 예외: 잘못된 파라미터 값
+                warn("조회 실패 (" + path + "): " + message);
+                return json(exchange, 500, Map.of("error", "database error"));
             }
         }
-        result.put("limit", limit);
-        result.put("offset", offset);
-        return result;
+        return json(exchange, 404, Map.of("error", "not found: " + path));
     }
 
-    /** 글 하나와 수집 이력입니다. 없으면 null입니다. */
-    private Map<String, Object> findDeal(String id) throws SQLException {
+    private List<Map<String, Object>> query(Route route, Map<String, String> params) throws SQLException {
         synchronized (connection) {
-            Map<String, Object> deal;
-            try (PreparedStatement select = connection.prepareStatement("SELECT " + DEAL_COLUMNS + " FROM deals WHERE id = ?")) {
-                select.setString(1, id);
-                try (ResultSet rows = select.executeQuery()) {
-                    List<Map<String, Object>> found = rows(rows);
-                    if (found.isEmpty()) return null;
-                    deal = found.get(0);
+            try (PreparedStatement statement = connection.prepareStatement(route.sql())) {
+                for (int i = 0; i < route.parameters().size(); i++) {
+                    String value = params.get(route.parameters().get(i));
+                    if (value == null) statement.setNull(i + 1, Types.NULL);
+                    else statement.setObject(i + 1, value, Types.OTHER); // 타입을 정하지 않고 보내 서버가 컬럼·캐스트에 맞춥니다.
                 }
+                try (ResultSet rows = statement.executeQuery()) { return rows(rows); }
             }
-            try (PreparedStatement select = connection.prepareStatement(
-                    "SELECT collected_at, price, comments, hits FROM deal_snapshots WHERE deal_id = ? ORDER BY collected_at")) {
-                select.setString(1, id);
-                try (ResultSet rows = select.executeQuery()) { deal.put("snapshots", rows(rows)); }
-            }
-            return deal;
         }
     }
 
-    private static void bindAll(PreparedStatement statement, List<Object> binds) throws SQLException {
-        for (int i = 0; i < binds.size(); i++) statement.setObject(i + 1, binds.get(i));
-    }
+    /** "/경로 = SQL" 줄들입니다. 경로의 {이름}은 변수이고, SQL의 :이름은 ?로 바뀌며 순서를 기억합니다. */
+    static List<Route> parseRoutes(String text) {
+        List<Route> table = new ArrayList<>();
+        for (Map.Entry<String, String> line : FieldMappings.parse(text).entrySet()) {
+            String path = line.getKey();
+            if (!path.startsWith("/")) throw new IllegalArgumentException("라우트 경로는 /로 시작해야 합니다: " + path);
+            List<String> variables = new ArrayList<>();
+            StringBuilder regex = new StringBuilder();
+            Matcher variable = PATH_VARIABLE.matcher(path);
+            int last = 0;
+            while (variable.find()) {
+                regex.append(Pattern.quote(path.substring(last, variable.start()))).append("([^/]+)");
+                variables.add(variable.group(1));
+                last = variable.end();
+            }
+            regex.append(Pattern.quote(path.substring(last)));
 
-    private static int integer(Map<String, String> params, String name, int fallback, int min, int max) throws BadRequest {
-        String value = params.get(name);
-        if (value == null) return fallback;
-        try {
-            int number = Integer.parseInt(value.strip());
-            if (number < min || number > max) throw new BadRequest(name + "은(는) " + min + "~" + max + " 사이여야 합니다.");
-            return number;
-        } catch (NumberFormatException e) {
-            throw new BadRequest(name + "은(는) 정수여야 합니다: " + value);
+            List<String> parameters = new ArrayList<>();
+            Matcher parameter = PARAMETER.matcher(line.getValue());
+            StringBuilder sql = new StringBuilder();
+            while (parameter.find()) {
+                parameters.add(parameter.group(1));
+                parameter.appendReplacement(sql, "?");
+            }
+            parameter.appendTail(sql);
+            table.add(new Route(Pattern.compile(regex.toString()), variables, sql.toString(), parameters));
         }
+        return table;
     }
 
     /** 결과 집합을 컬럼 이름 → 값 맵의 목록으로 바꿉니다. 시각은 ISO 8601 문자열입니다. */

@@ -24,10 +24,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** embedded PostgreSQL에 글 몇 개를 넣고, 노드가 띄운 API를 실제 HTTP로 호출합니다. */
+/** embedded PostgreSQL에 글 몇 개를 넣고, 라우트 옵션으로 만든 API를 실제 HTTP로 호출합니다. */
 class ApiServerNodeTest {
     private static EmbeddedPostgres postgres;
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
+
+    static final String ROUTES = """
+            /health = SELECT 'ok' AS status
+            /deals = SELECT id, source, title, price, shop, posted_at FROM deals \
+              WHERE (:source::text IS NULL OR source = :source) AND (:since::timestamptz IS NULL OR posted_at >= :since) \
+              AND (:q::text IS NULL OR title ILIKE '%' || :q || '%') \
+              ORDER BY posted_at DESC NULLS LAST, id LIMIT COALESCE(:limit::int, 50) OFFSET COALESCE(:offset::int, 0)
+            /deals/{id} = SELECT * FROM deals WHERE id = :id
+            /deals/{id}/snapshots = SELECT collected_at, price FROM deal_snapshots WHERE deal_id = :id ORDER BY collected_at
+            """;
 
     private final ApiServerNode node = new ApiServerNode("api01");
     private final TestNodes.Sink events = new TestNodes.Sink("sink01");
@@ -60,13 +70,17 @@ class ApiServerNodeTest {
     }
 
     @BeforeEach
-    void startNode() throws Exception {
+    void configure() {
         node.setUrl(postgres.getJdbcUrl("postgres", "postgres"));
         node.setUser("postgres");
         node.setPassword("postgres");
         node.setPort(0);
+        node.setRoutes(ROUTES);
         node.setWarningListener((n, m) -> warnings.add(m));
         node.connect(events);
+    }
+
+    private void start() throws Exception {
         node.start();
         events.start();
         assertNull(node.getFailure(), String.valueOf(node.getFailure()));
@@ -76,7 +90,8 @@ class ApiServerNodeTest {
     @AfterEach
     void stopNode() throws Exception {
         node.stop(); events.stop();
-        node.getThread().join(3_000); events.getThread().join(3_000);
+        if (node.getThread() != null) node.getThread().join(3_000);
+        if (events.getThread() != null) events.getThread().join(3_000);
     }
 
     private HttpResponse<String> get(String path) throws Exception {
@@ -95,19 +110,21 @@ class ApiServerNodeTest {
     }
 
     @Test
-    void listsDealsNewestFirstWithFieldsAsJson() throws Exception {
+    void routesReturnRowsAsJson() throws Exception {
+        start();
         HttpResponse<String> response = get("/deals");
         assertEquals(200, response.statusCode());
         assertEquals("application/json; charset=utf-8", response.headers().firstValue("Content-Type").orElse(null));
         assertEquals("*", response.headers().firstValue("Access-Control-Allow-Origin").orElse(null));
 
         JsonObject body = json(response);
-        assertEquals(List.of("ruliweb:2", "clien:1", "ppomppu:3", "clien:4"), ids(body), "최신 글부터, 날짜 없는 글은 마지막");
-        assertEquals(4, body.get("total").getAsInt());
+        assertEquals(List.of("ruliweb:2", "clien:1", "ppomppu:3", "clien:4"), ids(body), "SQL의 ORDER BY 그대로");
+        assertEquals(4, body.get("count").getAsInt());
         JsonObject first = body.getAsJsonArray("items").get(0).getAsJsonObject();
         assertEquals(4900, first.get("price").getAsInt(), "숫자는 숫자로");
         assertTrue(first.get("posted_at").getAsString().startsWith("2026-11-10T"), "시각은 ISO 8601: " + first.get("posted_at"));
-        assertTrue(first.get("shop").isJsonNull(), "비어 있는 값은 null");
+        assertTrue(first.get("shop").isJsonNull(), "비어 있는 값은 null로 키를 유지");
+        assertEquals("ok", json(get("/health")).getAsJsonArray("items").get(0).getAsJsonObject().get("status").getAsString());
 
         assertTrue(events.awaitMessages(1, 2_000));
         assertEquals("/deals", events.received.get(0).getString("path"));
@@ -115,47 +132,47 @@ class ApiServerNodeTest {
     }
 
     @Test
-    void filtersAndPagesTheList() throws Exception {
+    void queryStringAndPathVariablesFillNamedParameters() throws Exception {
+        start();
         assertEquals(List.of("clien:1", "clien:4"), ids(json(get("/deals?source=clien"))));
-        assertEquals(List.of("ruliweb:2", "clien:1"), ids(json(get("/deals?since=2026-11-10T00:00:00%2B09:00"))), "since는 posted_at 하한");
-        assertEquals(List.of("clien:1", "ppomppu:3"), ids(json(get("/deals?q=%ED%82%A4%EB%B3%B4%EB%93%9C"))), "q는 제목 검색(키보드)");
+        assertEquals(List.of("ruliweb:2", "clien:1"), ids(json(get("/deals?since=2026-11-10T00:00:00%2B09:00"))), ":since를 두 번 써도 됨");
+        assertEquals(List.of("clien:1", "ppomppu:3"), ids(json(get("/deals?q=%ED%82%A4%EB%B3%B4%EB%93%9C"))), "키보드");
+        assertEquals(List.of("clien:1", "ppomppu:3"), ids(json(get("/deals?limit=2&offset=1"))));
 
-        JsonObject page = json(get("/deals?limit=2&offset=1"));
-        assertEquals(List.of("clien:1", "ppomppu:3"), ids(page));
-        assertEquals(4, page.get("total").getAsInt(), "total은 필터 기준 전체 수");
-        assertEquals(2, page.get("limit").getAsInt());
-        assertEquals(1, page.get("offset").getAsInt());
-    }
-
-    @Test
-    void returnsOneDealWithItsSnapshotHistory() throws Exception {
-        HttpResponse<String> response = get("/deals/clien%3A1"); // 콜론을 인코딩해도, 그대로 보내도 됩니다
-        assertEquals(200, response.statusCode());
-        JsonObject deal = json(response);
-        assertEquals("무선 키보드", deal.get("title").getAsString());
-        JsonArray snapshots = deal.getAsJsonArray("snapshots");
+        JsonObject deal = json(get("/deals/clien%3A1"));
+        assertEquals("무선 키보드", deal.getAsJsonArray("items").get(0).getAsJsonObject().get("title").getAsString(), "경로 변수");
+        JsonArray snapshots = json(get("/deals/clien:1/snapshots")).getAsJsonArray("items");
         assertEquals(2, snapshots.size());
-        assertEquals(39900, snapshots.get(0).getAsJsonObject().get("price").getAsInt(), "수집 시각순");
-        assertEquals(35900, snapshots.get(1).getAsJsonObject().get("price").getAsInt());
-        assertTrue(snapshots.get(1).getAsJsonObject().get("collected_at").getAsString().contains("T"), "ISO 8601");
-
-        assertEquals(0, json(get("/deals/clien:4")).getAsJsonArray("snapshots").size(), "이력이 없으면 빈 배열");
-        assertEquals(404, get("/deals/nope:1").statusCode());
-        assertEquals(404, get("/deals/").statusCode());
+        assertEquals(35900, snapshots.get(1).getAsJsonObject().get("price").getAsInt(), "수집 시각순");
+        assertEquals(404, get("/deals/nope:1").statusCode(), "경로 변수가 있는 라우트는 결과가 없으면 404");
+        assertEquals(0, json(get("/deals?source=nope")).get("count").getAsInt(), "변수 없는 라우트는 빈 목록");
     }
 
     @Test
-    void badInputAndUnknownPathsAreClientErrors() throws Exception {
-        assertEquals(400, get("/deals?limit=0").statusCode());
-        assertEquals(400, get("/deals?limit=abc").statusCode());
-        assertEquals(400, get("/deals?limit=1000").statusCode(), "maxLimit 초과");
-        HttpResponse<String> badSince = get("/deals?since=not-a-date"); // "yesterday"는 PostgreSQL이 실제로 받아들이는 표현
-        assertEquals(400, badSince.statusCode());
-        assertTrue(json(badSince).get("error").getAsString().contains("since"), badSince.body());
+    void badValuesUnknownPathsAndMethodsAreClientErrors() throws Exception {
+        start();
+        HttpResponse<String> badLimit = get("/deals?limit=abc");
+        assertEquals(400, badLimit.statusCode(), badLimit.body());
+        assertEquals(400, get("/deals?since=not-a-date").statusCode());
         assertEquals(404, get("/nothing").statusCode());
         assertEquals(405, CLIENT.send(HttpRequest.newBuilder(URI.create(base + "/deals")).POST(HttpRequest.BodyPublishers.noBody()).build(),
                 HttpResponse.BodyHandlers.ofString()).statusCode());
-        assertEquals("ok", json(get("/health")).get("status").getAsString());
         assertEquals(List.of(), warnings, "클라이언트 오류는 경고가 아님");
+    }
+
+    @Test
+    void badRouteSqlFailsAtStart() throws Exception {
+        node.setRoutes("/x = SELEC 1");
+        node.start();
+        node.getThread().join(5_000);
+        assertNotNull(node.getFailure());
+        assertTrue(node.getFailure().getMessage().startsWith("DB 연결 또는 라우트 SQL 오류"), node.getFailure().getMessage());
+
+        ApiServerNode.Route route = ApiServerNode.parseRoutes("/a/{x}/b = SELECT :x, :y::int, :x").get(0);
+        assertEquals("SELECT ?, ?::int, ?", route.sql());
+        assertEquals(List.of("x", "y", "x"), route.parameters());
+        assertEquals(List.of("x"), route.variables());
+        assertTrue(route.path().matcher("/a/clien:1/b").matches());
+        assertThrows(IllegalArgumentException.class, () -> ApiServerNode.parseRoutes("deals = SELECT 1"), "경로는 /로 시작");
     }
 }
