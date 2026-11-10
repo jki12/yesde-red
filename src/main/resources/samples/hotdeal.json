@@ -4,12 +4,13 @@
   "nodes": [
     {
       "id": "hd0001",
-      "type": "INJECT",
+      "type": "SCHEDULE",
       "x": 40,
       "y": 40,
       "options": {
+        "cron": "*/10 * * * *",
         "message": "clien",
-        "intervalMillis": 600000
+        "runOnStart": true
       }
     },
     {
@@ -47,12 +48,13 @@
     },
     {
       "id": "hd0011",
-      "type": "INJECT",
+      "type": "SCHEDULE",
       "x": 40,
       "y": 180,
       "options": {
+        "cron": "*/10 * * * *",
         "message": "ruliweb",
-        "intervalMillis": 600000
+        "runOnStart": true
       }
     },
     {
@@ -90,12 +92,13 @@
     },
     {
       "id": "hd0031",
-      "type": "INJECT",
+      "type": "SCHEDULE",
       "x": 40,
       "y": 320,
       "options": {
+        "cron": "*/10 * * * *",
         "message": "ppomppu",
-        "intervalMillis": 600000
+        "runOnStart": true
       }
     },
     {
