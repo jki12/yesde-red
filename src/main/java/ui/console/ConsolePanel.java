@@ -197,13 +197,13 @@ public class ConsolePanel extends JPanel {
     }
 
     public void append(String source, String text) {
-        LogEntry entry = new LogEntry(TIME.format(LocalTime.now()), source, text);
+        String time = TIME.format(LocalTime.now()); // 호출 시점의 시각입니다. EDT로 넘어가며 늦어져도 바뀌지 않습니다.
 
         Runnable append = () -> {
             boolean wasScrolledToBottom = isScrolledToBottom();
             int row = model.getRowCount();
 
-            model.addRow(new Object[] {entry.time(), entry.source(), entry.text()});
+            model.addRow(new Object[] {time, source, text});
             updateRowHeight(row); // 새 행 하나의 높이만 계산합니다.
             countLabel.setText(getLogCountText());
 
@@ -233,8 +233,5 @@ public class ConsolePanel extends JPanel {
 
     private String getLogText(int index) {
         return (String) model.getValueAt(index, 2);
-    }
-
-    private record LogEntry(String time, String source, String text) {
     }
 }
