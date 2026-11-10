@@ -37,8 +37,8 @@ public class WorkspacePanel extends JPanel {
     private final NodeListPanel nodeList = new NodeListPanel();
     private final StatusBar statusBar = new StatusBar();
     // 실행은 IDLE이고 노드가 있을 때, 종료는 RUNNING일 때만 누를 수 있습니다. refreshCurrentBoardView()가 맞춥니다.
-    private final JButton runButton = UiTheme.button("실행");
-    private final JButton stopButton = UiTheme.button("종료");
+    private final JButton runButton = new JButton("실행");
+    private final JButton stopButton = new JButton("종료");
 
     // 배경 탭의 보드 이벤트는 화면을 갱신하지 않지만, 콘솔은 모든 보드가 공유하므로 실패·경고는 보드를 가리지 않고 기록합니다.
     private final PropertyChangeListener boardListener = e -> { if (e.getSource() == getSelectedBoard()) refreshCurrentBoardView(); };
@@ -121,7 +121,7 @@ public class WorkspacePanel extends JPanel {
         JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         rightActions.setOpaque(false);
 
-        JButton addNode = UiTheme.button("노드 추가");
+        JButton addNode = new JButton("노드 추가");
         addNode.setIcon(Codicons.icon("add"));
         addNode.addActionListener(e -> {
             BoardPanel board = getSelectedBoard();
@@ -136,7 +136,7 @@ public class WorkspacePanel extends JPanel {
         stopButton.setIcon(Codicons.icon("debug-stop"));
         stopButton.addActionListener(new StopAction(this::getSelectedBoard));
 
-        JButton newFlow = UiTheme.button("새 워크플로");
+        JButton newFlow = new JButton("새 워크플로");
         newFlow.setIcon(Codicons.icon("new-file"));
         newFlow.addActionListener(e -> tabPanel.addBoardTab());
 

@@ -20,7 +20,7 @@ public final class NodeOptionsEditor {
     private boolean editingEnabled;
     private final JPanel panel = new JPanel();
     private final Map<Field, OptionInput> inputs = new LinkedHashMap<>();
-    private final JButton apply = UiTheme.button("적용");
+    private final JButton apply = new JButton("적용");
     private final JLabel feedback = UiTheme.label("실행 전에 설정을 적용하세요.", false);
 
     public NodeOptionsEditor(BaseNode node, BooleanSupplier boardEditable) {

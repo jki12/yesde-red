@@ -90,7 +90,7 @@ public class ConsolePanel extends JPanel {
         autoScrollBox.setFont(UiTheme.getFont());
         autoScrollBox.setForeground(UiTheme.getTextColor());
 
-        JButton clear = UiTheme.button("로그 비우기");
+        JButton clear = new JButton("로그 비우기");
         clear.setIcon(Codicons.icon("clear-all", 16));
         clear.addActionListener(e -> clear());
 

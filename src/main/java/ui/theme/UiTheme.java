@@ -24,10 +24,6 @@ public final class UiTheme {
         return label;
     }
 
-    public static JButton button(String text) {
-        return new JButton(text);
-    }
-
     // 실제 색상 값은 FlatLightLaf.properties에서 관리
     public static Color getBackgroundColor() {
         return UIManager.getColor("TextField.background");

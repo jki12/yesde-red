@@ -10,46 +10,14 @@ import java.awt.event.*;
 import java.util.Locale;
 
 public class NodeTypeListPanel extends JScrollPane {
-    private final String[] typeNames = NodeFactory.getTypeNames();
-    private final JList<String> suggestions;
+    private final JList<NodeType> suggestions = new JList<>(new DefaultListModel<>());
     private final JLabel empty = UiTheme.label("검색 결과가 없습니다", true);
 
     public NodeTypeListPanel() {
-        suggestions = new JList<>(new DefaultListModel<>());
-
         suggestions.setFixedCellHeight(44);
         suggestions.setVisibleRowCount(5);
         suggestions.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        suggestions.setCellRenderer((list, value, index, selected, focus) -> {
-            NodeType type = NodeType.valueOf(value);
-
-            JPanel row = new JPanel(new BorderLayout(8, 0));
-            row.setBackground(selected ? list.getSelectionBackground() : list.getBackground());
-            row.setBorder(BorderFactory.createEmptyBorder(5, 12, 5, 12));
-
-            JLabel icon = new JLabel(NodeFactory.getIcon(type));
-            icon.setForeground(selected ? list.getSelectionForeground() : list.getForeground());
-            row.add(icon, BorderLayout.WEST);
-            JPanel text = new JPanel(new GridLayout(2, 1));
-            text.setOpaque(false);
-
-            JLabel title = UiTheme.label(NodeFactory.getDisplayName(type), false);
-            title.setForeground(selected ? list.getSelectionForeground() : list.getForeground());
-            text.add(title);
-
-            // 노드 타입.
-            JLabel code = UiTheme.label(value, true);
-            code.setFont(UiTheme.getNodeTypeFont());
-            if (selected) code.setForeground(list.getSelectionForeground());
-            text.add(code);
-            row.add(text, BorderLayout.CENTER);
-
-            row.setSize(Math.max(100, list.getWidth()), 44);
-            row.doLayout();
-            text.doLayout();
-            return row;
-        });
+        suggestions.setCellRenderer(new Renderer());
 
         empty.setHorizontalAlignment(SwingConstants.CENTER);
         getViewport().setBackground(UiTheme.getBackgroundColor());
@@ -92,6 +60,19 @@ public class NodeTypeListPanel extends JScrollPane {
         });
     }
 
+    /** 표시명 아래에 타입 이름을 작게 보여주는 두 줄 셀입니다. */
+    private static final class Renderer extends DefaultListCellRenderer {
+        @Override public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
+            super.getListCellRendererComponent(list, value, index, selected, focus);
+            NodeType type = (NodeType) value;
+            setText("<html>" + type.getDisplayName() + "<br><font size=-2>" + type.name() + "</font></html>");
+            setIcon(NodeFactory.getIcon(type));
+            setIconTextGap(8);
+            setBorder(BorderFactory.createEmptyBorder(5, 12, 5, 12));
+            return this;
+        }
+    }
+
     public void reset() {
         updateSuggestions("");
 
@@ -99,23 +80,17 @@ public class NodeTypeListPanel extends JScrollPane {
     }
 
     public void updateSuggestions(String text) {
-        DefaultListModel<String> currentListModel = ((DefaultListModel<String>) suggestions.getModel());
-        currentListModel.clear();
+        DefaultListModel<NodeType> model = (DefaultListModel<NodeType>) suggestions.getModel();
+        model.clear();
 
-        if (text == null) {
-            text = "";
+        String query = text == null ? "" : text.strip().toLowerCase(Locale.ROOT);
+        for (NodeType type : NodeType.values()) {
+            if ((type.name() + " " + type.getDisplayName()).toLowerCase(Locale.ROOT).contains(query)) model.addElement(type);
         }
 
-        String query = text.strip().toLowerCase(Locale.ROOT);
-        for (String typeName : typeNames) {
-            if ((typeName + " " + NodeFactory.getDisplayName(NodeType.valueOf(typeName))).toLowerCase(Locale.ROOT).contains(query)) {
-                currentListModel.addElement(typeName);
-            }
-        }
-
-        Component view = currentListModel.isEmpty() ? empty : suggestions;
+        Component view = model.isEmpty() ? empty : suggestions;
         if (getViewport().getView() != view) setViewportView(view);
-        if (!currentListModel.isEmpty()) suggestions.setSelectedIndex(0);
+        if (!model.isEmpty()) suggestions.setSelectedIndex(0);
     }
 
     public void focusSearchResults() {
@@ -126,7 +101,8 @@ public class NodeTypeListPanel extends JScrollPane {
     }
 
     public void addSelectedNode() {
-        if (suggestions.getSelectedValue() == null) return;
+        NodeType type = suggestions.getSelectedValue();
+        if (type == null) return;
 
         JPopupMenu popup = (JPopupMenu) getParent();
         if (popup.getInvoker() instanceof BoardPanel board) {
@@ -134,7 +110,7 @@ public class NodeTypeListPanel extends JScrollPane {
             SwingUtilities.convertPointFromScreen(location, board);
 
             try {
-                board.addNode(NodeType.valueOf(suggestions.getSelectedValue()), location);
+                board.addNode(type, location);
             }
             catch (RuntimeException error) { // 포트 사용 중이거나 이상한 값이 들어왔을 경우
                 JOptionPane.showMessageDialog(board, error.getMessage(), "노드를 만들 수 없습니다",

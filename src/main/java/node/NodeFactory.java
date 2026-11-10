@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import ui.theme.Codicons;
 
 import javax.swing.Icon;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -13,16 +12,6 @@ import java.util.Map;
 public class NodeFactory {
     private static final int ICON_SIZE = 18;
     private static final Map<NodeType, Icon> ICONS = new EnumMap<>(NodeType.class);
-
-    public static String[] getTypeNames() {
-        return Arrays.stream(NodeType.values())
-                .map(Enum::toString)
-                .toArray(String[]::new);
-    }
-
-    public static String getDisplayName(NodeType type) {
-        return type.getDisplayName();
-    }
 
     /** 타입별 아이콘은 한 번만 만들어 재사용합니다. */
     public static synchronized Icon getIcon(NodeType type) {
