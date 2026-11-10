@@ -12,7 +12,7 @@
         "directory": "mock-data",
         "delayMillis": 0,
         "routes": "",
-        "failEvery": 0
+        "failEvery": 4
       }
     },
     {
@@ -41,7 +41,9 @@
         "url": "http://127.0.0.1:8099/clien.html",
         "userAgent": "yesde-red/1.0",
         "timeoutMillis": 15000,
-        "minIntervalMillis": 0
+        "minIntervalMillis": 0,
+        "maxRetries": 2,
+        "retryDelayMillis": 500
       }
     },
     {
@@ -84,7 +86,9 @@
         "url": "http://127.0.0.1:8099/ruliweb.rss",
         "userAgent": "yesde-red/1.0",
         "timeoutMillis": 15000,
-        "minIntervalMillis": 0
+        "minIntervalMillis": 0,
+        "maxRetries": 2,
+        "retryDelayMillis": 500
       }
     },
     {
@@ -127,7 +131,9 @@
         "url": "http://127.0.0.1:8099/ppomppu.rss",
         "userAgent": "yesde-red/1.0",
         "timeoutMillis": 15000,
-        "minIntervalMillis": 0
+        "minIntervalMillis": 0,
+        "maxRetries": 2,
+        "retryDelayMillis": 500
       }
     },
     {

@@ -34,7 +34,7 @@
 | 노드 | 역할 | 주요 옵션 |
 |---|---|---|
 | 메시지 주입 | 간격마다 메시지를 보냅니다. 흐름의 시작점 | `message`, `intervalMillis` |
-| HTTP 요청 | payload의 `url`(없으면 옵션 URL)을 GET으로 호출해 `url`·`status`·`contentType`·`body`를 더합니다 | URL, 헤더, User-Agent, 타임아웃, 요청 사이 최소 간격 |
+| HTTP 요청 | payload의 `url`(없으면 옵션 URL)을 GET으로 호출해 `url`·`status`·`contentType`·`body`를 더합니다. 연결 실패·타임아웃·429·5xx는 대기를 두 배씩 늘리며 재시도하고(기본 2회, 첫 대기 1초), 4xx는 바로 건너뜁니다 | URL, 헤더, User-Agent, 타임아웃, 요청 사이 최소 간격, 재시도 횟수, 첫 재시도 대기 |
 | HTML 추출 | `body`(HTML 또는 XML/RSS)에서 CSS 선택자로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 선택자, 필드(`이름 = 선택자 [@속성]`), XML/RSS로 파싱 |
 | JSON 추출 | `body`(JSON)에서 경로로 항목마다 메시지를 만들고 필드를 뽑습니다 | 항목 경로(`data.items[*]`), 필드(`이름 = 경로`) |
 | 파일 저장 | 메시지를 CSV 또는 JSON Lines로 한 줄씩 기록합니다 | 파일 경로, 형식, 기록할 필드, 이어 쓰기 |
@@ -81,7 +81,7 @@
 - `hotdeal.json`: 클리앙 알뜰구매(HTML), 루리웹 핫딜(RSS), 뽐뿌(RSS)를 10분마다 받아, 출처별 필드 변환 노드가 공통 스키마(`id`, `source`, `source_post_id`, `post_url`, `title`, `shop`, `product`, `price`, `category`, `author`, `comments`, `hits`, `posted_at`, `collected_at`)로 맞춘 뒤 중복 제거 노드가 `id` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 글은 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다. 사이트가 RSS를 제공하면 HTML 목록보다 RSS가 안정적이고 예의 바른 경로입니다
 
 - `mock-hotdeal-db.json`: 같은 Mock 파이프라인의 결과를 CSV 대신 **PostgreSQL**에 넣습니다. `docker compose up -d`로 DB를 띄운 뒤 실행하면 `deals`에 9행이 들어가고, 15초마다 다시 수집될 때 행은 늘지 않고 `last_seen_at`과 `deal_snapshots`만 쌓입니다. 중복 제거 노드는 두지 않습니다. 갱신까지 DB가 맡기 때문입니다
-- `mock-hotdeal.json`: 위 핫딜 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버 노드가 `mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 같은 추출·변환·중복 제거 흐름이 `output/mock-hotdeal.csv`에 9건을 씁니다. 새 노드를 만들 때 입력을 고정하는 용도로도 씁니다
+- `mock-hotdeal.json`: 위 핫딜 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버가 4번째 요청마다 500을 내도록 돼 있어, HTTP 요청 노드의 재시도가 메우는 것을 콘솔(요청 이벤트의 `status`)에서 볼 수 있습니다. Mock 서버 노드가 `mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 같은 추출·변환·중복 제거 흐름이 `output/mock-hotdeal.csv`에 9건을 씁니다. 새 노드를 만들 때 입력을 고정하는 용도로도 씁니다
 
 수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
 
