@@ -99,14 +99,14 @@ price != null and price < 20000 and title contains "키보드"
 - `html-list.json`: Hacker News 첫 페이지 제목·링크를 5분마다 `output/hackernews.csv`에 기록
 - `hotdeal.json`(스케줄 노드가 10분마다 수집, 실행 즉시 한 번): 클리앙 알뜰구매(HTML), 루리웹 핫딜(RSS), 뽐뿌(RSS)를 10분마다 받아, 출처별 필드 변환 노드가 공통 스키마(`id`, `source`, `source_post_id`, `post_url`, `title`, `shop`, `product`, `price`, `category`, `author`, `comments`, `hits`, `posted_at`, `collected_at`)로 맞춘 뒤 중복 제거 노드가 `id` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 글은 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다. 사이트가 RSS를 제공하면 HTML 목록보다 RSS가 안정적이고 예의 바른 경로입니다
 
-- `mock-hotdeal-db.json`: 같은 Mock 파이프라인의 결과를 CSV 대신 **PostgreSQL**에 넣고, API 서버 노드가 `http://127.0.0.1:8080/deals`로 내줍니다. `docker compose up -d`로 DB를 띄운 뒤 실행하면 `deals`에 9행이 들어가고, 15초마다 다시 수집될 때 행은 늘지 않고 `last_seen_at`과 `deal_snapshots`만 쌓입니다. 중복 제거 노드는 두지 않습니다. 갱신까지 DB가 맡기 때문입니다
-- `mock-hotdeal.json`: 위 핫딜 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버가 4번째 요청마다 500을 내도록 돼 있어, HTTP 요청 노드의 재시도가 메우는 것을 콘솔(요청 이벤트의 `status`)에서 볼 수 있습니다. 2만원 미만 딜은 조건 필터를 지나 웹훅 알림 노드가 Mock 서버의 `/webhook`으로 POST하므로, 콘솔에 `POST /webhook 204` 이벤트가 알림 수만큼 찍힙니다. Mock 서버 노드가 `mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 같은 추출·변환·중복 제거 흐름이 `output/mock-hotdeal.csv`에 9건을 씁니다. 새 노드를 만들 때 입력을 고정하는 용도로도 씁니다
+- `mock-hotdeal-db.json`: 같은 Mock 파이프라인의 결과를 CSV 대신 **PostgreSQL**에 넣고, API 서버 노드가 `http://127.0.0.1:8080/deals`로 내줍니다. `samples/hotdeal`에서 `docker compose up -d`로 DB를 띄운 뒤 실행하면 `deals`에 9행이 들어가고, 15초마다 다시 수집될 때 행은 늘지 않고 `last_seen_at`과 `deal_snapshots`만 쌓입니다. 중복 제거 노드는 두지 않습니다. 갱신까지 DB가 맡기 때문입니다
+- `mock-hotdeal.json`: 위 핫딜 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버가 4번째 요청마다 500을 내도록 돼 있어, HTTP 요청 노드의 재시도가 메우는 것을 콘솔(요청 이벤트의 `status`)에서 볼 수 있습니다. 2만원 미만 딜은 조건 필터를 지나 웹훅 알림 노드가 Mock 서버의 `/webhook`으로 POST하므로, 콘솔에 `POST /webhook 204` 이벤트가 알림 수만큼 찍힙니다. Mock 서버 노드가 `samples/hotdeal/mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 같은 추출·변환·중복 제거 흐름이 `output/mock-hotdeal.csv`에 9건을 씁니다. 새 노드를 만들 때 입력을 고정하는 용도로도 씁니다
 
 수집 대상 사이트의 이용약관과 robots.txt를 확인하고, 요청 사이 간격을 충분히 두세요.
 
 ## DB
 
-수집 결과를 사이트 백엔드가 읽을 PostgreSQL에 넣습니다. 스키마는 `db/schema.sql`입니다.
+수집 결과를 사이트 백엔드가 읽을 PostgreSQL에 넣습니다. 스키마는 `samples/hotdeal/schema.sql`입니다.
 
 - `deals`: 글 하나에 한 행. 키는 `id`(`출처:글번호`)이고, 같은 글이 다시 수집되면 가격·댓글·조회수와 `last_seen_at`만 갱신됩니다.
 - `deal_snapshots`: 수집할 때마다 한 행. 가격 추이의 재료입니다.
@@ -114,7 +114,7 @@ price != null and price < 20000 and title contains "키보드"
 로컬에서는 Docker로 띄웁니다. 처음 기동할 때 스키마가 자동으로 만들어집니다.
 
 ```
-docker compose up -d
+cd samples/hotdeal && docker compose up -d
 # jdbc:postgresql://localhost:5432/hotdeal  (사용자·비밀번호 hotdeal)
 ```
 

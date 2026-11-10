@@ -48,7 +48,7 @@ class ApiServerNodeTest {
     static void startDatabase() throws Exception {
         postgres = EmbeddedPostgres.start();
         try (Connection connection = postgres.getPostgresDatabase().getConnection(); Statement statement = connection.createStatement()) {
-            statement.execute(Files.readString(Path.of("db/schema.sql")));
+            statement.execute(Files.readString(Path.of("samples/hotdeal/schema.sql")));
             statement.execute("""
                 INSERT INTO deals (id, source, source_post_id, post_url, title, price, posted_at) VALUES
                   ('clien:1',   'clien',   '1', 'u1', '무선 키보드',   39900, '2026-11-10T09:00:00+09:00'),

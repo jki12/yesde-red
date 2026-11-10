@@ -9,7 +9,7 @@
       "y": 40,
       "options": {
         "port": 8099,
-        "directory": "mock-data",
+        "directory": "samples/hotdeal/mock-data",
         "delayMillis": 0,
         "routes": "",
         "failEvery": 0

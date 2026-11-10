@@ -29,7 +29,7 @@ class DbWriteNodeTest {
         postgres = EmbeddedPostgres.start();
         url = postgres.getJdbcUrl("postgres", "postgres");
         try (Connection connection = postgres.getPostgresDatabase().getConnection(); Statement statement = connection.createStatement()) {
-            statement.execute(Files.readString(Path.of("db/schema.sql")));
+            statement.execute(Files.readString(Path.of("samples/hotdeal/schema.sql")));
         }
     }
 

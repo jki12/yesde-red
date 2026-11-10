@@ -1,5 +1,5 @@
--- 핫딜모음 수집 DB 스키마 (PostgreSQL).
--- yesde-red의 DB 저장 노드가 쓰고, 사이트 백엔드가 읽습니다. docker compose가 처음 기동할 때 자동으로 실행합니다.
+-- 핫딜 샘플의 DB 스키마 (PostgreSQL). DB 저장 노드가 쓰고 API 서버 노드와 사이트 백엔드가 읽습니다.
+-- 이 폴더의 docker compose가 처음 기동할 때 자동으로 실행합니다.
 
 -- 글 하나에 한 행. 같은 글이 다시 수집되면 행을 늘리지 않고 변하는 값(가격·댓글·조회수)만 갱신합니다.
 CREATE TABLE IF NOT EXISTS deals (
