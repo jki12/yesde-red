@@ -10,7 +10,6 @@ import node.Outputable;
 import node.option.OptionField;
 import node.option.OptionInputType;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class TransformNode extends BaseNode implements Inputable, Outputable {
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("변환 규칙 오류: " + e.getMessage(), e);
         }
-        keptFields = parseKeep();
+        keptFields = FieldMappings.names(keep);
     }
 
     @Override
@@ -61,15 +60,5 @@ public class TransformNode extends BaseNode implements Inputable, Outputable {
             transformed = pruned;
         }
         send(new Message(transformed));
-    }
-
-    private List<String> parseKeep() {
-        if (keep == null || keep.isBlank()) return null;
-        List<String> names = new ArrayList<>();
-        for (String line : keep.split("\\R")) {
-            String name = line.strip();
-            if (!name.isEmpty() && !name.startsWith("#")) names.add(name);
-        }
-        return names.isEmpty() ? null : names;
     }
 }

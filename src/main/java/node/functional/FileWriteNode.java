@@ -60,7 +60,7 @@ public class FileWriteNode extends BaseNode implements Inputable {
             writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
                     append ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING);
             headerPending = format == Format.CSV && !resume; // 이어 쓰는 파일에는 머리글을 다시 쓰지 않습니다.
-            columns = configuredColumns();
+            columns = FieldMappings.names(fields);
         } catch (IOException e) {
             throw new IllegalStateException("파일을 열 수 없습니다: " + path + " (" + e.getMessage() + ")", e);
         }
@@ -90,16 +90,6 @@ public class FileWriteNode extends BaseNode implements Inputable {
         } finally {
             writer = null;
         }
-    }
-
-    private List<String> configuredColumns() {
-        if (fields == null || fields.isBlank()) return null;
-        List<String> names = new ArrayList<>();
-        for (String line : fields.split("\\R")) {
-            String name = line.strip();
-            if (!name.isEmpty() && !name.startsWith("#")) names.add(name);
-        }
-        return names.isEmpty() ? null : names;
     }
 
     private Map<String, Object> selected(Message message) {
