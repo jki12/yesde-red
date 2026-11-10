@@ -46,6 +46,11 @@ class ApiServerNodeTest {
                   ('ppomppu:3', 'ppomppu', '3', 'u3', '기계식 키보드', 89000, '2026-11-09T23:00:00+09:00'),
                   ('clien:4',   'clien',   '4', 'u4', '날짜 없는 글',  NULL,  NULL)
                 """);
+            statement.execute("""
+                INSERT INTO deal_snapshots (deal_id, collected_at, price, comments, hits) VALUES
+                  ('clien:1', '2026-11-10T09:15:00+09:00', 39900, 2, 100),
+                  ('clien:1', '2026-11-10T09:30:00+09:00', 35900, 5, 240)
+                """);
         }
     }
 
@@ -120,6 +125,23 @@ class ApiServerNodeTest {
         assertEquals(4, page.get("total").getAsInt(), "total은 필터 기준 전체 수");
         assertEquals(2, page.get("limit").getAsInt());
         assertEquals(1, page.get("offset").getAsInt());
+    }
+
+    @Test
+    void returnsOneDealWithItsSnapshotHistory() throws Exception {
+        HttpResponse<String> response = get("/deals/clien%3A1"); // 콜론을 인코딩해도, 그대로 보내도 됩니다
+        assertEquals(200, response.statusCode());
+        JsonObject deal = json(response);
+        assertEquals("무선 키보드", deal.get("title").getAsString());
+        JsonArray snapshots = deal.getAsJsonArray("snapshots");
+        assertEquals(2, snapshots.size());
+        assertEquals(39900, snapshots.get(0).getAsJsonObject().get("price").getAsInt(), "수집 시각순");
+        assertEquals(35900, snapshots.get(1).getAsJsonObject().get("price").getAsInt());
+        assertTrue(snapshots.get(1).getAsJsonObject().get("collected_at").getAsString().contains("T"), "ISO 8601");
+
+        assertEquals(0, json(get("/deals/clien:4")).getAsJsonArray("snapshots").size(), "이력이 없으면 빈 배열");
+        assertEquals(404, get("/deals/nope:1").statusCode());
+        assertEquals(404, get("/deals/").statusCode());
     }
 
     @Test

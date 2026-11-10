@@ -29,6 +29,7 @@ import java.util.Map;
  * <pre>
  *   GET /health                       {"status":"ok"}
  *   GET /deals?source=&since=&q=&limit=&offset=   최신 글부터. source는 출처, since는 posted_at 하한(ISO 8601), q는 제목 검색
+ *   GET /deals/{id}                   글 하나와 수집 이력(snapshots: 시각순 가격·댓글·조회수)
  * </pre>
  * 잘못된 파라미터는 400, 없는 경로는 404, DB 오류는 500이며 경고로도 남깁니다. 응답에는 CORS 허용 헤더가 붙습니다.
  */
@@ -87,6 +88,10 @@ public class ApiServerNode extends LocalHttpServerNode {
         try {
             if (path.equals("/health")) return json(exchange, 200, Map.of("status", "ok"));
             if (path.equals("/deals")) return json(exchange, 200, listDeals(queryParameters(exchange.getRequestURI().getRawQuery())));
+            if (path.startsWith("/deals/")) {
+                Map<String, Object> deal = findDeal(URLDecoder.decode(path.substring("/deals/".length()), StandardCharsets.UTF_8));
+                return deal == null ? json(exchange, 404, Map.of("error", "not found: " + path)) : json(exchange, 200, deal);
+            }
             return json(exchange, 404, Map.of("error", "not found: " + path));
         } catch (BadRequest e) {
             return json(exchange, 400, Map.of("error", e.getMessage()));
@@ -127,6 +132,27 @@ public class ApiServerNode extends LocalHttpServerNode {
         result.put("limit", limit);
         result.put("offset", offset);
         return result;
+    }
+
+    /** 글 하나와 수집 이력입니다. 없으면 null입니다. */
+    private Map<String, Object> findDeal(String id) throws SQLException {
+        synchronized (connection) {
+            Map<String, Object> deal;
+            try (PreparedStatement select = connection.prepareStatement("SELECT " + DEAL_COLUMNS + " FROM deals WHERE id = ?")) {
+                select.setString(1, id);
+                try (ResultSet rows = select.executeQuery()) {
+                    List<Map<String, Object>> found = rows(rows);
+                    if (found.isEmpty()) return null;
+                    deal = found.get(0);
+                }
+            }
+            try (PreparedStatement select = connection.prepareStatement(
+                    "SELECT collected_at, price, comments, hits FROM deal_snapshots WHERE deal_id = ? ORDER BY collected_at")) {
+                select.setString(1, id);
+                try (ResultSet rows = select.executeQuery()) { deal.put("snapshots", rows(rows)); }
+            }
+            return deal;
+        }
     }
 
     private static void bindAll(PreparedStatement statement, List<Object> binds) throws SQLException {
