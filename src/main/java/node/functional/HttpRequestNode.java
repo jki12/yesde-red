@@ -2,6 +2,7 @@ package node.functional;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import node.BaseNode;
 import node.Inputable;
 import node.Message;
@@ -21,8 +22,10 @@ import java.util.Map;
 
 /**
  * 메시지를 받을 때마다 URL을 GET으로 호출하고 응답을 payload에 더해 넘깁니다.
- * URL은 들어온 payload의 url 필드를 우선 쓰고, 없으면 옵션의 URL을 씁니다. 실패한 요청은 경고만 남기고 건너뜁니다.
+ * URL은 들어온 payload의 url 필드를 우선 쓰고, 없으면 옵션의 URL을 씁니다.
+ * 연결 실패·타임아웃·429·5xx는 대기 시간을 두 배씩 늘리며 재시도하고, 그래도 안 되면 경고만 남기고 건너뜁니다. 404 같은 4xx는 바로 건너뜁니다.
  */
+@Slf4j
 @Getter
 @Setter
 public class HttpRequestNode extends BaseNode implements Inputable, Outputable {
@@ -41,6 +44,12 @@ public class HttpRequestNode extends BaseNode implements Inputable, Outputable {
     private long timeoutMillis = 10_000;
     @OptionField(min = 0, label = "요청 사이 최소 간격(ms)")
     private long minIntervalMillis = 1_000;
+    @OptionField(min = 0, label = "재시도 횟수 (연결 실패·타임아웃·429·5xx)")
+    private int maxRetries = 2;
+    @OptionField(min = 0, label = "첫 재시도까지 대기(ms), 이후 두 배씩")
+    private long retryDelayMillis = 1_000;
+
+    private static final long MAX_RETRY_DELAY_MILLIS = 60_000;
 
     private HttpClient client;
     private long lastRequestAt;
@@ -77,21 +86,40 @@ public class HttpRequestNode extends BaseNode implements Inputable, Outputable {
         }
 
         waitForInterval();
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() / 100 != 2) {
-                warn("HTTP " + response.statusCode() + ": " + target);
+        for (int attempt = 0; ; attempt++) {
+            String problem;
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() / 100 == 2) {
+                    Map<String, Object> result = new LinkedHashMap<>();
+                    result.put(URL, target);
+                    result.put(STATUS, response.statusCode());
+                    result.put(CONTENT_TYPE, response.headers().firstValue("Content-Type").orElse(null));
+                    result.put(BODY, response.body());
+                    send(in.withAll(result));
+                    return;
+                }
+                problem = "HTTP " + response.statusCode() + ": " + target;
+                if (!isRetryable(response.statusCode())) {
+                    warn(problem);
+                    return;
+                }
+            } catch (IOException e) {
+                problem = "요청 실패: " + target + " (" + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage()) + ")";
+            }
+            if (attempt >= maxRetries) {
+                warn(problem + (attempt > 0 ? " — " + (attempt + 1) + "회 시도" : ""));
                 return;
             }
-            Map<String, Object> result = new LinkedHashMap<>();
-            result.put(URL, target);
-            result.put(STATUS, response.statusCode());
-            result.put(CONTENT_TYPE, response.headers().firstValue("Content-Type").orElse(null));
-            result.put(BODY, response.body());
-            send(in.withAll(result));
-        } catch (IOException e) {
-            warn("요청 실패: " + target + " (" + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage()) + ")");
+            long delay = Math.min(retryDelayMillis << attempt, MAX_RETRY_DELAY_MILLIS); // 1초, 2초, 4초 … 최대 1분
+            log.info("[{}] {} — {}ms 뒤 재시도 ({}/{})", getId(), problem, delay, attempt + 1, maxRetries);
+            Thread.sleep(delay); // stop()의 인터럽트로 깨어나 종료됩니다.
         }
+    }
+
+    // 서버 쪽 일시 장애와 요청 제한만 재시도합니다. 404·403 같은 4xx는 다시 보내도 같은 답이 옵니다.
+    private static boolean isRetryable(int status) {
+        return status == 429 || status >= 500;
     }
 
     private HttpRequest buildRequest(String target) {

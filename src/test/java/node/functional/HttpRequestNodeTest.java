@@ -19,6 +19,8 @@ class HttpRequestNodeTest {
     private HttpServer server;
     private String base;
     private final List<String> warnings = new CopyOnWriteArrayList<>();
+    private final java.util.concurrent.atomic.AtomicInteger flakyHits = new java.util.concurrent.atomic.AtomicInteger();
+    private final java.util.concurrent.atomic.AtomicInteger downHits = new java.util.concurrent.atomic.AtomicInteger();
     private HttpRequestNode node;
     private TestNodes.Sink sink;
 
@@ -30,12 +32,18 @@ class HttpRequestNodeTest {
         server.createContext("/missing", exchange -> respond(exchange, 404, "text/plain", "not here"));
         server.createContext("/echo-agent", exchange -> respond(exchange, 200, "text/plain",
                 exchange.getRequestHeaders().getFirst("User-Agent") + "|" + exchange.getRequestHeaders().getFirst("X-Test")));
+        server.createContext("/flaky", exchange -> { // 두 번은 503, 그다음부터 200
+            int n = flakyHits.incrementAndGet();
+            if (n <= 2) respond(exchange, 503, "text/plain", "try later"); else respond(exchange, 200, "text/plain", "ok after " + n);
+        });
+        server.createContext("/down", exchange -> { downHits.incrementAndGet(); respond(exchange, 503, "text/plain", "down"); });
         server.createContext("/slow", exchange -> { try { Thread.sleep(800); } catch (InterruptedException ignored) { } respond(exchange, 200, "text/plain", "late"); });
         server.start();
         base = "http://127.0.0.1:" + server.getAddress().getPort();
 
         node = new HttpRequestNode("http01");
         node.setMinIntervalMillis(0);
+        node.setMaxRetries(0); // 재시도 검사는 각 테스트가 따로 켭니다.
         node.setWarningListener((n, message) -> warnings.add(message));
         sink = new TestNodes.Sink("sink01");
         node.connect(sink);
@@ -126,5 +134,35 @@ class HttpRequestNodeTest {
         assertTrue(sink.awaitMessages(3, 8_000));
         long elapsed = System.currentTimeMillis() - started;
         assertTrue(elapsed >= 600, "세 요청 사이에 최소 간격 2번이 들어가야 함, 걸린 시간 " + elapsed + "ms");
+    }
+
+    @Test
+    void retriesTransientFailuresWithGrowingDelays() throws Exception {
+        node.setMaxRetries(3);
+        node.setRetryDelayMillis(60); // 60ms, 120ms
+        node.start(); sink.start();
+        long startedAt = System.currentTimeMillis();
+        node.receive(new Message(Map.of("url", base + "/flaky")));
+
+        assertTrue(sink.awaitMessages(1, 5_000));
+        assertTrue(System.currentTimeMillis() - startedAt >= 180, "대기 60 + 120ms 뒤에 성공");
+        assertEquals(3, flakyHits.get(), "503 두 번 뒤 세 번째에 성공");
+        assertEquals("ok after 3", sink.received.get(0).getString(HttpRequestNode.BODY));
+        assertEquals(List.of(), warnings, "재시도로 성공하면 경고 없음");
+    }
+
+    @Test
+    void givesUpAfterMaxRetriesAndDoesNotRetryClientErrors() throws Exception {
+        node.setMaxRetries(2);
+        node.setRetryDelayMillis(10);
+        node.start(); sink.start();
+        node.receive(new Message(Map.of("url", base + "/down")));
+        node.receive(new Message(Map.of("url", base + "/missing")));
+
+        assertTrue(awaitWarnings(2, 5_000), warnings.toString());
+        assertEquals(3, downHits.get(), "처음 + 재시도 2회");
+        assertTrue(warnings.get(0).startsWith("HTTP 503") && warnings.get(0).endsWith("3회 시도"), warnings.get(0));
+        assertEquals("HTTP 404: " + base + "/missing", warnings.get(1), "404는 재시도 없이 한 번에 경고");
+        assertEquals(0, sink.received.size());
     }
 }
