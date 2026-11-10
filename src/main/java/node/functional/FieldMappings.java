@@ -18,17 +18,25 @@ final class FieldMappings {
         return names.isEmpty() ? null : names;
     }
 
+    /** 같은 이름이 여러 번 나오면 마지막 것이 남습니다. 순서가 중요하고 중복을 허용해야 하면 {@link #entries}를 씁니다. */
     static Map<String, String> parse(String text) {
         Map<String, String> mappings = new LinkedHashMap<>();
+        for (Map.Entry<String, String> entry : entries(text)) mappings.put(entry.getKey(), entry.getValue());
+        return mappings;
+    }
+
+    /** "이름 = 식" 줄들을 순서대로, 중복 이름도 그대로 돌려줍니다. */
+    static List<Map.Entry<String, String>> entries(String text) {
+        List<Map.Entry<String, String>> entries = new ArrayList<>();
         for (String line : lines(text)) {
             int separator = line.indexOf('=');
             if (separator <= 0) throw new IllegalArgumentException("\"이름 = 식\" 형식이 아닙니다: " + line);
             String name = line.substring(0, separator).strip();
             String expression = line.substring(separator + 1).strip();
             if (name.isEmpty() || expression.isEmpty()) throw new IllegalArgumentException("이름이나 식이 비어 있습니다: " + line);
-            mappings.put(name, expression);
+            entries.add(Map.entry(name, expression));
         }
-        return mappings;
+        return entries;
     }
 
     private static List<String> lines(String text) {

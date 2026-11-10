@@ -91,4 +91,11 @@ class FieldTransformsTest {
         assertThrows(IllegalArgumentException.class, () -> FieldTransforms.parseExpression("\"unterminated"));
         assertThrows(IllegalArgumentException.class, () -> FieldTransforms.parseExpression("title extra"));
     }
+
+    @Test
+    void theSameTargetMayBeRefinedOverSeveralLines() {
+        java.util.List<FieldTransforms.Rule> rules = FieldTransforms.parseRules("kind = regex(title, \"^(\\\\w+)\")\nkind = lower(kind)");
+        assertEquals(2, rules.size(), "같은 대상 두 줄이 모두 남음");
+        assertEquals("weekly", FieldTransforms.apply(rules, java.util.Map.of("title", "Weekly report")).get("kind"));
+    }
 }

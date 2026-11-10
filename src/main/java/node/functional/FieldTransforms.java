@@ -52,7 +52,7 @@ final class FieldTransforms {
 
     static List<Rule> parseRules(String text) {
         List<Rule> rules = new ArrayList<>();
-        for (Map.Entry<String, String> line : FieldMappings.parse(text).entrySet()) {
+        for (Map.Entry<String, String> line : FieldMappings.entries(text)) { // 같은 대상을 여러 줄에 써도 순서대로 모두 적용됩니다.
             rules.add(new Rule(line.getKey(), parseExpression(line.getValue())));
         }
         return rules;
