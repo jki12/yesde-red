@@ -89,6 +89,18 @@ class BaseNodeTest {
     }
 
     @Test
+    void errorsAreRecordedAsFailuresToo() throws Exception {
+        BaseNode node = new BaseNode(NodeType.DEBUG) {
+            @Override protected void process() { throw new NoClassDefFoundError("missing"); }
+        };
+        node.start();
+        node.getThread().join(2_000);
+
+        assertFalse(node.isAlive());
+        assertInstanceOf(NoClassDefFoundError.class, node.getFailure(), "Error도 실패로 기록");
+    }
+
+    @Test
     void failureInProcessIsRecordedAndReportedOnce() throws Exception {
         TestNodes.Failing failing = new TestNodes.Failing("f1");
         List<Throwable> reported = new CopyOnWriteArrayList<>();

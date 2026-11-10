@@ -173,13 +173,13 @@ public abstract class BaseNode implements Runnable {
         } catch (InterruptedException e) {
             // 큐 대기나 sleep 중의 인터럽트는 정상적인 종료 요청입니다.
             Thread.currentThread().interrupt();
-        } catch (Exception e) {
+        } catch (Throwable e) { // Error(초기화 실패, 스택 오버플로 등)도 사용자에게 알려야 합니다.
             log.error("노드 처리 중 오류가 발생했습니다. id={}", id, e);
             if (keepRunning) error = e; // 종료 요청 중에 난 예외는 정상 종료의 일부로 봅니다.
         } finally {
             try {
                 onStop();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.error("노드 종료 정리 중 오류가 발생했습니다. id={}", id, e);
                 if (error == null) error = e;
             } finally {
