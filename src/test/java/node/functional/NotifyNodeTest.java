@@ -79,6 +79,9 @@ class NotifyNodeTest {
         assertEquals("{\"text\":\"a !\"}", node.body(message), "없는 필드는 빈 문자열");
         node.setFormat(NotifyNode.Format.JSON);
         assertEquals("{\"title\":\"a\",\"price\":1}", node.body(message), "payload 전체");
+        node.setFormat(NotifyNode.Format.DISCORD);
+        node.setTemplate(null);
+        assertEquals("{\"content\":\"{\\\"title\\\":\\\"a\\\",\\\"price\\\":1}\"}", node.body(message), "템플릿이 없으면 메시지 그대로");
     }
 
     @Test

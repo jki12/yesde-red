@@ -13,7 +13,7 @@ import java.util.regex.PatternSyntaxException;
  * 메시지를 거르는 조건식을 읽고 평가합니다.
  * <pre>
  *   price < 20000 and title contains "키보드"
- *   (source = "clien" or source = "ruliweb") and not shop = null
+ *   (kind = "a" or kind = "b") and not note = null
  *   title matches "^\\[.*\\]"
  * </pre>
  * 비교: = != < <= > >= contains matches. 양쪽이 숫자면 숫자로, 아니면 문자열로 비교하며 null은 =·!=에만 맞습니다.

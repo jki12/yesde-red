@@ -34,14 +34,14 @@ public class DbWriteNode extends BaseNode implements Inputable {
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final Pattern TABLE = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)?");
 
-    @OptionField(label = "JDBC URL (예: jdbc:postgresql://localhost:5432/hotdeal)")
+    @OptionField(label = "JDBC URL (예: jdbc:postgresql://localhost:5432/mydb)")
     private String url;
     @OptionField(label = "사용자")
     private String user;
     @OptionField(type = OptionInputType.SENSITIVE_TEXT, label = "비밀번호")
     private String password;
     @OptionField(label = "테이블")
-    private String table = "deals";
+    private String table;
     @OptionField(label = "키 컬럼 (같은 값의 행이 있으면 갱신)")
     private String keyColumn = "id";
     @OptionField(type = OptionInputType.TEXT_AREA, label = "컬럼 (줄마다 컬럼 [= 필드], 비우면 payload 필드 이름 그대로)")

@@ -27,7 +27,7 @@ public enum NodeType {
     JSON_EXTRACT("JSON 추출", "응답 본문(JSON)에서 경로로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "list-tree", JsonExtractNode::new),
     FILE_WRITE("파일 저장", "받은 메시지를 CSV 또는 JSON Lines 파일에 한 줄씩 기록합니다.", "new-file", FileWriteNode::new),
     FILTER("조건 필터", "조건식에 맞는 메시지만 통과시킵니다. 예: price < 20000 and title contains \"키보드\"", "filter", FilterNode::new),
-    NOTIFY("웹훅 알림", "메시지를 받을 때마다 웹훅 URL로 POST합니다. Discord·Slack 형식 또는 payload 전체 JSON. 핫딜 알림에 씁니다.", "bell", NotifyNode::new),
+    NOTIFY("웹훅 알림", "메시지를 받을 때마다 웹훅 URL로 POST합니다. Discord·Slack 형식 또는 payload 전체 JSON.", "bell", NotifyNode::new),
     DEDUPE("중복 제거", "기준 필드의 값이 처음 보이는 메시지만 통과시킵니다. 수집마다 반복되는 글을 걸러 새 글만 남깁니다.", "clear-all", DedupeNode::new),
     TRANSFORM("필드 변환", "규칙(대상 = 식)으로 필드를 뽑고 바꾸고 만듭니다. 출처마다 다른 데이터를 공통 스키마로 맞춥니다.", "graph-line", TransformNode::new),
     DB_WRITE("DB 저장", "받은 메시지를 PostgreSQL 테이블에 upsert합니다. 키가 같은 행이 있으면 갱신하고 없으면 넣습니다.", "database", DbWriteNode::new),

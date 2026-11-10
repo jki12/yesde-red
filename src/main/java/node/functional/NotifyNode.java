@@ -19,8 +19,9 @@ import java.time.Duration;
 import java.util.Map;
 
 /**
- * 메시지를 받을 때마다 웹훅 URL로 JSON을 POST합니다. 조건 필터 뒤에 두면 원하는 핫딜만 알림이 됩니다.
+ * 메시지를 받을 때마다 웹훅 URL로 JSON을 POST합니다. 조건 필터 뒤에 두면 원하는 메시지만 알림이 됩니다.
  * 본문은 형식에 따라 Discord {"content": …}, Slack {"text": …}, 또는 payload 전체이며, 글은 {필드} 자리를 채운 템플릿입니다.
+ * 템플릿이 비어 있으면 메시지를 그대로(text 하나면 그 문자열, 아니면 JSON) 보냅니다.
  * 실패한 전송은 경고만 남깁니다. 서비스의 요청 제한을 지키도록 전송 사이 최소 간격을 둡니다.
  */
 @Getter
@@ -34,8 +35,8 @@ public class NotifyNode extends BaseNode implements Inputable {
     private String url;
     @OptionField(type = OptionInputType.RADIO_BUTTON, label = "형식 (JSON은 payload 전체)")
     private Format format = Format.DISCORD;
-    @OptionField(type = OptionInputType.TEXT_AREA, label = "글 템플릿 ({필드}로 값을 넣음)")
-    private String template = "{title}\n{price}원 · {post_url}";
+    @OptionField(type = OptionInputType.TEXT_AREA, label = "글 템플릿 ({필드}로 값을 넣음, 비우면 메시지 그대로)")
+    private String template;
     @OptionField(min = 1, label = "타임아웃(ms)")
     private long timeoutMillis = 10_000;
     @OptionField(min = 0, label = "전송 사이 최소 간격(ms)")
@@ -64,7 +65,7 @@ public class NotifyNode extends BaseNode implements Inputable {
     @Override
     protected void process() throws Exception {
         Message message = getInbox().take();
-        String text = FieldTransforms.format(template == null ? "" : template, message.getPayload());
+        String text = text(message);
         String body = body(message);
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofMillis(timeoutMillis))
@@ -89,8 +90,12 @@ public class NotifyNode extends BaseNode implements Inputable {
         return firstLine.length() > 60 ? firstLine.substring(0, 60) + "…" : firstLine;
     }
 
+    private String text(Message message) {
+        return template == null || template.isBlank() ? message.toString() : FieldTransforms.format(template, message.getPayload());
+    }
+
     String body(Message message) {
-        String text = FieldTransforms.format(template == null ? "" : template, message.getPayload());
+        String text = text(message);
         return switch (format) {
             case DISCORD -> GSON.toJson(Map.of("content", text));
             case SLACK -> GSON.toJson(Map.of("text", text));

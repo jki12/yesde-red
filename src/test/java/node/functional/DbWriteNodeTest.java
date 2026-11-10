@@ -50,6 +50,7 @@ class DbWriteNodeTest {
         node.setUrl(url);
         node.setUser("postgres");
         node.setPassword("postgres");
+        node.setTable("deals");
         node.setColumns(columns);
         return node;
     }
