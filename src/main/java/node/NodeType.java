@@ -7,6 +7,7 @@ import node.functional.HtmlExtractNode;
 import node.functional.HttpRequestNode;
 import node.functional.InjectNode;
 import node.functional.JsonExtractNode;
+import node.functional.MockServerNode;
 import node.functional.TransformNode;
 
 import java.util.function.Function;
@@ -20,7 +21,8 @@ public enum NodeType {
     JSON_EXTRACT("JSON 추출", "응답 본문(JSON)에서 경로로 항목과 필드를 뽑아 항목마다 메시지를 보냅니다.", "list-tree", JsonExtractNode::new),
     FILE_WRITE("파일 저장", "받은 메시지를 CSV 또는 JSON Lines 파일에 한 줄씩 기록합니다.", "new-file", FileWriteNode::new),
     DEDUPE("중복 제거", "기준 필드의 값이 처음 보이는 메시지만 통과시킵니다. 수집마다 반복되는 글을 걸러 새 글만 남깁니다.", "clear-all", DedupeNode::new),
-    TRANSFORM("필드 변환", "규칙(대상 = 식)으로 필드를 뽑고 바꾸고 만듭니다. 출처마다 다른 데이터를 공통 스키마로 맞춥니다.", "graph-line", TransformNode::new);
+    TRANSFORM("필드 변환", "규칙(대상 = 식)으로 필드를 뽑고 바꾸고 만듭니다. 출처마다 다른 데이터를 공통 스키마로 맞춥니다.", "graph-line", TransformNode::new),
+    MOCK_SERVER("Mock 서버", "실행 중 127.0.0.1에 HTTP 서버를 띄워 폴더의 파일을 응답으로 내줍니다. 실제 사이트 대신 고정 입력으로 파이프라인을 시험합니다.", "server", MockServerNode::new);
 
     private final String displayName;
     private final String description;
