@@ -183,7 +183,10 @@ class DbWriteNodeTest {
         assertTrue(unreachable.getFailure().getMessage().startsWith("DB에 연결할 수 없습니다"), unreachable.getFailure().getMessage());
 
         assertThrows(IllegalArgumentException.class, () -> DbWriteNode.upsertSql("deals; drop table deals", "id", Map.of("id", "id")));
+        Map<String, String> ordered = new LinkedHashMap<>(); // Map.of는 순회 순서가 실행마다 달라 열 순서를 못 믿습니다
+        ordered.put("id", "id");
+        ordered.put("title", "title");
         assertEquals("INSERT INTO deals (id, title) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title",
-                DbWriteNode.upsertSql("deals", "id", new LinkedHashMap<>(Map.of("id", "id", "title", "title")) {{ }}));
+                DbWriteNode.upsertSql("deals", "id", ordered));
     }
 }
