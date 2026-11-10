@@ -75,6 +75,59 @@ class MockServerNodeTest {
     }
 
     @Test
+    void routeRulesOverrideFilesAndFailuresCanBeInjected(@TempDir Path dir) throws Exception {
+        Files.writeString(dir.resolve("items.json"), "{}");
+        node.setRoutes("/items.json = 503 maintenance\n/ping = 200 pong\n/gone = 410");
+        node.setFailEvery(4);
+        start(dir);
+
+        HttpResponse<String> overridden = get("/items.json");
+        assertEquals(503, overridden.statusCode(), "규칙이 파일보다 우선");
+        assertEquals("maintenance", overridden.body());
+        assertEquals("pong", get("/ping").body());
+        assertEquals("HTTP 410", get("/gone").body(), "본문을 생략하면 상태 문구");
+        HttpResponse<String> injected = get("/ping"); // 4번째 요청
+        assertEquals(500, injected.statusCode(), "N번째 요청은 500");
+        assertTrue(injected.body().startsWith("injected failure"));
+        assertEquals(200, get("/ping").statusCode(), "그다음은 다시 정상");
+    }
+
+    @Test
+    void emitsOneMessagePerRequest(@TempDir Path dir) throws Exception {
+        Files.writeString(dir.resolve("a.txt"), "a");
+        support.TestNodes.Sink sink = new support.TestNodes.Sink("sink01");
+        node.connect(sink);
+        sink.start();
+        try {
+            start(dir);
+            get("/a.txt?page=2");
+            get("/nothing");
+
+            assertTrue(sink.awaitMessages(2, 5_000));
+            node.Message first = sink.received.get(0);
+            assertEquals("GET", first.get("method"));
+            assertEquals("/a.txt", first.get("path"));
+            assertEquals("page=2", first.get("query"));
+            assertEquals(200, first.get("status"));
+            assertEquals(404, sink.received.get(1).get("status"));
+        } finally {
+            sink.stop();
+            if (sink.getThread() != null) sink.getThread().join(2_000);
+        }
+    }
+
+    @Test
+    void badRouteRulesFailAtStart(@TempDir Path dir) throws Exception {
+        node.setDirectory(dir.toString());
+        node.setPort(0);
+        node.setRoutes("/x = abc");
+        node.start();
+        node.getThread().join(2_000);
+        assertNotNull(node.getFailure());
+        assertTrue(node.getFailure().getMessage().contains("상태 코드"));
+    }
+
+    @Test
     void delaysResponsesWhenConfigured(@TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("slow.txt"), "late");
         node.setDelayMillis(300);
