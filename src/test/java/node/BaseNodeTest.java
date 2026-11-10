@@ -111,6 +111,27 @@ class BaseNodeTest {
     }
 
     @Test
+    void startReturnsOnlyAfterOnStartHasRun() throws Exception {
+        java.util.concurrent.atomic.AtomicBoolean ready = new java.util.concurrent.atomic.AtomicBoolean();
+        BaseNode slowStarter = new BaseNode(NodeType.INJECT) {
+            @Override protected void onStart() { try { Thread.sleep(200); } catch (InterruptedException ignored) { } ready.set(true); }
+            @Override protected void process() throws Exception { Thread.sleep(Long.MAX_VALUE); }
+        };
+        slowStarter.start();
+        assertTrue(ready.get(), "start()는 onStart()가 끝난 뒤 돌아와야 함");
+        slowStarter.stop();
+        slowStarter.getThread().join(2_000);
+
+        BaseNode failing = new BaseNode(NodeType.INJECT) {
+            @Override protected void onStart() { throw new IllegalStateException("준비 실패"); }
+            @Override protected void process() { }
+        };
+        failing.start();
+        failing.getThread().join(2_000);
+        assertNotNull(failing.getFailure(), "onStart 실패도 노드 실패로 기록되고 start()는 멈추지 않음");
+    }
+
+    @Test
     void normalStopIsNotAFailure() throws Exception {
         TestNodes.Sink sink = new TestNodes.Sink("d1");
         List<Throwable> reported = new CopyOnWriteArrayList<>();

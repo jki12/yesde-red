@@ -46,6 +46,10 @@ public abstract class BaseNode implements Runnable {
     private volatile FailureListener failureListener;
     @Getter(AccessLevel.NONE)
     private volatile WarningListener warningListener;
+    // start()가 onStart() 완료(또는 실패)를 기다리는 데 씁니다. 서버·파일을 여는 노드가 준비된 뒤 다음 노드가 시작됩니다.
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private volatile java.util.concurrent.CountDownLatch started;
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
     private final Pipe inbox;
@@ -158,7 +162,11 @@ public abstract class BaseNode implements Runnable {
         try {
             // start() 직후 stop()이 호출돼도 종료 요청을 다시 덮어쓰지 않습니다.
             if (!keepRunning || Thread.currentThread().isInterrupted()) return;
-            onStart();
+            try {
+                onStart();
+            } finally {
+                if (started != null) started.countDown();
+            }
             while (keepRunning && !Thread.currentThread().isInterrupted()) {
                 process();
                 if (!keepRunning) break;
@@ -205,11 +213,24 @@ public abstract class BaseNode implements Runnable {
         thread = next;
         failure = null;
         keepRunning = true;
+        started = new java.util.concurrent.CountDownLatch(1);
         try {
             next.start();
         } catch (RuntimeException | Error e) {
             keepRunning = false;
             throw e;
+        }
+        awaitStarted(next);
+    }
+
+    // onStart()가 끝날 때까지(최대 10초) 기다립니다. 준비 순서가 중요한 노드(서버 → 요청)를 위해서입니다.
+    private void awaitStarted(Thread worker) {
+        try {
+            if (!started.await(10, java.util.concurrent.TimeUnit.SECONDS) && worker.isAlive()) {
+                log.warn("[{}] 시작 준비가 10초 안에 끝나지 않아 기다리지 않고 진행합니다.", id);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
