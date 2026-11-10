@@ -75,7 +75,8 @@ public class FileWriteNode extends BaseNode implements Inputable {
             writer.write(csvLine(columns));
             headerPending = false;
         }
-        writer.write(format == Format.CSV ? csvLine(values(message)) : GSON.toJson(selected(message)) + System.lineSeparator());
+        Map<String, Object> row = selected(message);
+        writer.write(format == Format.CSV ? csvLine(new ArrayList<>(row.values())) : GSON.toJson(row) + System.lineSeparator());
         writer.flush();
     }
 
@@ -95,12 +96,6 @@ public class FileWriteNode extends BaseNode implements Inputable {
     private Map<String, Object> selected(Message message) {
         Map<String, Object> row = new LinkedHashMap<>();
         for (String column : columns) row.put(column, message.get(column));
-        return row;
-    }
-
-    private List<Object> values(Message message) {
-        List<Object> row = new ArrayList<>();
-        for (String column : columns) row.add(message.get(column));
         return row;
     }
 
