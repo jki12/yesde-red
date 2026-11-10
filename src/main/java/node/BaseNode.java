@@ -212,12 +212,7 @@ public abstract class BaseNode implements Runnable {
         failure = null;
         keepRunning = true;
         started = new java.util.concurrent.CountDownLatch(1);
-        try {
-            next.start();
-        } catch (RuntimeException | Error e) {
-            keepRunning = false;
-            throw e;
-        }
+        next.start();
         awaitStarted(next);
     }
 

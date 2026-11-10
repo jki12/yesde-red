@@ -78,16 +78,11 @@ public final class WorkflowRunner {
 
     private void watchCompletion(List<BaseNode> nodes, List<Thread> workers) {
         Thread watcher = new Thread(() -> {
-            boolean interrupted = false;
-            for (Thread worker : workers) {
-                while (worker.isAlive()) {
-                    try {
-                        worker.join();
-                    } catch (InterruptedException e) {
-                        // 대기 스레드가 중단돼도 살아 있는 노드를 종료 완료로 표시하지 않습니다.
-                        interrupted = true;
-                    }
-                }
+            try {
+                for (Thread worker : workers) worker.join(); // 이 스레드는 아무도 interrupt하지 않습니다.
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return; // 살아 있는 노드를 종료 완료로 표시하지 않습니다.
             }
             // 송신 노드까지 모두 끝난 뒤 남은 메시지를 버립니다. EDT는 join()을 기다리지 않습니다.
             for (BaseNode node : nodes) node.clearPendingMessages();
@@ -100,7 +95,6 @@ public final class WorkflowRunner {
                 setState(RunState.IDLE);
                 log.info("{} 보드의 실행이 종료되었습니다.", name);
             });
-            if (interrupted) Thread.currentThread().interrupt();
         }, "workflow-completion");
         watcher.setDaemon(true);
         watcher.start();
