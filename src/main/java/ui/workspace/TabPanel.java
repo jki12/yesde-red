@@ -7,15 +7,10 @@ import workflow.RunState;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Pattern;
 
 @Slf4j
 public class TabPanel extends JTabbedPane {
     private static final String TAB_TITLE_PREFIX = "워크플로 ";
-    private static final Pattern NUMERIC = Pattern.compile("[0-9]+");
 
     public TabPanel() {
         registerShortcuts();
@@ -45,33 +40,12 @@ public class TabPanel extends JTabbedPane {
         });
     }
 
-    /**
-     * @return 새 탭의 기본 이름을 "워크플로 01" 형식으로 만들어 반환합니다.
-     */
+    /** 열려 있지 않은 가장 작은 번호로 "워크플로 01" 형식의 기본 이름을 만듭니다. */
     private String nextTabTitle() {
-        List<Integer> titles = new ArrayList<>(getTabCount());
-
-        for (int i = 0; i < getTabCount(); ++i) {
-            String title = getTitleAt(i);
-
-            if (!title.startsWith(TAB_TITLE_PREFIX)) continue;
-
-            String temp = title.substring(TAB_TITLE_PREFIX.length());
-            if (NUMERIC.matcher(temp).matches()) {
-                titles.add(Integer.parseInt(temp));
-            }
+        for (int number = 1; ; number++) {
+            String title = String.format("%s%02d", TAB_TITLE_PREFIX, number);
+            if (!hasTab(title)) return title;
         }
-
-        Collections.sort(titles); // 오름차순으로 훑어야 비어 있는 가장 작은 번호를 찾을 수 있습니다.
-
-        int num = 1;
-        for (int n : titles) {
-            if (n != num) break;
-
-            num++;
-        }
-
-        return TAB_TITLE_PREFIX + String.format("%02d", num);
     }
 
     public void addBoardTab() {
