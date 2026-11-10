@@ -30,9 +30,6 @@ public class DebugNode extends BaseNode implements Inputable {
     protected void process() throws Exception {
         Message message = getInbox().take();
 
-        console.append("DEBUG " + getId(), message.toString());
-
-        console.revalidate();
-        console.repaint();
+        console.append("DEBUG " + getId(), message.toString()); // EDT에서 모델을 바꾸므로 테이블이 스스로 다시 그립니다.
     }
 }

@@ -138,7 +138,7 @@ public class NodeInspectorPanel extends JPanel {
     private NodeOptionsEditor createOptionsEditor(BaseNode node) {
         if (node == null) return null;
 
-        NodeOptionsEditor editor = new NodeOptionsEditor(node, () -> boardEditable.getAsBoolean());
+        NodeOptionsEditor editor = new NodeOptionsEditor(node, boardEditable); // 노드는 보드 하나에만 속합니다.
 
         return editor.hasOptions() ? editor : null;
     }
