@@ -64,6 +64,7 @@ public class NotifyNode extends BaseNode implements Inputable {
     @Override
     protected void process() throws Exception {
         Message message = getInbox().take();
+        String text = FieldTransforms.format(template == null ? "" : template, message.getPayload());
         String body = body(message);
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofMillis(timeoutMillis))
@@ -76,10 +77,16 @@ public class NotifyNode extends BaseNode implements Inputable {
         lastSentAt = System.currentTimeMillis();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() / 100 != 2) warn("알림 전송 실패: HTTP " + response.statusCode() + " (" + message + ")");
+            if (response.statusCode() / 100 != 2) warn("알림 전송 실패: HTTP " + response.statusCode() + " — " + summary(text));
         } catch (IOException e) {
-            warn("알림 전송 실패: " + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage()));
+            warn("알림 전송 실패: " + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : ": " + e.getMessage()) + " — " + summary(text));
         }
+    }
+
+    // 경고에 실을 글의 첫 줄입니다. 콘솔 한 줄에 들어가도록 자릅니다.
+    private static String summary(String text) {
+        String firstLine = text.lines().findFirst().orElse("");
+        return firstLine.length() > 60 ? firstLine.substring(0, 60) + "…" : firstLine;
     }
 
     String body(Message message) {

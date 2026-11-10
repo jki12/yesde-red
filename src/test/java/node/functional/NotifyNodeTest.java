@@ -70,7 +70,10 @@ class NotifyNodeTest {
 
     @Test
     void slackAndRawJsonFormats() {
-        Message message = new Message(Map.of("title", "a", "price", 1L));
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("title", "a");
+        payload.put("price", 1L);
+        Message message = new Message(payload);
         node.setFormat(NotifyNode.Format.SLACK);
         node.setTemplate("{title} {missing}!");
         assertEquals("{\"text\":\"a !\"}", node.body(message), "없는 필드는 빈 문자열");

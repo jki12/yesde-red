@@ -68,7 +68,13 @@ class MockServerNodeTest {
             assertEquals(404, get("/sub/../../" + secret.getFileName()).statusCode());
             HttpResponse<String> post = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + node.getBoundPort() + "/ok.txt"))
                     .POST(HttpRequest.BodyPublishers.ofString("x")).build(), HttpResponse.BodyHandlers.ofString());
-            assertEquals(405, post.statusCode());
+            assertEquals(405, post.statusCode(), "파일은 GET만");
+            node.stop(); node.getThread().join(2_000);
+            node.setRoutes("/webhook = 204");
+            start(dir);
+            HttpResponse<String> hook = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + node.getBoundPort() + "/webhook"))
+                    .POST(HttpRequest.BodyPublishers.ofString("{}")).build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(204, hook.statusCode(), "경로 규칙은 POST에도 답함");
         } finally {
             Files.deleteIfExists(secret);
         }
@@ -77,8 +83,9 @@ class MockServerNodeTest {
     @Test
     void routeRulesOverrideFilesAndFailuresCanBeInjected(@TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("items.json"), "{}");
+        Files.writeString(dir.resolve("a.txt"), "a");
         node.setRoutes("/items.json = 503 maintenance\n/ping = 200 pong\n/gone = 410");
-        node.setFailEvery(4);
+        node.setFailEvery(2);
         start(dir);
 
         HttpResponse<String> overridden = get("/items.json");
@@ -86,10 +93,13 @@ class MockServerNodeTest {
         assertEquals("maintenance", overridden.body());
         assertEquals("pong", get("/ping").body());
         assertEquals("HTTP 410", get("/gone").body(), "본문을 생략하면 상태 문구");
-        HttpResponse<String> injected = get("/ping"); // 4번째 요청
-        assertEquals(500, injected.statusCode(), "N번째 요청은 500");
+        assertEquals("pong", get("/ping").body(), "규칙은 장애 주입을 받지 않음");
+
+        assertEquals(200, get("/a.txt").statusCode(), "파일 요청 1번째");
+        HttpResponse<String> injected = get("/a.txt"); // 파일 요청 2번째
+        assertEquals(500, injected.statusCode(), "파일 요청 N번째는 500");
         assertTrue(injected.body().startsWith("injected failure"));
-        assertEquals(200, get("/ping").statusCode(), "그다음은 다시 정상");
+        assertEquals(200, get("/a.txt").statusCode(), "그다음은 다시 정상");
     }
 
     @Test

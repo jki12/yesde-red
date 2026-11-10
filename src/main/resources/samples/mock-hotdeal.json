@@ -11,7 +11,7 @@
         "port": 8099,
         "directory": "mock-data",
         "delayMillis": 0,
-        "routes": "",
+        "routes": "/webhook = 204",
         "failEvery": 4
       }
     },
@@ -186,6 +186,28 @@
       "x": 1540,
       "y": 380,
       "options": {}
+    },
+    {
+      "id": "hd0040",
+      "type": "FILTER",
+      "x": 1540,
+      "y": 540,
+      "options": {
+        "condition": "price != null and price < 20000"
+      }
+    },
+    {
+      "id": "hd0041",
+      "type": "NOTIFY",
+      "x": 1840,
+      "y": 540,
+      "options": {
+        "url": "http://127.0.0.1:8099/webhook",
+        "format": "DISCORD",
+        "template": "[{source}] {title}\\n{price}원 · {post_url}",
+        "timeoutMillis": 10000,
+        "minIntervalMillis": 1000
+      }
     }
   ],
   "connections": [
@@ -248,6 +270,14 @@
     {
       "from": "hd0020",
       "to": "hd0022"
+    },
+    {
+      "from": "hd0020",
+      "to": "hd0040"
+    },
+    {
+      "from": "hd0040",
+      "to": "hd0041"
     }
   ]
 }

@@ -26,7 +26,7 @@ public class MockServerNode extends LocalHttpServerNode {
     private String directory = "mock";
     @OptionField(min = 0, label = "응답 지연(ms)")
     private long delayMillis = 0;
-    @OptionField(type = OptionInputType.TEXT_AREA, label = "경로 규칙 (줄마다 경로 = 상태 [본문], 폴더보다 우선)")
+    @OptionField(type = OptionInputType.TEXT_AREA, label = "경로 규칙 (줄마다 경로 = 상태 [본문], 폴더보다 우선, POST에도 응답)")
     private String routes;
     @OptionField(min = 0, label = "N번째 요청마다 500으로 실패 (0이면 없음)")
     private int failEvery = 0;
@@ -50,10 +50,18 @@ public class MockServerNode extends LocalHttpServerNode {
         super.onStart();
     }
 
-    // 응답 순서: 장애 주입 → 경로 규칙 → 폴더의 파일 → 404. 돌려주는 값은 보낸 상태 코드입니다.
+    // 응답 순서: 지연 → 경로 규칙 → 장애 주입 → 폴더의 파일 → 404. 돌려주는 값은 보낸 상태 코드입니다.
     @Override
     protected int serve(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
+        if (delayMillis > 0) {
+            try { Thread.sleep(delayMillis); } catch (InterruptedException e) { Thread.currentThread().interrupt(); return 0; }
+        }
+        Route route = routeTable.get(path); // 규칙은 정해 둔 대로만 답합니다(POST 포함, 장애 주입 없음). 웹훅 수신처 흉내에 씁니다.
+        if (route != null) {
+            respond(exchange, route.status(), "text/plain", route.body());
+            return route.status();
+        }
         long count = requestCount.incrementAndGet();
         if (failEvery > 0 && count % failEvery == 0) {
             respond(exchange, 500, "text/plain", "injected failure (request #" + count + ")");
@@ -62,14 +70,6 @@ public class MockServerNode extends LocalHttpServerNode {
         if (!"GET".equals(exchange.getRequestMethod())) {
             respond(exchange, 405, "text/plain", "GET only");
             return 405;
-        }
-        if (delayMillis > 0) {
-            try { Thread.sleep(delayMillis); } catch (InterruptedException e) { Thread.currentThread().interrupt(); return 0; }
-        }
-        Route route = routeTable.get(path);
-        if (route != null) {
-            respond(exchange, route.status(), "text/plain", route.body());
-            return route.status();
         }
         Path file = resolve(path);
         if (file == null || !Files.isRegularFile(file)) {

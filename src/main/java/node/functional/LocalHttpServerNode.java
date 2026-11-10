@@ -101,6 +101,10 @@ public abstract class LocalHttpServerNode extends BaseNode implements Outputable
     }
 
     protected static void respond(HttpExchange exchange, int status, String contentType, byte[] body) throws IOException {
+        if (status == 204 || status == 304) { // 본문이 없어야 하는 상태입니다. 본문을 실으면 HttpServer가 500으로 바꿉니다.
+            exchange.sendResponseHeaders(status, -1);
+            return;
+        }
         exchange.getResponseHeaders().set("Content-Type", contentType);
         exchange.sendResponseHeaders(status, body.length);
         try (OutputStream out = exchange.getResponseBody()) {
