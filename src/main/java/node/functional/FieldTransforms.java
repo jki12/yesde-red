@@ -147,8 +147,6 @@ final class FieldTransforms {
 
     private static Expression function(String name, List<Expression> args) {
         return switch (name) {
-            case "const" -> { require(name, args, 1); yield args.get(0); }
-            case "copy" -> { require(name, args, 1); yield args.get(0); }
             case "trim" -> unary(name, args, s -> s.strip());
             case "lower" -> unary(name, args, s -> s.toLowerCase(Locale.ROOT));
             case "upper" -> unary(name, args, s -> s.toUpperCase(Locale.ROOT));

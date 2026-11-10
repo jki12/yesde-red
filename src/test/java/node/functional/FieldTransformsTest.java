@@ -20,7 +20,6 @@ class FieldTransformsTest {
     void copiesConstantsAndFields() {
         Map<String, Object> payload = Map.of("title", "  [롯데온] 백팩 (73,470원) ", "n", 5);
         assertEquals("clien", eval("\"clien\"", payload));
-        assertEquals("clien", eval("const(\"clien\")", payload));
         assertEquals(5, eval("n", payload));
         assertEquals("[롯데온] 백팩 (73,470원)", eval("trim(title)", payload));
         assertEquals("abc", eval("lower(\"ABC\")", payload));
