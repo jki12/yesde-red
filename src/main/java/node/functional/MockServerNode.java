@@ -39,7 +39,7 @@ public class MockServerNode extends BaseNode implements Outputable {
     @OptionField(min = 0, label = "포트 (0이면 비어 있는 포트 자동)")
     private int port = 8099;
     @OptionField(label = "응답 파일 폴더 (경로 그대로 서빙, 예: /items.json → 폴더/items.json)")
-    private String directory = "mock-data";
+    private String directory = "mock";
     @OptionField(min = 0, label = "응답 지연(ms)")
     private long delayMillis = 0;
     @OptionField(type = OptionInputType.TEXT_AREA, label = "경로 규칙 (줄마다 경로 = 상태 [본문], 폴더보다 우선)")

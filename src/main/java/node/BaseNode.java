@@ -11,7 +11,9 @@ import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Getter
 @Setter
@@ -52,7 +54,7 @@ public abstract class BaseNode implements Runnable {
     private volatile java.util.concurrent.CountDownLatch started;
 
     // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
-    private final Pipe inbox;
+    private final BlockingQueue<Message> inbox; // 받은 순서대로 처리합니다.
     // 연결 변경은 드물고(EDT에서 사용자 조작) 순회는 메시지마다 워커 스레드에서 일어나므로,
     // 순회 중 추가돼도 예외가 나지 않는 복사-쓰기 집합을 씁니다. 연결 순서도 유지됩니다.
     private final Set<BaseNode> targets;
@@ -69,7 +71,7 @@ public abstract class BaseNode implements Runnable {
         this.id = id;
         this.type = type;
 
-        this.inbox = this instanceof Inputable ? new Pipe() : null;
+        this.inbox = this instanceof Inputable ? new LinkedBlockingQueue<>() : null;
         this.targets = this instanceof Outputable ? new CopyOnWriteArraySet<>() : null;
     }
 
@@ -124,7 +126,7 @@ public abstract class BaseNode implements Runnable {
             throw new IllegalStateException("입력 기능이 없는 노드입니다.");
         }
 
-        inbox.put(message);
+        inbox.add(message);
     }
 
     public void setLocation(Point p) {

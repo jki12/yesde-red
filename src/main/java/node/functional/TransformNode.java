@@ -60,7 +60,7 @@ public class TransformNode extends BaseNode implements Inputable, Outputable {
             for (String field : keptFields) pruned.put(field, transformed.get(field));
             transformed = pruned;
         }
-        send(new Message(in.getPriority(), transformed));
+        send(new Message(transformed));
     }
 
     private List<String> parseKeep() {

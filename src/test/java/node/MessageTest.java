@@ -14,7 +14,6 @@ class MessageTest {
         Message message = new Message("hello");
         assertEquals("hello", message.get(Message.TEXT));
         assertEquals("hello", message.toString(), "text 하나뿐이면 문자열 그대로");
-        assertEquals(0, message.getPriority());
     }
 
     @Test
@@ -33,24 +32,12 @@ class MessageTest {
 
     @Test
     void withCreatesACopyWithTheExtraField() {
-        Message original = new Message(3, "a");
+        Message original = new Message("a");
         Message extended = original.with("count", 2).withAll(Map.of("flag", true));
 
         assertEquals("a", original.toString(), "원본은 그대로");
-        assertEquals(3, extended.getPriority(), "우선순위 유지");
         assertEquals(2, extended.get("count"));
         assertEquals(true, extended.get("flag"));
         assertEquals("a", extended.get(Message.TEXT));
-    }
-
-    @Test
-    void higherPriorityComesFirstAndEqualPriorityKeepsCreationOrder() throws Exception {
-        assertTrue(new Message(5, "high").compareTo(new Message(1, "low")) < 0);
-
-        Pipe pipe = new Pipe();
-        for (int i = 0; i < 50; i++) pipe.put(new Message("m" + i));
-        pipe.put(new Message(9, "urgent"));
-        assertEquals("urgent", pipe.take().toString(), "높은 우선순위가 먼저");
-        for (int i = 0; i < 50; i++) assertEquals("m" + i, pipe.take().toString(), "같은 우선순위는 넣은 순서대로");
     }
 }

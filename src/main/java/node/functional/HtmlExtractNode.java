@@ -68,7 +68,7 @@ public class HtmlExtractNode extends BaseNode implements Inputable, Outputable {
                 for (Map.Entry<String, String> mapping : mappings.entrySet()) {
                     extracted.put(mapping.getKey(), extract(item, mapping.getValue()));
                 }
-                send(new Message(in.getPriority(), extracted));
+                send(new Message(extracted));
             }
         } catch (Selector.SelectorParseException e) {
             warn("선택자 오류: " + e.getMessage());

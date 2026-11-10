@@ -61,7 +61,7 @@ public class JsonExtractNode extends BaseNode implements Inputable, Outputable {
                 for (Map.Entry<String, String> mapping : mappings.entrySet()) {
                     extracted.put(mapping.getKey(), JsonPaths.toJava(JsonPaths.value(item, mapping.getValue())));
                 }
-                send(new Message(in.getPriority(), extracted));
+                send(new Message(extracted));
             }
         } catch (IllegalArgumentException e) {
             warn("경로 오류: " + e.getMessage());
