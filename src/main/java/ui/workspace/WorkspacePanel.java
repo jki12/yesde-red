@@ -40,10 +40,9 @@ public class WorkspacePanel extends JPanel {
     private final JButton runButton = UiTheme.button("실행");
     private final JButton stopButton = UiTheme.button("종료");
 
-    private final PropertyChangeListener boardListener = e -> refreshCurrentBoardView();
-    private BoardPanel observedBoard;
-    // 콘솔은 모든 보드가 공유하므로, 배경 탭의 보드가 실패해도 기록되도록 보드마다 한 번씩 붙입니다.
-    private final Set<BoardPanel> consoleBoundBoards = Collections.newSetFromMap(new WeakHashMap<>());
+    // 배경 탭의 보드 이벤트는 화면을 갱신하지 않지만, 콘솔은 모든 보드가 공유하므로 실패·경고는 보드를 가리지 않고 기록합니다.
+    private final PropertyChangeListener boardListener = e -> { if (e.getSource() == getSelectedBoard()) refreshCurrentBoardView(); };
+    private final Set<BoardPanel> boundBoards = Collections.newSetFromMap(new WeakHashMap<>());
 
     /*
      * WorkspacePanel 구성
@@ -90,14 +89,15 @@ public class WorkspacePanel extends JPanel {
         add(statusBar, BorderLayout.SOUTH);
 
 
-        // 선택된 보드 하나만 구독합니다. 탭이 바뀌면 이전 보드의 구독을 풀고 새 보드에 붙입니다.
+        // 보드는 처음 선택될 때 한 번 구독합니다. 탭이 바뀌면 새 보드를 구독하고 화면을 다시 읽습니다.
         tabPanel.addChangeListener(e -> observeSelectedBoard());
         observeSelectedBoard();
     }
 
     private void observeSelectedBoard() {
         BoardPanel board = getSelectedBoard();
-        if (board != null && consoleBoundBoards.add(board)) {
+        if (board != null && boundBoards.add(board)) {
+            for (String property : OBSERVED_BOARD_PROPERTIES) board.addPropertyChangeListener(property, boardListener);
             board.addPropertyChangeListener(BoardPanel.PROP_NODE_FAILED, e -> {
                 BoardPanel.NodeFailure failure = (BoardPanel.NodeFailure) e.getNewValue();
                 console.append("오류 " + board.getName(), failure.describe() + " (워크플로를 종료합니다)");
@@ -106,15 +106,6 @@ public class WorkspacePanel extends JPanel {
                 BoardPanel.NodeWarning warning = (BoardPanel.NodeWarning) e.getNewValue();
                 console.append("경고 " + board.getName(), warning.describe());
             });
-        }
-        if (board != observedBoard) {
-            if (observedBoard != null) {
-                for (String property : OBSERVED_BOARD_PROPERTIES) observedBoard.removePropertyChangeListener(property, boardListener);
-            }
-            if (board != null) {
-                for (String property : OBSERVED_BOARD_PROPERTIES) board.addPropertyChangeListener(property, boardListener);
-            }
-            observedBoard = board;
         }
         refreshCurrentBoardView();
     }

@@ -44,8 +44,8 @@ class WorkspacePanelTest {
 
             tabs.setSelectedIndex(0);
             assertTrue(summary(content).contains("노드 2개"), "돌아오면 첫 보드를 다시 읽음: " + summary(content));
-            assertEquals(1, first.getPropertyChangeListeners(BoardPanel.PROP_NODES_CHANGED).length, "구독자는 선택 보드에 하나");
-            assertEquals(0, second.getPropertyChangeListeners(BoardPanel.PROP_NODES_CHANGED).length);
+            assertEquals(1, first.getPropertyChangeListeners(BoardPanel.PROP_NODES_CHANGED).length, "탭을 오가도 구독은 보드마다 하나");
+            assertEquals(1, second.getPropertyChangeListeners(BoardPanel.PROP_NODES_CHANGED).length);
             assertEquals("대기 중", status(content));
         });
     }
