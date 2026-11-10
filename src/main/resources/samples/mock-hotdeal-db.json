@@ -184,7 +184,7 @@
         "url": "jdbc:postgresql://localhost:5432/hotdeal",
         "user": "hotdeal",
         "password": "hotdeal",
-        "routes": "/health = SELECT 'ok' AS status\n/deals = SELECT id, source, source_post_id, post_url, title, shop, product, price, category, author, comments, hits, posted_at, first_seen_at, last_seen_at FROM deals WHERE (:source::text IS NULL OR source = :source) AND (:since::timestamptz IS NULL OR posted_at >= :since) AND (:q::text IS NULL OR title ILIKE '%' || :q || '%') ORDER BY posted_at DESC NULLS LAST, id LIMIT LEAST(COALESCE(:limit::int, 50), 200) OFFSET COALESCE(:offset::int, 0)\n/deals/{id} = SELECT * FROM deals WHERE id = :id\n/deals/{id}/snapshots = SELECT collected_at, price, comments, hits FROM deal_snapshots WHERE deal_id = :id ORDER BY collected_at"
+        "routes": "/health = SELECT 'ok' AS status\n/deals = SELECT id, source, source_post_id, post_url, title, shop, product, price, category, author, comments, hits, posted_at, first_seen_at, last_seen_at FROM deals WHERE (:source::text IS NULL OR source = :source) AND (:since::timestamptz IS NULL OR posted_at >= :since) AND (:q::text IS NULL OR title ILIKE '%' || :q || '%') ORDER BY posted_at DESC NULLS LAST, id LIMIT LEAST(COALESCE(:limit::int, 50), 200) OFFSET COALESCE(:offset::int, 0)\n/deals/{id} = SELECT * FROM deals WHERE id = :id\n/deals/{id}/snapshots = SELECT collected_at, price, comments, hits FROM deal_snapshots WHERE deal_id = :id ORDER BY collected_at\n/sources = SELECT source, count(*) AS deals, max(last_seen_at) AS last_seen_at FROM deals GROUP BY source ORDER BY source"
       }
     }
   ],
