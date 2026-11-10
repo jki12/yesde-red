@@ -36,7 +36,7 @@ import java.util.Map;
 @Getter
 @Setter
 public class ApiServerNode extends LocalHttpServerNode {
-    private static final Gson GSON = new GsonBuilder().serializeNulls().create(); // 비어 있는 필드도 키를 내보내 프론트가 모양을 믿을 수 있게
+    private static final Gson GSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().create(); // null도 키를 내보내고, URL의 =·&를 \u003d로 바꾸지 않습니다
     private static final int DEFAULT_LIMIT = 50;
     static final String DEAL_COLUMNS = "id, source, source_post_id, post_url, title, shop, product, price, category, author, comments, hits, posted_at, first_seen_at, last_seen_at";
 
