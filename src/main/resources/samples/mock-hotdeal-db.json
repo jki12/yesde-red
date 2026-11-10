@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "샘플 - Mock 서버 핫딜을 PostgreSQL에 저장",
+  "name": "샘플 - Mock 서버 핫딜을 PostgreSQL에 저장하고 API로 제공",
   "nodes": [
     {
       "id": "mk0001",
@@ -173,6 +173,19 @@
         "snapshotTable": "deal_snapshots",
         "snapshotColumns": "deal_id = id\ncollected_at\nprice\ncomments\nhits"
       }
+    },
+    {
+      "id": "api001",
+      "type": "API_SERVER",
+      "x": 640,
+      "y": 40,
+      "options": {
+        "port": 8080,
+        "url": "jdbc:postgresql://localhost:5432/hotdeal",
+        "user": "hotdeal",
+        "password": "hotdeal",
+        "maxLimit": 200
+      }
     }
   ],
   "connections": [
@@ -239,6 +252,10 @@
     {
       "from": "hd0034",
       "to": "hd0022"
+    },
+    {
+      "from": "api001",
+      "to": "mk0002"
     }
   ]
 }
