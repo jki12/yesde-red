@@ -7,7 +7,6 @@ import ui.board.BoardPanel;
 import ui.workspace.TabPanel;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -17,7 +16,6 @@ import java.util.function.Supplier;
 @Slf4j
 public class ImportAction extends AbstractAction {
     private final Supplier<TabPanel> tabs;
-    private JFileChooser chooser; // 처음 쓸 때 만듭니다. 메뉴는 프레임 생성 중에 만들어집니다.
 
     public ImportAction() {
         this(() -> YesdeRedFrame.getInstance().getTabPanel());
@@ -33,7 +31,7 @@ public class ImportAction extends AbstractAction {
         TabPanel tabPanel = tabs.get();
         if (tabPanel == null) return;
 
-        JFileChooser chooser = chooser();
+        JFileChooser chooser = WorkflowFiles.chooser();
         if (chooser.showOpenDialog(tabPanel) != JFileChooser.APPROVE_OPTION) return;
         Path path = chooser.getSelectedFile().toPath();
 
@@ -48,13 +46,5 @@ public class ImportAction extends AbstractAction {
             log.warn("워크플로 파일 내용이 잘못됐습니다. path={} reason={}", path, ex.getMessage());
             JOptionPane.showMessageDialog(tabPanel, ex.getMessage(), "불러오기 실패", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private JFileChooser chooser() {
-        if (chooser == null) {
-            chooser = new JFileChooser();
-            chooser.setFileFilter(new FileNameExtensionFilter("워크플로 JSON (*.json)", WorkflowFiles.EXTENSION));
-        }
-        return chooser;
     }
 }

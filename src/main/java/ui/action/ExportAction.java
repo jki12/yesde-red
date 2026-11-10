@@ -5,7 +5,6 @@ import ui.YesdeRedFrame;
 import ui.board.BoardPanel;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +16,6 @@ import java.util.function.Supplier;
 @Slf4j
 public class ExportAction extends AbstractAction {
     private final Supplier<BoardPanel> selectedBoard;
-    private JFileChooser chooser; // 처음 쓸 때 만듭니다. 메뉴는 프레임 생성 중에 만들어집니다.
 
     public ExportAction() {
         this(() -> YesdeRedFrame.getInstance().getSelectedBoard());
@@ -33,7 +31,7 @@ public class ExportAction extends AbstractAction {
         BoardPanel board = selectedBoard.get();
         if (board == null) return;
 
-        JFileChooser chooser = chooser();
+        JFileChooser chooser = WorkflowFiles.chooser();
         chooser.setSelectedFile(new File(chooser.getCurrentDirectory(), board.getName() + "." + WorkflowFiles.EXTENSION));
         if (chooser.showSaveDialog(board) != JFileChooser.APPROVE_OPTION) return;
 
@@ -50,13 +48,5 @@ public class ExportAction extends AbstractAction {
             log.error("워크플로를 저장하지 못했습니다. path={}", path, ex);
             JOptionPane.showMessageDialog(board, "파일을 저장하지 못했습니다.\n" + ex.getMessage(), "내보내기 실패", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private JFileChooser chooser() {
-        if (chooser == null) {
-            chooser = new JFileChooser();
-            chooser.setFileFilter(new FileNameExtensionFilter("워크플로 JSON (*.json)", WorkflowFiles.EXTENSION));
-        }
-        return chooser;
     }
 }
