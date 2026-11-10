@@ -5,11 +5,16 @@ import ui.theme.Codicons;
 import ui.theme.UiTheme;
 import javax.swing.*;
 import java.awt.*;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.function.BooleanSupplier;
 
 public class NodeInspectorPanel extends JPanel {
     private final JLabel title = UiTheme.label("노드를 선택하세요", false);
     private final JTextField id = createReadOnlyField("nodeId");
+    private final JLabel stats = UiTheme.label("", true); // 이번 실행의 받음·보냄·경고 수
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
     private final JTextArea description = new JTextArea();
     private final JPanel editorContainer = new JPanel(new BorderLayout());
 
@@ -29,6 +34,8 @@ public class NodeInspectorPanel extends JPanel {
 
         addField(body, "이름", title);
         addField(body, "ID", id);
+        stats.setName("nodeStats");
+        addField(body, "처리", stats);
         body.add(Box.createVerticalStrut(12));
 
         JLabel hint = UiTheme.label("노드 정보 · 읽기 전용", true);
@@ -101,6 +108,7 @@ public class NodeInspectorPanel extends JPanel {
         this.boardEditable = boardEditable;
         showOptionsEditor(node);
 
+        refreshStats();
         if (node == null) {
             title.setText("노드를 선택하세요");
             id.setText("");
@@ -114,6 +122,15 @@ public class NodeInspectorPanel extends JPanel {
         id.setCaretPosition(0);
         id.setToolTipText(node.getId());
         description.setText(node.getDescription());
+    }
+
+    /** 선택한 노드의 처리 수를 다시 읽습니다. 실행 중에는 작업 공간이 주기적으로 부릅니다. */
+    public void refreshStats() {
+        if (selectedNode == null) { stats.setText(""); return; }
+        BaseNode.Stats s = selectedNode.getStats();
+        if (s.lastActivityAt() == 0 && s.warnings() == 0) { stats.setText("아직 없음"); return; }
+        String last = s.lastActivityAt() == 0 ? "" : "  ·  마지막 " + TIME.format(Instant.ofEpochMilli(s.lastActivityAt()).atZone(ZoneId.systemDefault()));
+        stats.setText("받음 " + s.received() + "  ·  보냄 " + s.sent() + "  ·  경고 " + s.warnings() + last);
     }
 
     private void showOptionsEditor(BaseNode node) {

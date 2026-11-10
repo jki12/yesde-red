@@ -89,6 +89,27 @@ class BaseNodeTest {
     }
 
     @Test
+    void statsCountThisRunsMessagesAndWarnings() throws Exception {
+        TestNodes.Source source = new TestNodes.Source("s1");
+        TestNodes.Warner warner = new TestNodes.Warner("w1");
+        source.connect(warner);
+        for (int i = 0; i < 3; i++) source.emit();
+
+        assertEquals(new BaseNode.Stats(0, 3, 0, source.getStats().lastActivityAt()), source.getStats());
+        assertEquals(3, warner.getStats().received(), "받음은 큐에 들어올 때 셈");
+        assertTrue(source.getStats().lastActivityAt() > 0);
+
+        warner.start();
+        warner.getThread().join(100);
+        long deadline = System.currentTimeMillis() + 2_000;
+        while (warner.warned.get() < 3 && System.currentTimeMillis() < deadline) Thread.sleep(10);
+        assertEquals(3, warner.getStats().warnings());
+        assertEquals(0, warner.getStats().received(), "start()가 이번 실행의 수를 0으로 돌림(큐에 남아 있던 3개는 이전 실행분)");
+        warner.stop();
+        warner.getThread().join(2_000);
+    }
+
+    @Test
     void errorsAreRecordedAsFailuresToo() throws Exception {
         BaseNode node = new BaseNode(NodeType.DEBUG) {
             @Override protected void process() { throw new NoClassDefFoundError("missing"); }

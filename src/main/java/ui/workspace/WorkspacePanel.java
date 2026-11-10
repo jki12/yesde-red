@@ -39,6 +39,8 @@ public class WorkspacePanel extends JPanel {
     // 실행은 IDLE이고 노드가 있을 때, 종료는 RUNNING일 때만 누를 수 있습니다. refreshCurrentBoardView()가 맞춥니다.
     private final JButton runButton = new JButton("실행");
     private final JButton stopButton = new JButton("종료");
+    // 실행 중에는 선택 노드의 처리 수를 1초마다 다시 읽습니다. 메시지마다 이벤트를 쏘면 화면이 따라가지 못합니다.
+    private final Timer statsTimer = new Timer(1_000, e -> inspector.refreshStats());
 
     // 배경 탭의 보드 이벤트는 화면을 갱신하지 않지만, 콘솔은 모든 보드가 공유하므로 실패·경고는 보드를 가리지 않고 기록합니다.
     private final PropertyChangeListener boardListener = e -> { if (e.getSource() == getSelectedBoard()) refreshCurrentBoardView(); };
@@ -178,6 +180,8 @@ public class WorkspacePanel extends JPanel {
         statusBar.showBoard(board);
         runButton.setEnabled(state == RunState.IDLE && board != null && !board.getNodePanels().isEmpty());
         stopButton.setEnabled(state == RunState.RUNNING);
+        if (state == RunState.RUNNING) { if (!statsTimer.isRunning()) statsTimer.start(); }
+        else statsTimer.stop();
     }
 
     public BoardPanel getSelectedBoard() {

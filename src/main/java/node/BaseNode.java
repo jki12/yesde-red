@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Getter
 @Setter
@@ -28,6 +29,9 @@ public abstract class BaseNode implements Runnable {
     public interface WarningListener {
         void nodeWarned(BaseNode node, String message);
     }
+
+    /** 이번 실행의 처리 수입니다. lastActivityAt은 마지막으로 메시지를 받거나 보낸 시각(epoch ms)이며 없으면 0입니다. */
+    public record Stats(long received, long sent, long warnings, long lastActivityAt) { }
 
     private static final RandomIdGenerator ID_GENERATOR = new RandomIdGenerator();
 
@@ -52,6 +56,17 @@ public abstract class BaseNode implements Runnable {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private volatile java.util.concurrent.CountDownLatch started;
+
+    // 처리 수입니다. 워커 스레드와 보내는 쪽 스레드가 함께 올리므로 원자적으로 셉니다. start()에서 0으로 돌립니다.
+    @Getter(AccessLevel.NONE)
+    private final AtomicLong receivedCount = new AtomicLong();
+    @Getter(AccessLevel.NONE)
+    private final AtomicLong sentCount = new AtomicLong();
+    @Getter(AccessLevel.NONE)
+    private final AtomicLong warningCount = new AtomicLong();
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private volatile long lastActivityAt;
 
     // 받은 순서대로 처리하는 입력 큐입니다. 입력이 없는 노드에서는 비어 있습니다.
     private final BlockingQueue<Message> inbox = new LinkedBlockingQueue<>();
@@ -111,9 +126,15 @@ public abstract class BaseNode implements Runnable {
             throw new IllegalStateException("출력 기능이 없는 노드입니다.");
         }
 
+        sentCount.incrementAndGet();
+        lastActivityAt = System.currentTimeMillis();
         for (BaseNode target : targets) {
             target.receive(message);
         }
+    }
+
+    public Stats getStats() {
+        return new Stats(receivedCount.get(), sentCount.get(), warningCount.get(), lastActivityAt);
     }
 
     // 받은 메시지는 입력 큐에 넣고, 실제 처리는 노드 작업 스레드에 맡깁니다.
@@ -123,6 +144,8 @@ public abstract class BaseNode implements Runnable {
         }
 
         inbox.add(message);
+        receivedCount.incrementAndGet();
+        lastActivityAt = System.currentTimeMillis();
     }
 
     public void setLocation(Point p) {
@@ -192,6 +215,7 @@ public abstract class BaseNode implements Runnable {
     /** 메시지 단위 문제를 알립니다. 노드는 멈추지 않고 다음 메시지로 넘어갑니다. */
     protected void warn(String message) {
         log.warn("[{}] {}", id, message);
+        warningCount.incrementAndGet();
         WarningListener listener = warningListener;
         if (listener != null) listener.nodeWarned(this, message);
     }
@@ -210,6 +234,10 @@ public abstract class BaseNode implements Runnable {
         Thread next = new Thread(this, "node-" + id);
         thread = next;
         failure = null;
+        receivedCount.set(0);
+        sentCount.set(0);
+        warningCount.set(0);
+        lastActivityAt = 0;
         keepRunning = true;
         started = new java.util.concurrent.CountDownLatch(1);
         next.start();

@@ -144,6 +144,35 @@ class WorkspacePanelTest {
         });
     }
 
+    @Test
+    void inspectorShowsTheSelectedNodesCountsWhileRunning() throws Exception {
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        WorkspacePanel[] content = new WorkspacePanel[1];
+        JLabel[] stats = new JLabel[1];
+        Edt.run(() -> {
+            content[0] = new WorkspacePanel();
+            BoardPanel board = content[0].getSelectedBoard();
+            ui.board.NodePanel source = new ui.board.NodePanel(new support.TestNodes.Source("s1"));
+            ui.board.NodePanel sink = new ui.board.NodePanel(new support.TestNodes.Sink("d1"));
+            source.setBounds(40, 40, 200, 60); sink.setBounds(400, 40, 200, 60);
+            board.add(source); board.add(sink);
+            ((node.Outputable) source.getNode()).connect((node.Inputable) sink.getNode());
+            board.setSelectedNode(sink);
+            stats[0] = (JLabel) support.Swing.find(content[0], "nodeStats");
+            assertEquals("아직 없음", stats[0].getText());
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            ((JButton) support.Swing.find(content[0], "runWorkflow")).doClick();
+        });
+        Thread.sleep(300); // 출력 노드가 시작하자마자 메시지 하나를 보냅니다
+        Edt.run(() -> ((JButton) support.Swing.find(content[0], "stopWorkflow")).doClick());
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        Edt.run(() -> {
+            assertTrue(stats[0].getText().matches("받음 [1-9]\\d*  ·  보냄 0  ·  경고 0  ·  마지막 \\d{2}:\\d{2}:\\d{2}"), stats[0].getText());
+            content[0].getSelectedBoard().setSelectedNode(null);
+            assertEquals("", stats[0].getText());
+        });
+    }
+
     private static int consoleRows(WorkspacePanel content) {
         JTable table = findTable(content.getConsole());
         assertNotNull(table, "콘솔 표가 없음");
