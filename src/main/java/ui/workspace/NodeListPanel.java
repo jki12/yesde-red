@@ -13,7 +13,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -24,7 +23,6 @@ public class NodeListPanel extends JPanel {
     private final JTextField search = new JTextField();
 
     private BoardPanel board;
-    private List<NodePanel> allNodes = new ArrayList<>();
 
     // 프로그램이 트리 선택을 맞추는 중에는 트리 이벤트를 보드 선택으로 되돌려 보내지 않는 재진입 방지 플래그입니다.
     private boolean syncingSelection;
@@ -82,42 +80,31 @@ public class NodeListPanel extends JPanel {
         Listeners.onTextChange(search, this::rebuildTree);
     }
 
+    /** 보드의 카드 목록과 선택을 트리에 반영합니다. 카드는 많아야 수십 개라 매번 다시 만듭니다. */
     public void showBoard(BoardPanel board) {
-        // 보드가 바뀌거나 실제 카드 목록이 달라진 경우만 트리를 다시 만듭니다.
-        // 카드 개수가 같고 선택만 바뀌면 선택 강조만 맞춰 불필요한 모델 재구성을 줄입니다.
-        List<NodePanel> nodes = board == null ? List.of() : board.getNodePanels();
-        if (this.board != board || !allNodes.equals(nodes)) {
-            this.board = board;
-            rebuildTree();
-        } else syncSelection();
+        this.board = board;
+        rebuildTree();
     }
 
     private void rebuildTree() {
         // reload()/선택 복원도 TreeSelection 이벤트를 발생시킬 수 있으므로 재구성 전체를 syncingSelection으로 감쌉니다.
         syncingSelection = true;
         try {
-            allNodes = board == null ? List.of() : board.getNodePanels();
-            // allNodes는 필터 적용 전 전체 목록입니다. 검색 결과만 보관하면 다음 선택 갱신 때 매번 변경으로 오인할 수 있습니다.
+            List<NodePanel> nodes = board == null ? List.of() : board.getNodePanels();
             root.removeAllChildren();
             String query = search.getText().strip().toLowerCase(Locale.ROOT);
-            for (NodePanel view : allNodes) {
+            for (NodePanel view : nodes) {
                 String text = view.getNode().getDisplayName() + " " + view.getNode().getType()
                         + " " + view.getNode().getId();
                 if (text.toLowerCase(Locale.ROOT).contains(query)) root.add(new DefaultMutableTreeNode(view));
             }
             // 제목에 노드 수를 표시하고, 검색 중에는 "표시 수/전체 수"로 보여줍니다.
             root.setUserObject((board == null ? "워크플로" : board.getName())
-                    + " (" + root.getChildCount() + (query.isEmpty() ? "" : "/" + allNodes.size()) + ")");
+                    + " (" + root.getChildCount() + (query.isEmpty() ? "" : "/" + nodes.size()) + ")");
             model.reload();
             tree.expandRow(0);
             selectCurrentNode();
         } finally { syncingSelection = false; } // 예외가 발생해도 이후 사용자 선택을 계속 무시하는 상태로 남기지 않습니다.
-    }
-
-    private void syncSelection() {
-        syncingSelection = true; // 목록 선택 → 보드 선택 → 목록 갱신의 순환 이벤트를 막습니다.
-        try { selectCurrentNode(); }
-        finally { syncingSelection = false; }
     }
 
     private void selectCurrentNode() {
