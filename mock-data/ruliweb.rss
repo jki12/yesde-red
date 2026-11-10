@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>가상 핫딜 피드</title><link>http://127.0.0.1:8099/ruliweb.rss</link>
+<item><title>[가상스토어] 인디 게임 번들 (4,900원/무료)</title><category>게임S/W</category><author>테스터A</author>
+  <link>http://127.0.0.1:8099/read/700001</link><pubDate>Tue, 10 Nov 2026 09:30:00 +0900</pubDate></item>
+<item><title>[예시마켓] 보온병 500ml (8,900원/2,500원)</title><category>생활</category><author>테스터B</author>
+  <link>http://127.0.0.1:8099/read/700002</link><pubDate>Tue, 10 Nov 2026 08:55:10 +0900</pubDate></item>
+<item><title>[샘플샵] 컬쳐 상품권 5만원권 / 46,550원</title><category>상품권</category><author>테스터C</author>
+  <link>http://127.0.0.1:8099/read/700003</link><pubDate>Mon, 09 Nov 2026 23:10:00 +0900</pubDate></item>
+</channel></rss>

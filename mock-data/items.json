@@ -1,0 +1,4 @@
+{"data": {"items": [
+  {"name": "가상 상품 A", "price": {"amount": 12000, "currency": "KRW"}, "tags": ["new", "sale"]},
+  {"name": "가상 상품 B", "price": {"amount": 8500.5, "currency": "KRW"}, "tags": []}
+]}}
