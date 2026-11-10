@@ -174,6 +174,7 @@ price != null and price < 20000 and title contains "키보드"
 
 `src/main/resources/samples/`의 파일을 **File → 불러오기…**로 열어 바로 실행해 볼 수 있습니다.
 
+- `tour.json`: **노드 한 바퀴, 파일 하나로 오프라인.** Mock 서버의 경로 규칙에 JSON 응답을 직접 적어 가상 API(`/api/posts`)를 만들고, 스케줄(5분마다, 즉시 한 번) → HTTP 요청 → JSON 추출(중첩 경로 `author.name`, 배열 `tags[0]`) → 필드 변환(키 조합, 정규식, 시각 정규화) → 중복 제거 → 파일 저장(`output/example.jsonl`)과 조건 필터(`kind = "weekly" and price > 5000`) → 디버그로 흐릅니다. 새 파이프라인을 만들 때 복사해서 고치는 출발점으로 쓰기 좋습니다.
 - `hotdeal.json`: 스케줄 노드가 10분마다(실행 즉시 한 번) 클리앙 알뜰구매(HTML), 루리웹 핫딜(RSS), 뽐뿌(RSS)를 받아, 출처별 필드 변환 노드가 공통 스키마(`id`, `source`, `source_post_id`, `post_url`, `title`, `shop`, `product`, `price`, `category`, `author`, `comments`, `hits`, `posted_at`, `collected_at`)로 맞춘 뒤 중복 제거 노드가 `id` 기준으로 새 글만 골라 `output/hotdeal.csv`에 기록합니다. 본 글은 `output/hotdeal-seen.txt`에 남아 앱을 다시 켜도 유지됩니다. 사이트가 RSS를 제공하면 HTML 목록보다 RSS가 안정적이고 예의 바른 경로입니다.
 - `mock-hotdeal.json`: 같은 파이프라인을 **인터넷 없이** 돌립니다. Mock 서버 노드가 `samples/hotdeal/mock-data/`의 가상 게시판(HTML 1, RSS 2)을 `http://127.0.0.1:8099/`로 내주고, 4번째 요청마다 500을 내 재시도를 보여주며, 2만원 미만 글은 조건 필터 → 웹훅 알림 → Mock 서버 `/webhook`(204)으로 갑니다. 결과는 `output/mock-hotdeal.csv` 9건.
 - `mock-hotdeal-db.json`: 결과를 CSV 대신 **PostgreSQL**에 upsert하고(`deals` + `deal_snapshots`), API 서버 노드가 `/deals`, `/deals/{id}`, `/deals/{id}/snapshots`로 내줍니다. 중복 제거 노드는 두지 않습니다. 갱신까지 DB가 맡기 때문입니다.

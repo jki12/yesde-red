@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "name": "예제 - 노드 한 바퀴 (오프라인)",
+  "nodes": [
+    {
+      "id": "ex0001",
+      "type": "MOCK_SERVER",
+      "x": 40,
+      "y": 40,
+      "options": {
+        "port": 8098,
+        "directory": ".",
+        "delayMillis": 0,
+        "failEvery": 0,
+        "routes": "# 가상 API 하나. 실제 사이트 대신 이 노드가 응답합니다.\n/api/posts = 200 {\"data\":{\"items\":[{\"id\":101,\"author\":{\"name\":\"kim\"},\"title\":\"Weekly report: traffic up 12%\",\"tags\":[\"report\",\"weekly\"],\"price\":{\"amount\":12000,\"currency\":\"KRW\"},\"published\":\"Tue, 10 Nov 2026 09:30:00 +0900\"},{\"id\":102,\"author\":{\"name\":\"lee\"},\"title\":\"Hotfix 2.3.1 released\",\"tags\":[\"release\"],\"price\":{\"amount\":0,\"currency\":\"KRW\"},\"published\":\"Tue, 10 Nov 2026 08:10:00 +0900\"},{\"id\":103,\"author\":{\"name\":\"park\"},\"title\":\"Design review notes\",\"tags\":[],\"price\":{\"amount\":4500,\"currency\":\"KRW\"},\"published\":\"Mon, 09 Nov 2026 22:45:00 +0900\"},{\"id\":104,\"author\":{\"name\":\"kim\"},\"title\":\"Weekly report: incidents\",\"tags\":[\"report\",\"weekly\"],\"price\":{\"amount\":9900,\"currency\":\"KRW\"},\"published\":\"Mon, 09 Nov 2026 18:00:00 +0900\"}]}}"
+      }
+    },
+    {
+      "id": "ex0002",
+      "type": "DEBUG",
+      "x": 340,
+      "y": 40,
+      "options": {}
+    },
+    {
+      "id": "ex0010",
+      "type": "SCHEDULE",
+      "x": 40,
+      "y": 200,
+      "options": {
+        "cron": "*/5 * * * *",
+        "message": "tick",
+        "runOnStart": true
+      }
+    },
+    {
+      "id": "ex0011",
+      "type": "HTTP_REQUEST",
+      "x": 340,
+      "y": 200,
+      "options": {
+        "url": "http://127.0.0.1:8098/api/posts",
+        "userAgent": "yesde-red/1.0",
+        "timeoutMillis": 10000,
+        "minIntervalMillis": 0,
+        "maxRetries": 2,
+        "retryDelayMillis": 1000
+      }
+    },
+    {
+      "id": "ex0012",
+      "type": "JSON_EXTRACT",
+      "x": 640,
+      "y": 200,
+      "options": {
+        "items": "data.items[*]",
+        "fields": "id = id\ntitle = title\nauthor = author.name\nfirst_tag = tags[0]\nprice = price.amount\npublished = published"
+      }
+    },
+    {
+      "id": "ex0013",
+      "type": "TRANSFORM",
+      "x": 940,
+      "y": 200,
+      "options": {
+        "rules": "source = \"example\"\nkey = format(\"{source}:{id}\")\ntitle = trim(title)\nkind = regex(title, \"^(\\\\w+)\")\nkind = lower(kind)\npublished_at = datetime(published, \"rfc1123\")\ncollected_at = now()",
+        "keep": "key\nsource\nid\ntitle\nkind\nauthor\nfirst_tag\nprice\npublished_at\ncollected_at"
+      }
+    },
+    {
+      "id": "ex0014",
+      "type": "DEDUPE",
+      "x": 1240,
+      "y": 200,
+      "options": {
+        "key": "key",
+        "maxEntries": 100000,
+        "storePath": "output/example-seen.txt"
+      }
+    },
+    {
+      "id": "ex0015",
+      "type": "FILE_WRITE",
+      "x": 1540,
+      "y": 120,
+      "options": {
+        "path": "output/example.jsonl",
+        "format": "JSONL",
+        "fields": null,
+        "append": true
+      }
+    },
+    {
+      "id": "ex0016",
+      "type": "FILTER",
+      "x": 1540,
+      "y": 280,
+      "options": {
+        "condition": "kind = \"weekly\" and price > 5000"
+      }
+    },
+    {
+      "id": "ex0017",
+      "type": "DEBUG",
+      "x": 1840,
+      "y": 280,
+      "options": {}
+    }
+  ],
+  "connections": [
+    {
+      "from": "ex0001",
+      "to": "ex0002"
+    },
+    {
+      "from": "ex0010",
+      "to": "ex0011"
+    },
+    {
+      "from": "ex0011",
+      "to": "ex0012"
+    },
+    {
+      "from": "ex0012",
+      "to": "ex0013"
+    },
+    {
+      "from": "ex0013",
+      "to": "ex0014"
+    },
+    {
+      "from": "ex0014",
+      "to": "ex0015"
+    },
+    {
+      "from": "ex0014",
+      "to": "ex0016"
+    },
+    {
+      "from": "ex0016",
+      "to": "ex0017"
+    }
+  ]
+}
