@@ -319,7 +319,7 @@ public class BoardPanel extends JPanel implements Scrollable {
     List<Connection> connections() {
         List<Connection> result = new ArrayList<>();
         for (Component c : getComponents()) {
-            if (!(c instanceof NodePanel source) || !(source.getNode() instanceof Outputable)) continue;
+            if (!(c instanceof NodePanel source)) continue;
             for (BaseNode target : source.getNode().getTargets()) {
                 NodePanel destination = nodePanelsById.get(target.getId());
                 if (destination != null && destination.getParent() == this) result.add(new Connection(source, destination));
@@ -349,9 +349,7 @@ public class BoardPanel extends JPanel implements Scrollable {
 
     /** 이 보드의 출력 노드들이 가진 연결 수 합계입니다. 처리된 메시지 수가 아닙니다. */
     public long getConnectionCount() {
-        return getNodePanels().stream().map(NodePanel::getNode)
-                .filter(node -> node.getTargets() != null)
-                .mapToLong(node -> node.getTargets().size()).sum();
+        return getNodePanels().stream().mapToLong(view -> view.getNode().getTargets().size()).sum();
     }
 
     public RunState getRunState() {

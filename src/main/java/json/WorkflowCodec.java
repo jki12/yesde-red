@@ -30,7 +30,6 @@ public final class WorkflowCodec {
         for (BaseNode node : nodes) {
             nodeDocuments.add(new WorkflowDocument.Node(node.getId(), node.getType().name(), node.getX(), node.getY(),
                     NodeOptions.read(node)));
-            if (node.getTargets() == null) continue;
             for (BaseNode target : node.getTargets()) {
                 if (nodes.contains(target)) connections.add(new WorkflowDocument.Connection(node.getId(), target.getId()));
             }

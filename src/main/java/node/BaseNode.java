@@ -53,11 +53,11 @@ public abstract class BaseNode implements Runnable {
     @Setter(AccessLevel.NONE)
     private volatile java.util.concurrent.CountDownLatch started;
 
-    // 입출력 역할에 필요한 큐와 연결 목록만 생성하며, 참조는 생성 후 교체하지 않습니다.
-    private final BlockingQueue<Message> inbox; // 받은 순서대로 처리합니다.
+    // 받은 순서대로 처리하는 입력 큐입니다. 입력이 없는 노드에서는 비어 있습니다.
+    private final BlockingQueue<Message> inbox = new LinkedBlockingQueue<>();
     // 연결 변경은 드물고(EDT에서 사용자 조작) 순회는 메시지마다 워커 스레드에서 일어나므로,
     // 순회 중 추가돼도 예외가 나지 않는 복사-쓰기 집합을 씁니다. 연결 순서도 유지됩니다.
-    private final Set<BaseNode> targets;
+    private final Set<BaseNode> targets = new CopyOnWriteArraySet<>();
 
     public BaseNode(NodeType type) {
         this(type, null);
@@ -70,15 +70,11 @@ public abstract class BaseNode implements Runnable {
         this.createdAt = LocalDateTime.now();
         this.id = id;
         this.type = type;
-
-        this.inbox = this instanceof Inputable ? new LinkedBlockingQueue<>() : null;
-        this.targets = this instanceof Outputable ? new CopyOnWriteArraySet<>() : null;
     }
 
+    /** 읽기 전용 연결 목록입니다. 복사본이 아니므로 이후 연결 변경도 반영됩니다. */
     public Set<BaseNode> getTargets() {
-        // 외부에서는 연결 목록을 조회만 허용합니다. 복사본이 아니므로 이후 연결 변경도 반영됩니다.
-        // 출력 기능이 없는 노드는 null을 반환합니다.
-        return targets == null ? null : Collections.unmodifiableSet(targets);
+        return Collections.unmodifiableSet(targets);
     }
 
     public boolean connect(Inputable input) {
@@ -91,13 +87,13 @@ public abstract class BaseNode implements Runnable {
     }
 
     public boolean disconnect(Inputable input) {
-        if (!(input instanceof BaseNode other) || targets == null) return false;
+        if (!(input instanceof BaseNode other)) return false;
         return targets.remove(other);
     }
 
     /** 나가는 연결을 모두 끊습니다. 노드를 보드에서 지울 때 씁니다. 끊은 것이 하나라도 있으면 true입니다. */
     public boolean disconnectAll() {
-        if (targets == null || targets.isEmpty()) return false;
+        if (targets.isEmpty()) return false;
         targets.clear();
         return true;
     }
@@ -248,6 +244,6 @@ public abstract class BaseNode implements Runnable {
 
     public synchronized void clearPendingMessages() {
         if (isAlive()) throw new IllegalStateException("실행 중인 노드의 큐는 비울 수 없습니다.");
-        if (inbox != null) inbox.clear();
+        inbox.clear();
     }
 }

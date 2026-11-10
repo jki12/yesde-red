@@ -58,7 +58,7 @@ class BaseNodeTest {
         assertTrue(source.connect(sink));
         assertFalse(source.connect(sink), "같은 대상은 두 번 연결되지 않음");
         assertEquals(1, source.getTargets().size());
-        assertNull(sink.getTargets(), "입력 전용 노드는 연결 목록이 없음");
+        assertTrue(sink.getTargets().isEmpty(), "입력 전용 노드는 연결이 없음");
         assertThrows(UnsupportedOperationException.class, () -> source.getTargets().clear(), "외부에서는 읽기 전용");
     }
 
