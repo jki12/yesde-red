@@ -228,8 +228,8 @@ public class BoardPanel extends JPanel implements Scrollable {
         BaseNode removed = view.getNode();
         boolean connectionsChanged = removed.disconnectAll();
         if (removed instanceof Inputable target) {
-            for (BaseNode node : getNodes()) {
-                if (node.disconnect(target)) connectionsChanged = true;
+            for (NodePanel other : getNodePanels()) {
+                if (other.getNode().disconnect(target)) connectionsChanged = true;
             }
         }
 
@@ -336,11 +336,7 @@ public class BoardPanel extends JPanel implements Scrollable {
         repaint();
     }
 
-    private BaseNode[] getNodes() {
-        return Arrays.stream(getComponents()).filter(NodePanel.class::isInstance)
-                .map(c -> ((NodePanel) c).getNode()).toArray(BaseNode[]::new);
-    }
-
+    /** 카드를 만든 순서대로 돌려줍니다. 컴포넌트 순서는 클릭할 때마다 바뀌는 z-order라 그대로 쓰지 않습니다. */
     public List<NodePanel> getNodePanels() {
         return Arrays.stream(getComponents()).filter(NodePanel.class::isInstance)
                 .map(NodePanel.class::cast)
@@ -356,9 +352,10 @@ public class BoardPanel extends JPanel implements Scrollable {
         return runner.getState();
     }
 
+    /** 카드를 만든 순서(저장 문서의 순서)대로 노드를 시작합니다. 서버를 여는 노드를 앞에 두면 요청 노드보다 먼저 준비됩니다. */
     public void startWorkflow() {
         lastFailure = null;
-        runner.start(List.of(getNodes()));
+        runner.start(getNodePanels().stream().map(NodePanel::getNode).toList());
     }
 
     public void stopWorkflow() {

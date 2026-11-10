@@ -202,6 +202,31 @@ class BoardPanelTest {
     }
 
     @Test
+    void nodesStartInCreationOrderRegardlessOfZOrder() throws Exception {
+        java.util.List<String> started = new java.util.concurrent.CopyOnWriteArrayList<>();
+        class Recorder extends node.BaseNode implements node.Inputable {
+            private final String id;
+            Recorder(String id) { super(NodeType.DEBUG); this.id = id; }
+            @Override public String getId() { return id; }
+            @Override protected void onStart() { started.add(id); }
+            @Override protected void process() throws Exception { getInbox().take(); }
+        }
+        java.util.concurrent.CountDownLatch idle = new java.util.concurrent.CountDownLatch(1);
+        Edt.run(() -> {
+            board.removeAll();
+            add(new Recorder("r1"), 10, 10);
+            add(new Recorder("r2"), 10, 110);
+            add(new Recorder("r3"), 10, 210);
+            board.setComponentZOrder(board.getNodePanels().get(2), 0); // 마지막 카드를 클릭한 것처럼 맨 앞으로
+            board.addPropertyChangeListener(BoardPanel.PROP_BOARD_STATE, e -> { if (e.getNewValue() == workflow.RunState.IDLE) idle.countDown(); });
+            board.startWorkflow();
+            board.stopWorkflow();
+        });
+        assertTrue(idle.await(5, java.util.concurrent.TimeUnit.SECONDS));
+        assertEquals(java.util.List.of("r1", "r2", "r3"), started, "z-order가 아니라 만든 순서대로 시작");
+    }
+
+    @Test
     void deleteKeyRemovesTheSelectedCardOnly() throws Exception {
         Edt.run(() -> {
             Action delete = board.getActionMap().get("deleteSelection");
