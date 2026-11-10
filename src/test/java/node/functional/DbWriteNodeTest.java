@@ -119,6 +119,24 @@ class DbWriteNodeTest {
     }
 
     @Test
+    void snapshotTableGetsOneRowPerCollection() throws Exception {
+        DbWriteNode node = node(MAPPING);
+        node.setSnapshotTable("deal_snapshots");
+        node.setSnapshotColumns("deal_id = id\ncollected_at\nprice\nhits");
+        List<String> warnings = run(node,
+                new Message(deal("clien:1", "키보드", 39900, "2026-11-10T10:00:00+09:00")),
+                new Message(deal("clien:1", "키보드", 35900, "2026-11-10T10:15:00+09:00")));
+        assertEquals(List.of(), warnings);
+
+        try (Connection connection = postgres.getPostgresDatabase().getConnection(); Statement statement = connection.createStatement()) {
+            ResultSet rows = statement.executeQuery("SELECT (SELECT count(*) FROM deals), string_agg(price::text, ',' ORDER BY collected_at) FROM deal_snapshots");
+            assertTrue(rows.next());
+            assertEquals(1, rows.getInt(1), "deals는 한 행");
+            assertEquals("39900,35900", rows.getString(2), "스냅샷은 수집마다 한 행");
+        }
+    }
+
+    @Test
     void withoutColumnOptionPayloadFieldNamesAreTheColumns() throws Exception {
         Map<String, Object> deal = deal("ruliweb:7", "보온병", 8900, "x");
         deal.remove("collected_at");

@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 /**
  * 받은 메시지를 PostgreSQL 테이블에 upsert합니다. 키 컬럼 값이 같은 행이 있으면 나머지 컬럼을 갱신하고, 없으면 새 행을 넣습니다.
  * 컬럼은 "컬럼 = 필드" 줄로 payload 필드에 대응시키고, "컬럼"만 쓰면 같은 이름의 필드를 씁니다.
+ * 스냅샷 테이블을 지정하면 메시지마다 그 테이블에도 한 행을 INSERT해(같은 트랜잭션) 가격·댓글 수 같은 값의 이력을 남깁니다.
  * 연결 실패는 노드 실패(워크플로 종료), 한 행의 제약 위반은 경고입니다.
  */
 @Getter
@@ -45,10 +46,16 @@ public class DbWriteNode extends BaseNode implements Inputable {
     private String keyColumn = "id";
     @OptionField(type = OptionInputType.TEXT_AREA, label = "컬럼 (줄마다 컬럼 [= 필드], 비우면 payload 필드 이름 그대로)")
     private String columns;
+    @OptionField(label = "스냅샷 테이블 (비우면 안 씀, 메시지마다 한 행 INSERT)")
+    private String snapshotTable;
+    @OptionField(type = OptionInputType.TEXT_AREA, label = "스냅샷 컬럼 (줄마다 컬럼 [= 필드])")
+    private String snapshotColumns;
 
     private Connection connection;
     private PreparedStatement upsert;
+    private PreparedStatement snapshot;
     private Map<String, String> mapping; // 컬럼 → 필드. columns 옵션이 비면 첫 메시지에서 정합니다.
+    private Map<String, String> snapshotMapping;
 
     public DbWriteNode(String id) {
         super(NodeType.DB_WRITE, id);
@@ -60,10 +67,17 @@ public class DbWriteNode extends BaseNode implements Inputable {
         if (url == null || url.isBlank()) throw new IllegalStateException("JDBC URL이 비어 있습니다.");
         mapping = parseColumns(columns);
         if (mapping != null) upsertSql(table, keyColumn, mapping); // 옵션 오류는 연결 전에 드러냅니다.
+        boolean snapshots = snapshotTable != null && !snapshotTable.isBlank();
+        if (snapshots) {
+            snapshotMapping = parseColumns(snapshotColumns);
+            if (snapshotMapping == null) throw new IllegalStateException("스냅샷 테이블을 쓰려면 스냅샷 컬럼이 필요합니다.");
+            insertSql(snapshotTable, snapshotMapping);
+        }
         try {
             connection = DriverManager.getConnection(url, user, password);
             connection.setAutoCommit(false);
             if (mapping != null) upsert = connection.prepareStatement(upsertSql(table, keyColumn, mapping));
+            if (snapshots) snapshot = connection.prepareStatement(insertSql(snapshotTable, snapshotMapping));
         } catch (SQLException e) {
             throw new IllegalStateException("DB에 연결할 수 없습니다: " + e.getMessage(), e);
         }
@@ -78,9 +92,12 @@ public class DbWriteNode extends BaseNode implements Inputable {
                 for (String field : message.getPayload().keySet()) mapping.put(field, field);
                 upsert = connection.prepareStatement(upsertSql(table, keyColumn, mapping));
             }
-            int index = 1;
-            for (String field : mapping.values()) bind(upsert, index++, message.get(field));
+            bindAll(upsert, mapping, message);
             upsert.executeUpdate();
+            if (snapshot != null) {
+                bindAll(snapshot, snapshotMapping, message);
+                snapshot.executeUpdate();
+            }
             connection.commit();
         } catch (SQLException e) {
             rollbackQuietly();
@@ -100,6 +117,7 @@ public class DbWriteNode extends BaseNode implements Inputable {
         } finally {
             connection = null;
             upsert = null;
+            snapshot = null;
         }
     }
 
@@ -122,18 +140,30 @@ public class DbWriteNode extends BaseNode implements Inputable {
         return mapping;
     }
 
-    /** INSERT … ON CONFLICT (키) DO UPDATE SET 나머지 = EXCLUDED.나머지. 식별자는 영문·숫자·밑줄만 허용합니다. */
+    /** INSERT … ON CONFLICT (키) DO UPDATE SET 나머지 = EXCLUDED.나머지. */
     static String upsertSql(String table, String keyColumn, Map<String, String> mapping) {
-        if (table == null || !TABLE.matcher(table).matches()) throw new IllegalArgumentException("테이블 이름이 올바르지 않습니다: " + table);
         if (keyColumn == null || !mapping.containsKey(keyColumn)) throw new IllegalArgumentException("키 컬럼이 컬럼 목록에 없습니다: " + keyColumn);
         List<String> updates = new ArrayList<>();
         for (String column : mapping.keySet()) {
-            if (!IDENTIFIER.matcher(column).matches()) throw new IllegalArgumentException("컬럼 이름이 올바르지 않습니다: " + column);
             if (!column.equals(keyColumn)) updates.add(column + " = EXCLUDED." + column);
         }
-        String sql = "INSERT INTO " + table + " (" + String.join(", ", mapping.keySet()) + ") VALUES ("
-                + String.join(", ", java.util.Collections.nCopies(mapping.size(), "?")) + ") ON CONFLICT (" + keyColumn + ") ";
-        return sql + (updates.isEmpty() ? "DO NOTHING" : "DO UPDATE SET " + String.join(", ", updates));
+        return insertSql(table, mapping) + " ON CONFLICT (" + keyColumn + ") "
+                + (updates.isEmpty() ? "DO NOTHING" : "DO UPDATE SET " + String.join(", ", updates));
+    }
+
+    /** INSERT INTO 테이블 (컬럼…) VALUES (?…). 식별자는 영문·숫자·밑줄만 허용해 사용자 입력이 SQL에 섞이지 않게 합니다. */
+    static String insertSql(String table, Map<String, String> mapping) {
+        if (table == null || !TABLE.matcher(table).matches()) throw new IllegalArgumentException("테이블 이름이 올바르지 않습니다: " + table);
+        for (String column : mapping.keySet()) {
+            if (!IDENTIFIER.matcher(column).matches()) throw new IllegalArgumentException("컬럼 이름이 올바르지 않습니다: " + column);
+        }
+        return "INSERT INTO " + table + " (" + String.join(", ", mapping.keySet()) + ") VALUES ("
+                + String.join(", ", java.util.Collections.nCopies(mapping.size(), "?")) + ")";
+    }
+
+    private static void bindAll(PreparedStatement statement, Map<String, String> mapping, Message message) throws SQLException {
+        int index = 1;
+        for (String field : mapping.values()) bind(statement, index++, message.get(field));
     }
 
     // 숫자·불리언은 그대로, 문자열은 타입을 정하지 않고 보내 서버가 컬럼 타입(TIMESTAMPTZ 등)으로 바꾸게 합니다. 목록·맵은 JSON 문자열입니다.
